@@ -62,11 +62,11 @@ void windowfunction()
     {
         if (Keyboard::isKeyPressed(Keyboard::Key::Right) && canMoveRight(player, rightx))
         {
-            player.move(20, 0);
+            player.move(5, 0);
         }
         if (Keyboard::isKeyPressed(Keyboard::Key::Left) && canMoveleft(player, leftx))
         {
-            player.move(-20, 0);
+            player.move(-5, 0);
         }
         cameraView();
         windowclose();
@@ -110,7 +110,7 @@ void cameraView()
         else if (player.getPosition().x < 600)
             view.setCenter(599, player.getPosition().y);
     }
-    else if (bgCounter == 1) 
+    else if (bgCounter == 1)
     {
         if (!isMoved)
         {
@@ -118,19 +118,24 @@ void cameraView()
             isMoved = true;
         }
         leftx = 10000;
-        rightx = 14771;
-        //4771    1192
-        view.setCenter(player.getPosition());
+        rightx = 14700;
+        if (player.getPosition().x <= 13800 && player.getPosition().x >= 11000)
+            view.setCenter(player.getPosition());
+        else if (player.getPosition().x > 13800) {
+            view.setCenter(13800, player.getPosition().y);
+        }
+        else if (player.getPosition().x < 11000)
+            view.setCenter(10999, player.getPosition().y);
     }
 
 }
 void Playersetup(Player& mc)
 {
 
-    // mc.Playertex.loadFromFile("Yellow Naruto.png");
-     //mc.PlayerSprite.setTexture(mc.Playertex);
-    // mc.PlayerSprite.setPosition(0, 0);
-    // mc.PlayerSprite.setScale(5, 5);
+     mc.Playertex.loadFromFile("Yellow Naruto.png");
+     mc.PlayerSprite.setTexture(mc.Playertex);
+     mc.PlayerSprite.setPosition(0, 0);
+     mc.PlayerSprite.setScale(5, 5);
 }
 void transition()
 {
