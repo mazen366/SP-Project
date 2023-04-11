@@ -1,46 +1,42 @@
-#include <SFML/Graphics.hpp>
+#include <iostream>
 using namespace std;
 using namespace sf;
-RenderWindow window(sf::VideoMode(2560, 1440), "Game", sf::Style::Fullscreen);
-Event event;
-RectangleShape bg;
-Texture bgTexture;
-Sprite bgSprite;
-float bgCounter = 0;
-
-void bgSetup() {
-    bgTexture.setRepeated(true);
-    bg.setSize(sf::Vector2f(2560.f, 1440.f));
-    bgTexture.loadFromFile("Textures/BG Sprite Sheet.png");
-    bgSprite.setTexture(bgTexture);
-}
-
-void windowclose() {
-    while (window.pollEvent(event))
-    {
-        if (event.type == sf::Event::Closed)
-            window.close();
-    }
-}
-
-void windowfunction() {
-
-    while (window.isOpen())
-    {
-        bgCounter += 0.0075;
-        if (bgCounter > 8)
-            bgCounter -= 8;
-        bgSprite.setTextureRect(IntRect((int)bgCounter * 2560, 0, 2560, 1440));
-        windowclose();
-        window.clear();
-        window.draw(bgSprite);
-        window.display();
-    }
-}
-
+RenderWindow window( VideoMode(1920,1080),"game");
+void backgoundDrawer();
 int main()
 {
-    bgSetup();
-    windowfunction();
+    
+    window.setFramerateLimit(60);
+  
+    
+    while(window.isOpen())
+    {
+        Event event;
+        while (window.pollEvent(event))
+        {
+            if(event.type==Event::Closed||(event.KeyPressed&&event.key.code==Keyboard::Space))
+                window.close();
+            
+        }
+        //update
+        
+        //draw
+        window.clear();
+        backgoundDrawer();
+        window.display();
+        
+      
+    }
     return 0;
+}
+void backgoundDrawer()
+{
+    Texture background1Atex;
+    background1Atex.loadFromFile("Level 1-A BG.png");
+    //9063 × 1192
+    Sprite background1A(background1Atex);
+    background1A.setPosition(0, -53);
+    
+    window.draw(background1A);
+    
 }
