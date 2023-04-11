@@ -3,15 +3,28 @@
 #include <iostream>
 using namespace std;
 using namespace sf;
+
 RenderWindow window(sf::VideoMode(1920, 1080), "Game");
 Event event;
+
+//player
 RectangleShape player, ground[100];
+
+// plVelocity 
+Vector2f playerVelocity = { 0,0 };
+
 Texture bgTexture[30];
 Sprite bgSprite[30];
+
 int bgCounter = 0, leftx = -370, rightx = 8643;
 bool isBlackscreen = false, isMoved = false;
 Clock blackscreenTimer;
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
+
+//animation backGround lv1 a 
+Texture lampTex;
+Sprite lamp;
+float lampIndecator = 0;
 
 struct Player
 {
@@ -20,6 +33,8 @@ struct Player
 }mc;
 
 // DECLRATIONS
+//void lampAnimation();
+void plmovement();
 void Playersetup(Player&);
 void bgSetup();
 void windowclose();
@@ -54,25 +69,26 @@ void bgSetup()
     bgSprite[1].setTexture(bgTexture[1]);
     bgSprite[1].setPosition(10000, 0);
 
+    //animation BG lv 1 a
+   // lampTex.loadFromFile("Level 1-A Lamps.png");
+  //  lamp.setTexture(lampTex);
+  //  lamp.setTextureRect(IntRect(0, 0, 9063 , 1192));
+ //   lamp.setPosition(Vector2f(0, 0));
+
 }
 void windowfunction()
 {
 
     while (window.isOpen())
     {
-        if (Keyboard::isKeyPressed(Keyboard::Key::Right) && canMoveRight(player, rightx))
-        {
-            player.move(5, 0);
-        }
-        if (Keyboard::isKeyPressed(Keyboard::Key::Left) && canMoveleft(player, leftx))
-        {
-            player.move(-5, 0);
-        }
+        plmovement();
+        // lampAnimation();
         cameraView();
         windowclose();
         window.clear();
         window.draw(bgSprite[0]);
         window.draw(bgSprite[1]);
+        window.draw(lamp);
         window.draw(player);
         // window.draw(mc.PlayerSprite);
         window.setView(view);
@@ -132,10 +148,10 @@ void cameraView()
 void Playersetup(Player& mc)
 {
 
-     mc.Playertex.loadFromFile("Yellow Naruto.png");
-     mc.PlayerSprite.setTexture(mc.Playertex);
-     mc.PlayerSprite.setPosition(0, 0);
-     mc.PlayerSprite.setScale(5, 5);
+    mc.Playertex.loadFromFile("Yellow Naruto.png");
+    mc.PlayerSprite.setTexture(mc.Playertex);
+    mc.PlayerSprite.setPosition(0, 0);
+    mc.PlayerSprite.setScale(5, 5);
 }
 void transition()
 {
@@ -188,3 +204,27 @@ bool canMoveleft(RectangleShape object, int xPoisition)
     return false;
 
 }
+void plmovement()
+{
+
+    if (Keyboard::isKeyPressed(Keyboard::Key::Right) && canMoveRight(player, rightx))
+    {
+        playerVelocity.x = 20;
+    }
+    else if (Keyboard::isKeyPressed(Keyboard::Key::Left) && canMoveleft(player, leftx))
+    {
+        playerVelocity.x = -20;
+    }
+    else
+    {
+        playerVelocity.x = 0;
+    }
+    player.move(playerVelocity);
+}
+//void lampAnimation()
+//{
+//    lampIndecator += 1;
+//   	if (lampIndecator >= 2)
+//    			lampIndecator = 0;
+//    lamp.setTextureRect(IntRect((short int)lampIndecator * (9063), 0,9063 , 1192));
+//}
