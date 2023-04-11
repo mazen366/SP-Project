@@ -8,14 +8,16 @@ Texture bgTexture;
 Sprite bgSprite;
 float bgCounter = 0;
 
-void bgSetup() {
+void bgSetup() 
+{
     bgTexture.setRepeated(true);
     bg.setSize(sf::Vector2f(2560.f, 1440.f));
     bgTexture.loadFromFile("Textures/BG Sprite Sheet.png");
     bgSprite.setTexture(bgTexture);
 }
 
-void windowclose() {
+void windowclose() 
+{
     while (window.pollEvent(event))
     {
         if (event.type == sf::Event::Closed)
@@ -23,7 +25,8 @@ void windowclose() {
     }
 }
 
-void windowfunction() {
+void windowfunction() 
+{
 
     while (window.isOpen())
     {
