@@ -14,8 +14,27 @@ Mouse ms;
 // DECLRATIONS
 void bgSetup();
 void windowclose();
+void windowfunction();
 
-void windowfunction() {
+int main()
+{
+    bgSetup();
+    windowfunction();
+    return 0;
+}
+
+
+//DEFINITIONS
+void bgSetup() 
+{
+    player.setSize(Vector2f(50, 50));
+    player.setPosition(600, 600);
+    bgTexture.loadFromFile("Level 1-A BG.png");
+    bgSprite.setTexture(bgTexture);
+    bgSprite.setPosition(-370, -53);
+}
+void windowfunction()
+{
 
     while (window.isOpen())
     {
@@ -39,24 +58,6 @@ void windowfunction() {
         window.setView(view);
         window.display();
     }
-}
-
-int main()
-{
-    bgSetup();
-    windowfunction();
-    return 0;
-}
-
-
-//DEFINITIONS
-void bgSetup() 
-{
-    player.setSize(Vector2f(50, 50));
-    player.setPosition(600, 600);
-    bgTexture.loadFromFile("Level 1-A BG.png");
-    bgSprite.setTexture(bgTexture);
-    bgSprite.setPosition(-370, -53);
 }
 void windowclose() 
 {
