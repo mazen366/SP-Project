@@ -1,42 +1,42 @@
 #include <SFML/Graphics.hpp>
+#include <iostream>
 using namespace std;
 using namespace sf;
-RenderWindow window(sf::VideoMode(2560, 1440), "Game", sf::Style::Fullscreen);
+RenderWindow window(sf::VideoMode(1920, 1080), "Game");
 Event event;
-RectangleShape bg;
+RectangleShape player, ground[100];
 Texture bgTexture;
 Sprite bgSprite;
 float bgCounter = 0;
+View view(Vector2f(0, 0), Vector2f(1920, 1080));
+Mouse ms;
 
-void bgSetup() 
-{
-    bgTexture.setRepeated(true);
-    bg.setSize(sf::Vector2f(2560.f, 1440.f));
-    bgTexture.loadFromFile("Textures/BG Sprite Sheet.png");
-    bgSprite.setTexture(bgTexture);
-}
+// DECLRATIONS
+void bgSetup();
+void windowclose();
 
-void windowclose() 
-{
-    while (window.pollEvent(event))
-    {
-        if (event.type == sf::Event::Closed)
-            window.close();
-    }
-}
-
-void windowfunction() 
-{
+void windowfunction() {
 
     while (window.isOpen())
     {
-        bgCounter += 0.0075;
-        if (bgCounter > 8)
-            bgCounter -= 8;
-        bgSprite.setTextureRect(IntRect((int)bgCounter * 2560, 0, 2560, 1440));
+        if (Keyboard::isKeyPressed(Keyboard::Key::Right) && player.getPosition().x < 9063 - 370 - 50) {
+            player.move(20, 0);
+        }
+        if (Keyboard::isKeyPressed(Keyboard::Key::Left) && player.getPosition().x > -370) {
+            player.move(-20, 0);
+        }
+        if (player.getPosition().x <= 7740 && player.getPosition().x >= 600)
+            view.setCenter(player.getPosition());
+        else if (player.getPosition().x > 7740) {
+            view.setCenter(7741, player.getPosition().y);
+        }
+        else if (player.getPosition().x < 600)
+            view.setCenter(599, player.getPosition().y);
         windowclose();
         window.clear();
         window.draw(bgSprite);
+        window.draw(player);
+        window.setView(view);
         window.display();
     }
 }
@@ -46,4 +46,26 @@ int main()
     bgSetup();
     windowfunction();
     return 0;
+}
+
+
+//DEFINITIONS
+void bgSetup() 
+{
+    player.setSize(Vector2f(50, 50));
+    player.setPosition(600, 600);
+    bgTexture.loadFromFile("Level 1-A BG.png");
+    bgSprite.setTexture(bgTexture);
+    bgSprite.setPosition(-370, -53);
+}
+void windowclose() 
+{
+    while (window.pollEvent(event))
+    {
+        if (event.type == sf::Event::Closed)
+            window.close();
+        if (Keyboard::isKeyPressed(Keyboard::Key::Escape)) {
+            window.close();
+        }
+    }
 }
