@@ -21,6 +21,8 @@ RectangleShape ground[30], wall[30];
 
 // plVelocity
 Vector2f playerVelocity = { 0,0 };
+float gravity = 3.0;
+
 
 Texture bgTexture[30];
 Sprite bgSprite[30];
@@ -34,6 +36,10 @@ View view(Vector2f(0, 0), Vector2f(1920, 1080));
 
 
 //make clock & timer to plmovement
+Clock clock_pl;
+float dt = 0;
+float delay = 0.1f;
+float timer = 0;
 
 // DECLRATIONS
 void plmovement();
@@ -46,6 +52,7 @@ void transition();
 void transition_reverse();
 bool canMoveRight(RectangleShape, int);
 bool canMoveleft(RectangleShape object, int xPoisition);
+bool plIsGrounded();
 void create(RectangleShape arr[], int index, int sizeX, int sizeY, int xPosition, int yPostions);
 
 int main()
@@ -63,7 +70,7 @@ void bgSetup()
     player.playerRec.setPosition(600, 600);
     ground[0].setSize(Vector2f(9200, 30));
     ground[0].setPosition(-370, 800);
-    bgTexture[0].loadFromFile( "Level 1-A BG.png");
+    bgTexture[0].loadFromFile("Level 1-A BG.png");
     bgSprite[0].setTexture(bgTexture[0]);
     bgSprite[0].setPosition(-370, -53);
 
@@ -72,7 +79,7 @@ void bgSetup()
     bgTexture[1].loadFromFile("Level 1-B-1 BG.png");
     bgSprite[1].setTexture(bgTexture[1]);
     bgSprite[1].setPosition(10000, -50);
-    
+
     create(ground, 2, 300, 18, 15930, 840);
 
     create(ground, 3, 150, 10, 16230, 625);
@@ -82,12 +89,12 @@ void bgSetup()
     create(ground, 5, 325, 18, 16520, 173);
 
     create(ground, 6, 700, 10, 16830, 40);
-    
+
     bgTexture[2].loadFromFile("Level 1-B-2 BG.png");
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
-   
-    
+
+
     create(wall, 0, 10, 80, 15930, 860);
 
     create(wall, 1, 10, 220, 16230, 635);
@@ -97,8 +104,8 @@ void bgSetup()
     create(wall, 3, 10, 200, 16520, 193);
 
     create(wall, 4, 10, 140, 16830, 40);
-    
-    
+
+
     bgTexture[3].loadFromFile("Level 1-C BG.png");
     bgSprite[3].setTexture(bgTexture[3]);
     bgSprite[3].setPosition(18000, 0);
@@ -116,7 +123,7 @@ void windowfunction()
 
     while (window.isOpen())
     {
-        
+        clock_pl.restart();
         plmovement();
         // lampAnimation();
         cameraView();
@@ -157,6 +164,8 @@ void windowfunction()
         }
         else
             window.display();
+
+        dt = clock_pl.getElapsedTime().asSeconds();
     }
 }
 void windowclose()
@@ -190,7 +199,7 @@ void cameraView()
         }
         leftx = 10020;
         rightx = 17551;
-        if (player.playerRec.getPosition().x <= 16671  && player.playerRec.getPosition().x >= 11000)
+        if (player.playerRec.getPosition().x <= 16671 && player.playerRec.getPosition().x >= 11000)
             view.setCenter(player.playerRec.getPosition());
         else if (player.playerRec.getPosition().x > 16671) {
             view.setCenter(16671, player.playerRec.getPosition().y);
@@ -207,7 +216,7 @@ void cameraView()
         }
         leftx = 18100;
         rightx = 19500;
-        view.setCenter(18820,596);
+        view.setCenter(18820, 596);
         view.setSize(1600, 1080);
     }
     else if (bgCounter == 3)
@@ -290,35 +299,95 @@ bool canMoveleft(RectangleShape object, int xPoisition)
     return false;
 
 }
+
 void plmovement()
 {
 
-
-
-    if (Keyboard::isKeyPressed(Keyboard::Key::Right) && canMoveRight(player.playerRec, rightx))
+    //gravity
+    if (plIsGrounded())
     {
-        playerVelocity.x = 20;
-    }
-    else if (Keyboard::isKeyPressed(Keyboard::Key::Left) && canMoveleft(player.playerRec, leftx))
-    {
-        playerVelocity.x = -20;
-    }
-    else if (Keyboard::isKeyPressed(Keyboard::Key::Down))
-    {
-        playerVelocity.y = 20;
-    }
-    else if (Keyboard::isKeyPressed(Keyboard::Key::Up))
-    {
-        playerVelocity.y = -20;
+        playerVelocity.y = 0;
     }
     else
     {
-        playerVelocity.x = 0;
+        playerVelocity.y += gravity * dt;
+    }
+
+    if (plIsGrounded())
+    {
         playerVelocity.y = 0;
+        if (Keyboard::isKeyPressed(Keyboard::Space))
+        {
+            playerVelocity.y = -5;//jump
+        }
+        else if (Keyboard::isKeyPressed(Keyboard::Right))
+        {
+
+            // player.playerSprite.setScale(1.4, 1.4);
+             //player.playerSprite.setOrigin(0, 0);
+//               if (timer < 0) 
+  //             {
+                 //  player.indecator++;
+                   //player.indecator %= 4;
+                   //player.playerSprite.setTextureRect(IntRect(64 * player.indecator, 0, 64, 65));
+    //               timer = delay;
+      //         }
+        //       else 
+          //     {
+            //       timer -= dt;
+              // }
+              // playerVelocity.x = 100 * dt;
+            playerVelocity.x = 15;
+            if (Keyboard::isKeyPressed(Keyboard::LShift))
+            {
+                playerVelocity.x *= 2;
+            }
+        }
+        else if (Keyboard::isKeyPressed(Keyboard::Left))
+        {
+            //player.playerSprite.setScale(-1.4, 1.4);
+            //player.playerSprite.setOrigin(player.playerSprite.getLocalBounds().width, 0);
+        //    if (timer < 0) {
+                //player.indecator++;
+               // player.indecator %= 4;
+              //  player.playerSprite.setTextureRect(IntRect(64 * player.indecator, 0, 64, 65));
+          //      timer = delay;
+           // }
+           // else {
+             //   timer -= dt;
+            //}
+
+            //playerVelocity.x = -100 * dt;
+            playerVelocity.x = -15;
+            if (Keyboard::isKeyPressed(Keyboard::LShift))
+            {
+                playerVelocity.x *= 2;
+            }
+        }
+        else
+        {
+            playerVelocity.x = 0;
+        }
 
     }
+    else
+    {
+        playerVelocity.y += gravity * dt;
+    }
     player.playerRec.move(playerVelocity);
+
 }
+//player.playerSprite.move(playerVelocity);
+bool plIsGrounded()
+{
+    if (player.playerRec.getGlobalBounds().intersects(ground[1].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[0].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[2].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[3].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[4].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[5].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[6].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[7].getGlobalBounds()))
+    {
+        return 1;
+    }
+    return 0;
+}
+
+
 void create(RectangleShape arr[], int index, int sizeX, int sizeY, int xPosition, int yPostions)
 {
     arr[index].setSize(Vector2f(sizeX, sizeY));
