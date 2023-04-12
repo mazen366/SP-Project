@@ -26,7 +26,7 @@ Texture bgTexture[30];
 Sprite bgSprite[30];
 
 int bgCounter = 0, leftx = -370, rightx = 8643;
-bool isBlackscreen = false, isMoved = false;
+bool isBlackscreen = false, isMoved = false, ismoved2 = 0, ismoved3 = 0;
 Clock blackscreenTimer;
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
 
@@ -46,6 +46,7 @@ void transition();
 void transition_reverse();
 bool canMoveRight(RectangleShape, int);
 bool canMoveleft(RectangleShape object, int xPoisition);
+void create(RectangleShape arr[], int index, int sizeX, int sizeY, int xPosition, int yPostions);
 
 int main()
 {
@@ -62,81 +63,95 @@ void bgSetup()
     player.playerRec.setPosition(600, 600);
     ground[0].setSize(Vector2f(9200, 30));
     ground[0].setPosition(-370, 800);
-    bgTexture[0].loadFromFile(resourcePath()+"Level 1-A BG.png");
+    bgTexture[0].loadFromFile( "Level 1-A BG.png");
     bgSprite[0].setTexture(bgTexture[0]);
     bgSprite[0].setPosition(-370, -53);
 
-    ground[1].setSize(Vector2f(2889 + 3000, 30));
+    ground[1].setSize(Vector2f(5939, 30));
     ground[1].setPosition(10000, 907);
-    bgTexture[1].loadFromFile(resourcePath()+"Level 1-B-1 BG.png");
+    bgTexture[1].loadFromFile("Level 1-B-1 BG.png");
     bgSprite[1].setTexture(bgTexture[1]);
     bgSprite[1].setPosition(10000, -50);
     
-    ground[2].setSize(Vector2f( 300,5));
-    ground[2].setPosition(15840, 766);
+    create(ground, 2, 300, 18, 15930, 840);
+
+    create(ground, 3, 150, 10, 16230, 625);
+
+    create(ground, 4, 160, 10, 16370, 390);
+
+    create(ground, 5, 325, 18, 16520, 173);
+
+    create(ground, 6, 700, 10, 16830, 40);
     
-    ground[3].setSize(Vector2f( 200,5));
-    ground[3].setPosition(16140, 545);
-    
-    ground[4].setSize(Vector2f( 160,5));
-    ground[4].setPosition(16340, 364);
-    
-    ground[5].setSize(Vector2f( 350,5));
-    ground[5].setPosition(16500, 173);
-    
-    ground[6].setSize(Vector2f( 700,5));
-    ground[6].setPosition(16850, 63);
-    
-    bgTexture[2].loadFromFile(resourcePath()+"Level 1-B-2 BG.png");
+    bgTexture[2].loadFromFile("Level 1-B-2 BG.png");
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
-    //15840  776
-    wall[0].setSize(Vector2f(10, 131));
-    wall[0].setPosition(15840, 776);
+   
     
-    wall[1].setSize(Vector2f(10, 231));
-    wall[1].setPosition(16140, 545);
+    create(wall, 0, 10, 80, 15930, 860);
+
+    create(wall, 1, 10, 220, 16230, 635);
+
+    create(wall, 2, 10, 220, 16370, 404);
+
+    create(wall, 3, 10, 200, 16520, 193);
+
+    create(wall, 4, 10, 140, 16830, 40);
     
-    wall[2].setSize(Vector2f(10, 181));
-    wall[2].setPosition(16340, 364);
     
-    wall[3].setSize(Vector2f(10, 191));
-    wall[3].setPosition(16500, 173);
-    
-    wall[3].setSize(Vector2f(10, 191));
-    wall[3].setPosition(16500, 173);
-    
-    wall[4].setSize(Vector2f(10, 110));
-    wall[4].setPosition(16850, 63);
+    bgTexture[3].loadFromFile("Level 1-C BG.png");
+    bgSprite[3].setTexture(bgTexture[3]);
+    bgSprite[3].setPosition(18000, 0);
+
+    ground[7].setSize(Vector2f(1640, 20));
+    ground[7].setPosition(18000, 970);
+
+    bgTexture[4].loadFromFile("Level 1-D BG.png");
+    bgSprite[4].setTexture(bgTexture[4]);
+    bgSprite[4].setPosition(20000, 0);
+
 }
 void windowfunction()
 {
 
     while (window.isOpen())
     {
-        if (Keyboard::isKeyPressed(Keyboard::Key::W)) {
-            cout << player.playerRec.getPosition().x << "  " << Mouse::getPosition(window).y << endl;
-        }
+        
         plmovement();
         // lampAnimation();
         cameraView();
         windowclose();
         window.clear();
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 5; i++)
             window.draw(bgSprite[i]);
         window.draw(player.playerRec);
-        for (int i = 0; i < 7; i++)
+        for (int i = 0; i < 8; i++)
             window.draw(ground[i]);
         for (int i = 0; i < 5; i++)
             window.draw(wall[i]);;
         // window.draw(mc.PlayerSprite);
-        //15840  776
         window.setView(view);
-        if (player.playerRec.getPosition().x > 8633 && bgCounter == 0)
+        if (player.playerRec.getPosition().x > rightx && bgCounter == 0)
         {
             transition();
             transition_reverse();
             bgCounter = 1;
+            this_thread::sleep_for(chrono::milliseconds(300));
+
+        }
+        else if (player.playerRec.getPosition().x > rightx && bgCounter == 1)
+        {
+            transition();
+            transition_reverse();
+            bgCounter = 2;
+            this_thread::sleep_for(chrono::milliseconds(300));
+
+        }
+        else if (player.playerRec.getPosition().x > rightx && bgCounter == 2)
+        {
+            transition();
+            transition_reverse();
+            bgCounter = 3;
             this_thread::sleep_for(chrono::milliseconds(300));
 
         }
@@ -175,13 +190,44 @@ void cameraView()
         }
         leftx = 10020;
         rightx = 17551;
-        if (player.playerRec.getPosition().x <= 14771 + 1900 && player.playerRec.getPosition().x >= 11000)
+        if (player.playerRec.getPosition().x <= 16671  && player.playerRec.getPosition().x >= 11000)
             view.setCenter(player.playerRec.getPosition());
-        else if (player.playerRec.getPosition().x > 14771 + 1900) {
-            view.setCenter(14771 + 1900, player.playerRec.getPosition().y);
+        else if (player.playerRec.getPosition().x > 16671) {
+            view.setCenter(16671, player.playerRec.getPosition().y);
         }
         else if (player.playerRec.getPosition().x < 11000)
             view.setCenter(10999, player.playerRec.getPosition().y);
+    }
+    else if (bgCounter == 2)
+    {
+        if (!ismoved2)
+        {
+            player.playerRec.setPosition(18400, 800);
+            ismoved2 = true;
+        }
+        leftx = 18100;
+        rightx = 19500;
+        view.setCenter(18820,596);
+        view.setSize(1600, 1080);
+    }
+    else if (bgCounter == 3)
+    {
+        if (!ismoved3)
+        {
+            view.setSize(1920, 1180);
+            player.playerRec.setPosition(20400, 600);
+            ismoved3 = true;
+        }
+        leftx = 20000;
+        rightx = 24771;
+        view.setCenter(player.playerRec.getPosition());
+        //if (player.playerRec.getPosition().x <= 14771 + 1900 && player.playerRec.getPosition().x >= 11000)
+        //    view.setCenter(player.playerRec.getPosition());
+        //else if (player.playerRec.getPosition().x > 14771 + 1900) {
+        //    view.setCenter(14771 + 1900, player.playerRec.getPosition().y);
+        //}
+        //else if (player.playerRec.getPosition().x < 11000)
+        //    view.setCenter(10999, player.playerRec.getPosition().y);
     }
 
 }
@@ -247,6 +293,8 @@ bool canMoveleft(RectangleShape object, int xPoisition)
 void plmovement()
 {
 
+
+
     if (Keyboard::isKeyPressed(Keyboard::Key::Right) && canMoveRight(player.playerRec, rightx))
     {
         playerVelocity.x = 20;
@@ -255,9 +303,24 @@ void plmovement()
     {
         playerVelocity.x = -20;
     }
+    else if (Keyboard::isKeyPressed(Keyboard::Key::Down))
+    {
+        playerVelocity.y = 20;
+    }
+    else if (Keyboard::isKeyPressed(Keyboard::Key::Up))
+    {
+        playerVelocity.y = -20;
+    }
     else
     {
         playerVelocity.x = 0;
+        playerVelocity.y = 0;
+
     }
     player.playerRec.move(playerVelocity);
+}
+void create(RectangleShape arr[], int index, int sizeX, int sizeY, int xPosition, int yPostions)
+{
+    arr[index].setSize(Vector2f(sizeX, sizeY));
+    arr[index].setPosition(xPosition, yPostions);
 }
