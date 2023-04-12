@@ -1,5 +1,5 @@
 #include <SFML/Graphics.hpp>
-#include<thread>
+#include<thread> 
 #include <iostream>
 using namespace std;
 using namespace sf;
@@ -8,11 +8,16 @@ RenderWindow window(sf::VideoMode(1920, 1080), "Game");
 Event event;
 
 //player
-RectangleShape player, ground[30], wall[30];
+struct Player
+{
+    RectangleShape playerRec;
+    Texture playerTex;
+    Sprite playerSprite;
+};
+Player player;
 
-// plVelocity 
-Vector2f playerVelocity = { 0,0 };
-
+//ground & wall
+RectangleShape ground[30], wall[30];
 
 // plVelocity 
 Vector2f playerVelocity = { 0,0 };
@@ -26,20 +31,13 @@ Clock blackscreenTimer;
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
 
 //animation backGround lv1 a 
-Texture lampTex;
-Sprite lamp;
-float lampIndecator = 0;
 
-struct Player
-{
-    Texture Playertex;
-    Sprite PlayerSprite;
-}mc;
+
+//make clock & timer to plmovement
 
 // DECLRATIONS
-//void lampAnimation();
 void plmovement();
-void Playersetup(Player&);
+void Playersetup();
 void bgSetup();
 void windowclose();
 void windowfunction();
@@ -51,7 +49,7 @@ bool canMoveleft(RectangleShape object, int xPoisition);
 
 int main()
 {
-    Playersetup(mc);
+
     bgSetup();
     windowfunction();
     return 0;
@@ -59,8 +57,9 @@ int main()
 //DEFINITIONS
 void bgSetup()
 {
-    player.setSize(Vector2f(50, 50));
-    player.setPosition(600, 600);
+
+    player.playerRec.setSize(Vector2f(50, 50));
+    player.playerRec.setPosition(600, 600);
     ground[0].setSize(Vector2f(9200, 30));
     ground[0].setPosition(-370, 800);
     bgTexture[0].loadFromFile("Level 1-A BG.png");
@@ -79,11 +78,6 @@ void bgSetup()
     //15840  776
     wall[0].setSize(Vector2f(10, 907 - 776));
     wall[0].setPosition(15840, 776);
-    //animation BG lv 1 a
-   // lampTex.loadFromFile("Level 1-A Lamps.png");
-  //  lamp.setTexture(lampTex);
-  //  lamp.setTextureRect(IntRect(0, 0, 9063 , 1192));
- //   lamp.setPosition(Vector2f(0, 0));
 
 }
 void windowfunction()
@@ -92,7 +86,7 @@ void windowfunction()
     while (window.isOpen())
     {
         if (Keyboard::isKeyPressed(Keyboard::Key::W)) {
-            cout << player.getPosition().x << "  " << Mouse::getPosition(window).y << endl;
+            cout << player.playerRec.getPosition().x << "  " << Mouse::getPosition(window).y << endl;
         }
         plmovement();
         // lampAnimation();
@@ -101,15 +95,14 @@ void windowfunction()
         window.clear();
         for (int i = 0; i < 3; i++)
             window.draw(bgSprite[i]);
-        window.draw(lamp);
-        window.draw(player);
+        window.draw(player.playerRec);
         window.draw(ground[0]);
         window.draw(ground[1]);
         window.draw(wall[0]);
         // window.draw(mc.PlayerSprite);
         //15840  776
         window.setView(view);
-        if (player.getPosition().x > 8633 && bgCounter == 0)
+        if (player.playerRec.getPosition().x > 8633 && bgCounter == 0)
         {
             transition();
             transition_reverse();
@@ -135,40 +128,40 @@ void windowclose()
 void cameraView()
 {
     if (bgCounter == 0) {
-        if (player.getPosition().x <= 7740 && player.getPosition().x >= 600)
-            view.setCenter(player.getPosition());
-        else if (player.getPosition().x > 7740) {
-            view.setCenter(7741, player.getPosition().y);
+        if (player.playerRec.getPosition().x <= 7740 && player.playerRec.getPosition().x >= 600)
+            view.setCenter(player.playerRec.getPosition());
+        else if (player.playerRec.getPosition().x > 7740) {
+            view.setCenter(7741, player.playerRec.getPosition().y);
         }
-        else if (player.getPosition().x < 600)
-            view.setCenter(599, player.getPosition().y);
+        else if (player.playerRec.getPosition().x < 600)
+            view.setCenter(599, player.playerRec.getPosition().y);
     }
     else if (bgCounter == 1)
     {
         if (!isMoved)
         {
-            player.setPosition(10400, 600);
+            player.playerRec.setPosition(10400, 600);
             isMoved = true;
         }
         leftx = 10020;
         rightx = 17551;
-        if (player.getPosition().x <= 14771 + 1900 && player.getPosition().x >= 11000)
-            view.setCenter(player.getPosition());
-        else if (player.getPosition().x > 14771 + 1900) {
-            view.setCenter(14771 + 1900, player.getPosition().y);
+        if (player.playerRec.getPosition().x <= 14771 + 1900 && player.playerRec.getPosition().x >= 11000)
+            view.setCenter(player.playerRec.getPosition());
+        else if (player.playerRec.getPosition().x > 14771 + 1900) {
+            view.setCenter(14771 + 1900, player.playerRec.getPosition().y);
         }
-        else if (player.getPosition().x < 11000)
-            view.setCenter(10999, player.getPosition().y);
+        else if (player.playerRec.getPosition().x < 11000)
+            view.setCenter(10999, player.playerRec.getPosition().y);
     }
 
 }
-void Playersetup(Player& mc)
+void Playersetup()
 {
 
-    mc.Playertex.loadFromFile("Yellow Naruto.png");
-    mc.PlayerSprite.setTexture(mc.Playertex);
-    mc.PlayerSprite.setPosition(0, 0);
-    mc.PlayerSprite.setScale(5, 5);
+    player.playerTex.loadFromFile("Yellow Naruto.png");
+    player.playerSprite.setTexture(player.playerTex);
+    player.playerSprite.setPosition(0, 0);
+    player.playerSprite.setScale(5, 5);
 }
 void transition()
 {
@@ -224,11 +217,11 @@ bool canMoveleft(RectangleShape object, int xPoisition)
 void plmovement()
 {
 
-    if (Keyboard::isKeyPressed(Keyboard::Key::Right) && canMoveRight(player, rightx))
+    if (Keyboard::isKeyPressed(Keyboard::Key::Right) && canMoveRight(player.playerRec, rightx))
     {
         playerVelocity.x = 20;
     }
-    else if (Keyboard::isKeyPressed(Keyboard::Key::Left) && canMoveleft(player, leftx))
+    else if (Keyboard::isKeyPressed(Keyboard::Key::Left) && canMoveleft(player.playerRec, leftx))
     {
         playerVelocity.x = -20;
     }
@@ -236,12 +229,5 @@ void plmovement()
     {
         playerVelocity.x = 0;
     }
-    player.move(playerVelocity);
+    player.playerRec.move(playerVelocity);
 }
-//void lampAnimation()
-//{
-//    lampIndecator += 1;
-//   	if (lampIndecator >= 2)
-//    			lampIndecator = 0;
-//    lamp.setTextureRect(IntRect((short int)lampIndecator * (9063), 0,9063 , 1192));
-//}
