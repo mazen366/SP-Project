@@ -13,6 +13,10 @@ RectangleShape player, ground[30], wall[30];
 // plVelocity 
 Vector2f playerVelocity = { 0,0 };
 
+
+// plVelocity 
+Vector2f playerVelocity = { 0,0 };
+
 Texture bgTexture[30];
 Sprite bgSprite[30];
 
