@@ -1,5 +1,5 @@
 #include <SFML/Graphics.hpp>
-#include<thread> 
+#include<thread>
 #include <iostream>
 using namespace std;
 using namespace sf;
@@ -19,7 +19,7 @@ Player player;
 //ground & wall
 RectangleShape ground[30], wall[30];
 
-// plVelocity 
+// plVelocity
 Vector2f playerVelocity = { 0,0 };
 
 Texture bgTexture[30];
@@ -30,7 +30,7 @@ bool isBlackscreen = false, isMoved = false;
 Clock blackscreenTimer;
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
 
-//animation backGround lv1 a 
+//animation backGround lv1 a
 
 
 //make clock & timer to plmovement
@@ -49,7 +49,7 @@ bool canMoveleft(RectangleShape object, int xPoisition);
 
 int main()
 {
-
+    window.setFramerateLimit(60);
     bgSetup();
     windowfunction();
     return 0;
@@ -62,23 +62,52 @@ void bgSetup()
     player.playerRec.setPosition(600, 600);
     ground[0].setSize(Vector2f(9200, 30));
     ground[0].setPosition(-370, 800);
-    bgTexture[0].loadFromFile("Level 1-A BG.png");
+    bgTexture[0].loadFromFile(resourcePath()+"Level 1-A BG.png");
     bgSprite[0].setTexture(bgTexture[0]);
     bgSprite[0].setPosition(-370, -53);
 
     ground[1].setSize(Vector2f(2889 + 3000, 30));
     ground[1].setPosition(10000, 907);
-    bgTexture[1].loadFromFile("Level 1-B-1 BG.png");
+    bgTexture[1].loadFromFile(resourcePath()+"Level 1-B-1 BG.png");
     bgSprite[1].setTexture(bgTexture[1]);
     bgSprite[1].setPosition(10000, -50);
-
-    bgTexture[2].loadFromFile("Level 1-B-2 BG.png");
+    
+    ground[2].setSize(Vector2f( 300,5));
+    ground[2].setPosition(15840, 766);
+    
+    ground[3].setSize(Vector2f( 200,5));
+    ground[3].setPosition(16140, 545);
+    
+    ground[4].setSize(Vector2f( 160,5));
+    ground[4].setPosition(16340, 364);
+    
+    ground[5].setSize(Vector2f( 350,5));
+    ground[5].setPosition(16500, 173);
+    
+    ground[6].setSize(Vector2f( 700,5));
+    ground[6].setPosition(16850, 63);
+    
+    bgTexture[2].loadFromFile(resourcePath()+"Level 1-B-2 BG.png");
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
     //15840  776
-    wall[0].setSize(Vector2f(10, 907 - 776));
+    wall[0].setSize(Vector2f(10, 131));
     wall[0].setPosition(15840, 776);
-
+    
+    wall[1].setSize(Vector2f(10, 231));
+    wall[1].setPosition(16140, 545);
+    
+    wall[2].setSize(Vector2f(10, 181));
+    wall[2].setPosition(16340, 364);
+    
+    wall[3].setSize(Vector2f(10, 191));
+    wall[3].setPosition(16500, 173);
+    
+    wall[3].setSize(Vector2f(10, 191));
+    wall[3].setPosition(16500, 173);
+    
+    wall[4].setSize(Vector2f(10, 110));
+    wall[4].setPosition(16850, 63);
 }
 void windowfunction()
 {
@@ -96,9 +125,10 @@ void windowfunction()
         for (int i = 0; i < 3; i++)
             window.draw(bgSprite[i]);
         window.draw(player.playerRec);
-        window.draw(ground[0]);
-        window.draw(ground[1]);
-        window.draw(wall[0]);
+        for (int i = 0; i < 7; i++)
+            window.draw(ground[i]);
+        for (int i = 0; i < 5; i++)
+            window.draw(wall[i]);;
         // window.draw(mc.PlayerSprite);
         //15840  776
         window.setView(view);
