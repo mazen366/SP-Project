@@ -52,8 +52,9 @@ void transition();
 void transition_reverse();
 bool canMoveRight(RectangleShape, int);
 bool canMoveleft(RectangleShape object, int xPoisition);
-bool plIsGrounded();
+bool collisonPl(RectangleShape[],int);
 void create(RectangleShape arr[], int index, int sizeX, int sizeY, int xPosition, int yPostions);
+
 
 int main()
 {
@@ -90,20 +91,20 @@ void bgSetup()
 
     create(ground, 6, 700, 10, 16830, 40);
 
-    bgTexture[2].loadFromFile("Level 1-B-2 BG.png");
+    bgTexture[2].loadFromFile(resourcePath()+"Level 1-B-2 BG.png");
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
 
 
-    create(wall, 0, 10, 80, 15930, 860);
+    create(wall, 0, 20, 80, 15930, 860);
 
-    create(wall, 1, 10, 220, 16230, 635);
+    create(wall, 1, 20, 220, 16230, 635);
 
-    create(wall, 2, 10, 220, 16370, 404);
+    create(wall, 2, 20, 220, 16370, 404);
 
-    create(wall, 3, 10, 200, 16520, 193);
+    create(wall, 3, 20, 200, 16520, 193);
 
-    create(wall, 4, 10, 140, 16830, 40);
+    create(wall, 4, 20, 140, 16830, 40);
 
 
     bgTexture[3].loadFromFile("Level 1-C BG.png");
@@ -284,7 +285,7 @@ void transition_reverse()
 }
 bool canMoveRight(RectangleShape object, int xPoisition)
 {
-    if (object.getPosition().x <= xPoisition)
+    if (object.getPosition().x <= xPoisition&&!collisonPl(wall,4))
         return true;
 
     return false;
@@ -304,35 +305,33 @@ void plmovement()
 {
 
     //gravity
-    if (plIsGrounded())
-    {
-        playerVelocity.y = 0;
-    }
-    else
-    {
+   
+    if(collisonPl(wall, 4))
+        playerVelocity.x=0;
+        
+    if(!collisonPl(ground, 7))
         playerVelocity.y += gravity * dt;
-    }
 
-    if (plIsGrounded())
+   else
     {
         playerVelocity.y = 0;
         if (Keyboard::isKeyPressed(Keyboard::Space))
         {
             playerVelocity.y = -5;//jump
         }
-        else if (Keyboard::isKeyPressed(Keyboard::Right))
+        else if (Keyboard::isKeyPressed(Keyboard::Right)&&canMoveRight(player.playerRec, rightx))
         {
 
             // player.playerSprite.setScale(1.4, 1.4);
              //player.playerSprite.setOrigin(0, 0);
-//               if (timer < 0) 
+//               if (timer < 0)
   //             {
                  //  player.indecator++;
                    //player.indecator %= 4;
                    //player.playerSprite.setTextureRect(IntRect(64 * player.indecator, 0, 64, 65));
     //               timer = delay;
       //         }
-        //       else 
+        //       else
           //     {
             //       timer -= dt;
               // }
@@ -343,7 +342,7 @@ void plmovement()
                 playerVelocity.x *= 2;
             }
         }
-        else if (Keyboard::isKeyPressed(Keyboard::Left))
+        else if (Keyboard::isKeyPressed(Keyboard::Left)&&canMoveleft(player.playerRec, leftx))
         {
             //player.playerSprite.setScale(-1.4, 1.4);
             //player.playerSprite.setOrigin(player.playerSprite.getLocalBounds().width, 0);
@@ -370,21 +369,22 @@ void plmovement()
         }
 
     }
-    else
-    {
-        playerVelocity.y += gravity * dt;
-    }
+ 
     player.playerRec.move(playerVelocity);
 
 }
 //player.playerSprite.move(playerVelocity);
-bool plIsGrounded()
+bool collisonPl(RectangleShape arr[],int size)
 {
-    if (player.playerRec.getGlobalBounds().intersects(ground[1].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[0].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[2].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[3].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[4].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[5].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[6].getGlobalBounds()) || player.playerRec.getGlobalBounds().intersects(ground[7].getGlobalBounds()))
+    for(int i=0;i<=size;i++)
     {
-        return 1;
+        if (player.playerRec.getGlobalBounds().intersects(arr[i].getGlobalBounds()) )
+            return true;
+        
+        
     }
-    return 0;
+    return false;
+    
 }
 
 
