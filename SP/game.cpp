@@ -10,7 +10,7 @@ Event event;
 //player
 struct Player
 {
-    RectangleShape playerRec;
+    float plcounter = 0;
     Texture playerTex;
     Sprite playerSprite;
 };
@@ -21,13 +21,13 @@ RectangleShape ground[30], wall[30];
 
 // plVelocity
 Vector2f playerVelocity = { 0,0 };
-float gravity = 3.0;
+float gravity = 2.0;
 
 
 Texture bgTexture[30];
 Sprite bgSprite[30];
 
-int bgCounter = 0, leftx = -370, rightx = 8643;
+int bgCounter = 0, leftx = -300, rightx = 8643;
 bool isBlackscreen = false, isMoved = false, ismoved2 = 0, ismoved3 = 0;
 Clock blackscreenTimer;
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
@@ -50,9 +50,9 @@ void windowfunction();
 void cameraView();
 void transition();
 void transition_reverse();
-bool canMoveRight(RectangleShape, int);
-bool canMoveleft(RectangleShape object, int xPoisition);
-bool collisonPl(RectangleShape[],int);
+bool canMoveRight(Sprite, int);
+bool canMoveleft(Sprite object, int xPoisition);
+bool collisonPl(RectangleShape[], int);
 void create(RectangleShape arr[], int index, int sizeX, int sizeY, int xPosition, int yPostions);
 
 
@@ -60,6 +60,7 @@ int main()
 {
     window.setFramerateLimit(60);
     bgSetup();
+    Playersetup();
     windowfunction();
     return 0;
 }
@@ -67,8 +68,7 @@ int main()
 void bgSetup()
 {
 
-    player.playerRec.setSize(Vector2f(50, 50));
-    player.playerRec.setPosition(600, 600);
+    player.playerSprite.setPosition(600, 600);
     ground[0].setSize(Vector2f(9200, 30));
     ground[0].setPosition(-370, 800);
     bgTexture[0].loadFromFile("Level 1-A BG.png");
@@ -91,7 +91,7 @@ void bgSetup()
 
     create(ground, 6, 700, 10, 16830, 40);
 
-    bgTexture[2].loadFromFile(resourcePath()+"Level 1-B-2 BG.png");
+    bgTexture[2].loadFromFile("Level 1-B-2 BG.png");
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
 
@@ -125,21 +125,22 @@ void windowfunction()
     while (window.isOpen())
     {
         clock_pl.restart();
+        cameraView();
         plmovement();
         // lampAnimation();
-        cameraView();
         windowclose();
         window.clear();
         for (int i = 0; i < 5; i++)
             window.draw(bgSprite[i]);
-        window.draw(player.playerRec);
-        for (int i = 0; i < 8; i++)
-            window.draw(ground[i]);
-        for (int i = 0; i < 5; i++)
-            window.draw(wall[i]);;
-        // window.draw(mc.PlayerSprite);
+        window.draw(player.playerSprite);
+        //for (int i = 0; i < 8; i++)
+        //    window.draw(ground[i]);
+        //for (int i = 0; i < 5; i++)
+        //    window.draw(wall[i]);
+
+        window.draw(player.playerSprite);
         window.setView(view);
-        if (player.playerRec.getPosition().x > rightx && bgCounter == 0)
+        if (player.playerSprite.getPosition().x > rightx && bgCounter == 0)
         {
             transition();
             transition_reverse();
@@ -147,7 +148,7 @@ void windowfunction()
             this_thread::sleep_for(chrono::milliseconds(300));
 
         }
-        else if (player.playerRec.getPosition().x > rightx && bgCounter == 1)
+        else if (player.playerSprite.getPosition().x > rightx && bgCounter == 1)
         {
             transition();
             transition_reverse();
@@ -155,7 +156,7 @@ void windowfunction()
             this_thread::sleep_for(chrono::milliseconds(300));
 
         }
-        else if (player.playerRec.getPosition().x > rightx && bgCounter == 2)
+        else if (player.playerSprite.getPosition().x > rightx && bgCounter == 2)
         {
             transition();
             transition_reverse();
@@ -183,36 +184,67 @@ void windowclose()
 void cameraView()
 {
     if (bgCounter == 0) {
-        if (player.playerRec.getPosition().x <= 7740 && player.playerRec.getPosition().x >= 600)
-            view.setCenter(player.playerRec.getPosition());
-        else if (player.playerRec.getPosition().x > 7740) {
-            view.setCenter(7741, player.playerRec.getPosition().y);
-        }
-        else if (player.playerRec.getPosition().x < 600)
-            view.setCenter(599, player.playerRec.getPosition().y);
+        
+            if (player.playerSprite.getPosition().y >= 590) {
+                if (player.playerSprite.getPosition().x <= 7740 && player.playerSprite.getPosition().x >= 600)
+                view.setCenter(player.playerSprite.getPosition().x, player.playerSprite.getPosition().y - 65);
+                else if (player.playerSprite.getPosition().x > 7740) {
+                    view.setCenter(7741, player.playerSprite.getPosition().y - 65);
+                }
+                else if (player.playerSprite.getPosition().x < 600)
+                    view.setCenter(599, player.playerSprite.getPosition().y - 65);
+            }
+            else if (player.playerSprite.getPosition().y < 590) {
+                if (player.playerSprite.getPosition().x <= 7740 && player.playerSprite.getPosition().x >= 600)
+                view.setCenter(player.playerSprite.getPosition().x, 530);
+                else if (player.playerSprite.getPosition().x > 7740) {
+                    view.setCenter(7741, 530);
+                }
+                else if (player.playerSprite.getPosition().x < 600)
+                    view.setCenter(599, 530);
+            }
+        
+
+
+
     }
     else if (bgCounter == 1)
     {
         if (!isMoved)
         {
-            player.playerRec.setPosition(10400, 600);
+            player.playerSprite.setPosition(10400, 600);
             isMoved = true;
         }
-        leftx = 10020;
+        leftx = 10100;
         rightx = 17551;
-        if (player.playerRec.getPosition().x <= 16671 && player.playerRec.getPosition().x >= 11000)
-            view.setCenter(player.playerRec.getPosition());
-        else if (player.playerRec.getPosition().x > 16671) {
-            view.setCenter(16671, player.playerRec.getPosition().y);
+        //14771
+        if (player.playerSprite.getPosition().y >= 700) {
+            if (player.playerSprite.getPosition().x <= 14771 && player.playerSprite.getPosition().x >= 11000)
+                view.setCenter(player.playerSprite.getPosition().x, player.playerSprite.getPosition().y - 180);
+            else if (player.playerSprite.getPosition().x < 11000)
+                view.setCenter(10999, player.playerSprite.getPosition().y - 180);
+
+
         }
-        else if (player.playerRec.getPosition().x < 11000)
-            view.setCenter(10999, player.playerRec.getPosition().y);
+        else if (player.playerSprite.getPosition().y < 700) {
+            if (player.playerSprite.getPosition().x <= 14771 && player.playerSprite.getPosition().x >= 11000)
+                view.setCenter(player.playerSprite.getPosition().x, 530);
+
+            else if (player.playerSprite.getPosition().x < 11000)
+                view.setCenter(10999, 530);
+
+        }
+        if (player.playerSprite.getPosition().x > 14771) {
+            view.setCenter((14771 + rightx) / 2, 110);
+            view.setSize(rightx - 14771, 2087);
+        }
+        else view.setSize(1920, 1080);
     }
     else if (bgCounter == 2)
     {
         if (!ismoved2)
         {
-            player.playerRec.setPosition(18400, 800);
+            player.playerSprite.setPosition(18400, 800);
             ismoved2 = true;
         }
         leftx = 18100;
@@ -224,13 +256,13 @@ void cameraView()
     {
         if (!ismoved3)
         {
-            view.setSize(1920, 1180);
-            player.playerRec.setPosition(20400, 600);
+            view.setSize(1920, 1080);
+            player.playerSprite.setPosition(20400, 600);
             ismoved3 = true;
         }
         leftx = 20000;
         rightx = 24771;
-        view.setCenter(player.playerRec.getPosition());
+        view.setCenter(player.playerSprite.getPosition());
         //if (player.playerRec.getPosition().x <= 14771 + 1900 && player.playerRec.getPosition().x >= 11000)
         //    view.setCenter(player.playerRec.getPosition());
         //else if (player.playerRec.getPosition().x > 14771 + 1900) {
@@ -244,10 +276,9 @@ void cameraView()
 void Playersetup()
 {
 
-    player.playerTex.loadFromFile("Yellow Naruto.png");
+    player.playerTex.loadFromFile("Running Sprite Sheet u.png");
     player.playerSprite.setTexture(player.playerTex);
-    player.playerSprite.setPosition(0, 0);
-    player.playerSprite.setScale(5, 5);
+    player.playerSprite.setTextureRect(IntRect(0, 0, 1324 / 12, 133));
 }
 void transition()
 {
@@ -283,16 +314,16 @@ void transition_reverse()
         }
     }
 }
-bool canMoveRight(RectangleShape object, int xPoisition)
+bool canMoveRight(Sprite object, int xPoisition)
 {
-    if (object.getPosition().x <= xPoisition&&!collisonPl(wall,4))
+    if (object.getPosition().x <= xPoisition && !collisonPl(wall, 4))
         return true;
 
     return false;
 
 }
 
-bool canMoveleft(RectangleShape object, int xPoisition)
+bool canMoveleft(Sprite object, int xPoisition)
 {
     if (object.getPosition().x >= xPoisition)
         return true;
@@ -305,58 +336,42 @@ void plmovement()
 {
 
     //gravity
-   
-    if(collisonPl(wall, 4))
-        playerVelocity.x=0;
-        
-    if(!collisonPl(ground, 7))
-        playerVelocity.y += gravity * dt;
+    player.playerSprite.setOrigin(1324 / 24, 0);
+    if (!canMoveleft(player.playerSprite, leftx) || !canMoveRight(player.playerSprite, rightx)) {
+        playerVelocity.x = 0;
+        playerVelocity.y += gravity * dt * 3;
+    }
+    if (collisonPl(wall, 4))
+        playerVelocity.x = 0;
 
-   else
+    if (!collisonPl(ground, 7))
+        playerVelocity.y += gravity * dt * 3;
+
+    else
     {
         playerVelocity.y = 0;
         if (Keyboard::isKeyPressed(Keyboard::Space))
         {
-            playerVelocity.y = -5;//jump
+            playerVelocity.y = -7;//jump
         }
-        else if (Keyboard::isKeyPressed(Keyboard::Right)&&canMoveRight(player.playerRec, rightx))
+        else if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(player.playerSprite, rightx))
         {
-
-            // player.playerSprite.setScale(1.4, 1.4);
-             //player.playerSprite.setOrigin(0, 0);
-//               if (timer < 0)
-  //             {
-                 //  player.indecator++;
-                   //player.indecator %= 4;
-                   //player.playerSprite.setTextureRect(IntRect(64 * player.indecator, 0, 64, 65));
-    //               timer = delay;
-      //         }
-        //       else
-          //     {
-            //       timer -= dt;
-              // }
-              // playerVelocity.x = 100 * dt;
+            player.playerSprite.setScale(1, 1);
+            player.playerSprite.setTextureRect(IntRect((int)player.plcounter * (1324 / 12), 0, (1324 / 12), 133));
+            player.plcounter += 0.3;
+            if (player.plcounter > 11.9) player.plcounter = 0;
             playerVelocity.x = 15;
             if (Keyboard::isKeyPressed(Keyboard::LShift))
             {
                 playerVelocity.x *= 2;
             }
         }
-        else if (Keyboard::isKeyPressed(Keyboard::Left)&&canMoveleft(player.playerRec, leftx))
+        else if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(player.playerSprite, leftx))
         {
-            //player.playerSprite.setScale(-1.4, 1.4);
-            //player.playerSprite.setOrigin(player.playerSprite.getLocalBounds().width, 0);
-        //    if (timer < 0) {
-                //player.indecator++;
-               // player.indecator %= 4;
-              //  player.playerSprite.setTextureRect(IntRect(64 * player.indecator, 0, 64, 65));
-          //      timer = delay;
-           // }
-           // else {
-             //   timer -= dt;
-            //}
-
-            //playerVelocity.x = -100 * dt;
+            player.playerSprite.setScale(-1, 1);
+            player.playerSprite.setTextureRect(IntRect((int)player.plcounter * (1324 / 12), 0, (1324 / 12), 133));
+            player.plcounter += 0.3;
+            if (player.plcounter > 11.9) player.plcounter = 0;
             playerVelocity.x = -15;
             if (Keyboard::isKeyPressed(Keyboard::LShift))
             {
@@ -369,22 +384,52 @@ void plmovement()
         }
 
     }
- 
-    player.playerRec.move(playerVelocity);
+    if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(player.playerSprite, rightx))
+    {
+        player.playerSprite.setScale(1, 1);
+        player.playerSprite.setTextureRect(IntRect((int)player.plcounter * (1324 / 12), 0, (1324 / 12), 133));
+        player.plcounter += 0.3;
+        if (player.plcounter > 11.9) player.plcounter = 0;
+
+        playerVelocity.x = 15;
+        if (Keyboard::isKeyPressed(Keyboard::LShift))
+        {
+            playerVelocity.x *= 2;
+        }
+    }
+    else if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(player.playerSprite, leftx))
+    {
+        player.playerSprite.setScale(-1, 1);
+        player.playerSprite.setTextureRect(IntRect((int)player.plcounter * (1324 / 12), 0, (1324 / 12), 133));
+        player.plcounter += 0.3;
+        if (player.plcounter > 11.9) player.plcounter = 0;
+        playerVelocity.x = -15;
+        if (Keyboard::isKeyPressed(Keyboard::LShift))
+        {
+            playerVelocity.x *= 2;
+        }
+    }
+    else
+    {
+        playerVelocity.x = 0;
+    }
+
+
+
+    player.playerSprite.move(playerVelocity);
 
 }
-//player.playerSprite.move(playerVelocity);
-bool collisonPl(RectangleShape arr[],int size)
+bool collisonPl(RectangleShape arr[], int size)
 {
-    for(int i=0;i<=size;i++)
+    for (int i = 0; i <= size; i++)
     {
-        if (player.playerRec.getGlobalBounds().intersects(arr[i].getGlobalBounds()) )
+        if (player.playerSprite.getGlobalBounds().intersects(arr[i].getGlobalBounds()))
             return true;
-        
-        
+
+
     }
     return false;
-    
+
 }
 
 
