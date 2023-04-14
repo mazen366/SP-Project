@@ -23,8 +23,7 @@ RectangleShape ground[30], wall[30];
 
 //gravity
 float gravity = 0.7;
-int jumpcnt = 1;
-bool canjump;
+bool canDoubleJump;
 
 //make clock & timer to plmovement
 Clock clock_pl;
@@ -75,7 +74,7 @@ void bgSetup()
     player.playerSprite.setPosition(600, 600);
     ground[0].setSize(Vector2f(9200, 30));
     ground[0].setPosition(-370, 800);
-    bgTexture[0].loadFromFile(+"Level 1-A BG.png");
+    bgTexture[0].loadFromFile("Level 1-A BG.png");
     bgSprite[0].setTexture(bgTexture[0]);
     bgSprite[0].setPosition(-370, -53);
 
@@ -274,14 +273,13 @@ void cameraView()
         }
         leftx = 20000;
         rightx = 24771;
-        view.setCenter(player.playerSprite.getPosition());
-        //if (player.playerRec.getPosition().x <= 14771 + 1900 && player.playerRec.getPosition().x >= 11000)
-        //    view.setCenter(player.playerRec.getPosition());
-        //else if (player.playerRec.getPosition().x > 14771 + 1900) {
-        //    view.setCenter(14771 + 1900, player.playerRec.getPosition().y);
-        //}
-        //else if (player.playerRec.getPosition().x < 11000)
-        //    view.setCenter(10999, player.playerRec.getPosition().y);
+        view.setSize(1920, 1190);
+        if (player.playerSprite.getPosition().x <= 23800&&player.playerSprite.getPosition().x>=20950 )
+            view.setCenter(player.playerSprite.getPosition().x,600);
+        else if (player.playerSprite.getPosition().x > 23800)
+            view.setCenter(23801, 600);
+        else if (player.playerSprite.getPosition().x< 20950)
+            view.setCenter(20949,600);
     }
 
 }
@@ -358,18 +356,18 @@ void plmovement()
 
     if (!collisonPl(ground, 8))
     {
-        if (Keyboard::isKeyPressed(Keyboard::A) && canjump)
+        if (Keyboard::isKeyPressed(Keyboard::A) && canDoubleJump)
         {
             //  cout << "A jump" << endl;
             jump();
-            canjump = 0;
+            canDoubleJump = 0;
         }
         else
         {
 
         }
         player.Velocity.y += gravity * 0.9;
-        onlymove();//function -> movement in air    
+        onlymove();//function -> movement in air
     }
     else
     {
@@ -415,10 +413,10 @@ void move_with_animation()
     if (Keyboard::isKeyPressed(Keyboard::Space))
     {
         jump();
-        canjump = 1;
+        canDoubleJump = 1;
     }
     else
-        canjump = 0;
+        canDoubleJump = 0;
     if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(player.playerSprite, leftx))
     {
 
