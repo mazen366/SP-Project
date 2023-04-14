@@ -21,7 +21,11 @@ RectangleShape ground[30], wall[30];
 
 // plVelocity
 Vector2f playerVelocity = { 0,0 };
+<<<<<<< HEAD
 float gravity = 0.7;
+=======
+float gravity = 2.0;
+>>>>>>> daae8caee1d419b6820ca85b1eee615f01f4197d
 
 
 Texture bgTexture[30];
@@ -186,6 +190,7 @@ void windowclose()
 void cameraView()
 {
     if (bgCounter == 0) {
+<<<<<<< HEAD
 
         if (player.playerSprite.getPosition().y >= 590) {
             if (player.playerSprite.getPosition().x <= 7740 && player.playerSprite.getPosition().x >= 600)
@@ -206,6 +211,28 @@ void cameraView()
                 view.setCenter(599, 530);
         }
 
+=======
+        
+            if (player.playerSprite.getPosition().y >= 590) {
+                if (player.playerSprite.getPosition().x <= 7740 && player.playerSprite.getPosition().x >= 600)
+                view.setCenter(player.playerSprite.getPosition().x, player.playerSprite.getPosition().y - 65);
+                else if (player.playerSprite.getPosition().x > 7740) {
+                    view.setCenter(7741, player.playerSprite.getPosition().y - 65);
+                }
+                else if (player.playerSprite.getPosition().x < 600)
+                    view.setCenter(599, player.playerSprite.getPosition().y - 65);
+            }
+            else if (player.playerSprite.getPosition().y < 590) {
+                if (player.playerSprite.getPosition().x <= 7740 && player.playerSprite.getPosition().x >= 600)
+                view.setCenter(player.playerSprite.getPosition().x, 530);
+                else if (player.playerSprite.getPosition().x > 7740) {
+                    view.setCenter(7741, 530);
+                }
+                else if (player.playerSprite.getPosition().x < 600)
+                    view.setCenter(599, 530);
+            }
+        
+>>>>>>> daae8caee1d419b6820ca85b1eee615f01f4197d
 
 
 
@@ -341,19 +368,28 @@ void plmovement()
     player.playerSprite.setOrigin(1324 / 24, 0);
     if (!canMoveleft(player.playerSprite, leftx) || !canMoveRight(player.playerSprite, rightx)) {
         playerVelocity.x = 0;
+<<<<<<< HEAD
         playerVelocity.y += gravity * 0.9;
+=======
+        playerVelocity.y += gravity * dt * 3;
+>>>>>>> daae8caee1d419b6820ca85b1eee615f01f4197d
     }
     if (collisonPl(wall, 4))
         playerVelocity.x = 0;
 
     if (!collisonPl(ground, 7))
+<<<<<<< HEAD
         playerVelocity.y += gravity * 0.9;
+=======
+        playerVelocity.y += gravity * dt * 3;
+>>>>>>> daae8caee1d419b6820ca85b1eee615f01f4197d
 
     else
     {
         playerVelocity.y = 0;
         if (Keyboard::isKeyPressed(Keyboard::Space))
         {
+<<<<<<< HEAD
             //jump
             playerVelocity.y = -15;
             playerVelocity.x /= 2;
@@ -366,11 +402,23 @@ void plmovement()
             player.plcounter += 0.01 * dt;
             if (player.plcounter > 11.9) player.plcounter = 0;
             playerVelocity.x = 0.17 * dt;
+=======
+            playerVelocity.y = -7;//jump
+        }
+        else if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(player.playerSprite, rightx))
+        {
+            player.playerSprite.setScale(1, 1);
+            player.playerSprite.setTextureRect(IntRect((int)player.plcounter * (1324 / 12), 0, (1324 / 12), 133));
+            player.plcounter += 0.3;
+            if (player.plcounter > 11.9) player.plcounter = 0;
+            playerVelocity.x = 15;
+>>>>>>> daae8caee1d419b6820ca85b1eee615f01f4197d
             if (Keyboard::isKeyPressed(Keyboard::LShift))
             {
                 playerVelocity.x *= 2;
             }
         }
+<<<<<<< HEAD
         else if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(player.playerSprite, rightx))
         {
 
@@ -379,6 +427,15 @@ void plmovement()
             player.plcounter += 0.01 * dt;
             if (player.plcounter > 11.9) player.plcounter = 0;
             playerVelocity.x = 0.17 * dt;
+=======
+        else if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(player.playerSprite, leftx))
+        {
+            player.playerSprite.setScale(-1, 1);
+            player.playerSprite.setTextureRect(IntRect((int)player.plcounter * (1324 / 12), 0, (1324 / 12), 133));
+            player.plcounter += 0.3;
+            if (player.plcounter > 11.9) player.plcounter = 0;
+            playerVelocity.x = -15;
+>>>>>>> daae8caee1d419b6820ca85b1eee615f01f4197d
             if (Keyboard::isKeyPressed(Keyboard::LShift))
             {
                 playerVelocity.x *= 2;
@@ -393,8 +450,17 @@ void plmovement()
     }
     if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(player.playerSprite, rightx))
     {
+<<<<<<< HEAD
 
         playerVelocity.x = 0.17 * dt;
+=======
+        player.playerSprite.setScale(1, 1);
+        player.playerSprite.setTextureRect(IntRect((int)player.plcounter * (1324 / 12), 0, (1324 / 12), 133));
+        player.plcounter += 0.3;
+        if (player.plcounter > 11.9) player.plcounter = 0;
+
+        playerVelocity.x = 15;
+>>>>>>> daae8caee1d419b6820ca85b1eee615f01f4197d
         if (Keyboard::isKeyPressed(Keyboard::LShift))
         {
             playerVelocity.x *= 2;
@@ -402,8 +468,16 @@ void plmovement()
     }
     else if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(player.playerSprite, leftx))
     {
+<<<<<<< HEAD
 
         playerVelocity.x = -0.17 * dt;
+=======
+        player.playerSprite.setScale(-1, 1);
+        player.playerSprite.setTextureRect(IntRect((int)player.plcounter * (1324 / 12), 0, (1324 / 12), 133));
+        player.plcounter += 0.3;
+        if (player.plcounter > 11.9) player.plcounter = 0;
+        playerVelocity.x = -15;
+>>>>>>> daae8caee1d419b6820ca85b1eee615f01f4197d
         if (Keyboard::isKeyPressed(Keyboard::LShift))
         {
             playerVelocity.x *= 2;
