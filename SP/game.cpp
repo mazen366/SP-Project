@@ -15,6 +15,9 @@ struct Player
     Sprite playerSprite;
     // plVelocity
     Vector2f Velocity = { 0,0 };
+    Texture playerHPTex;
+    Sprite playerHPSprite;
+    float health = 100.0;
 };
 Player player;
 
@@ -53,6 +56,7 @@ void windowfunction();
 void cameraView();
 void transition();
 void transition_reverse();
+void transition_pos_check();
 bool canMoveRight(Sprite, int);
 bool canMoveleft(Sprite object, int xPoisition);
 bool collisonPl(RectangleShape[], int);
@@ -137,6 +141,7 @@ void windowfunction()
         clock_pl.restart();
         cameraView();
         plmovement();
+        player.playerHPSprite.setPosition(view.getCenter().x - 960, view.getCenter().y - 500);
         // lampAnimation();
         windowclose();
         window.clear();
@@ -150,35 +155,9 @@ void windowfunction()
        // window.draw(ground[8]);
 
         window.draw(player.playerSprite);
+        window.draw(player.playerHPSprite);
         window.setView(view);
-        if (player.playerSprite.getPosition().x > rightx && bgCounter == 0)
-        {
-            transition();
-            transition_reverse();
-            bgCounter = 1;
-            this_thread::sleep_for(chrono::milliseconds(300));
-
-        }
-        else if (player.playerSprite.getPosition().x > rightx && bgCounter == 1)
-        {
-            transition();
-            transition_reverse();
-            bgCounter = 2;
-            this_thread::sleep_for(chrono::milliseconds(300));
-
-        }
-        else if (player.playerSprite.getPosition().x > rightx && bgCounter == 2)
-        {
-            transition();
-            transition_reverse();
-            bgCounter = 3;
-            this_thread::sleep_for(chrono::milliseconds(300));
-
-        }
-        else
-            window.display();
-
-
+        transition_pos_check();
     }
 }
 void windowclose()
@@ -289,6 +268,9 @@ void Playersetup()
     player.playerTex.loadFromFile("Running Sprite Sheet u.png");
     player.playerSprite.setTexture(player.playerTex);
     player.playerSprite.setTextureRect(IntRect(0, 0, 1324 / 12, 133));
+    player.playerHPTex.loadFromFile("Gradient_Health_Bar.png");
+    player.playerHPSprite.setTexture(player.playerHPTex);
+    player.playerHPSprite.setTextureRect(IntRect(0, 0, 204, 30));
 }
 void transition()
 {
@@ -323,6 +305,35 @@ void transition_reverse()
             }
         }
     }
+}
+void transition_pos_check()
+{
+    if (player.playerSprite.getPosition().x > rightx && bgCounter == 0)
+    {
+        transition();
+        transition_reverse();
+        bgCounter = 1;
+        this_thread::sleep_for(chrono::milliseconds(300));
+
+    }
+    else if (player.playerSprite.getPosition().x > rightx && bgCounter == 1)
+    {
+        transition();
+        transition_reverse();
+        bgCounter = 2;
+        this_thread::sleep_for(chrono::milliseconds(300));
+
+    }
+    else if (player.playerSprite.getPosition().x > rightx && bgCounter == 2)
+    {
+        transition();
+        transition_reverse();
+        bgCounter = 3;
+        this_thread::sleep_for(chrono::milliseconds(300));
+
+    }
+    else
+        window.display();
 }
 bool canMoveRight(Sprite object, int xPoisition)
 {
@@ -461,8 +472,6 @@ bool collisonPl(RectangleShape arr[], int size)
     {
         if (player.playerSprite.getGlobalBounds().intersects(arr[i].getGlobalBounds()))
             return true;
-
-
     }
     return false;
 
