@@ -73,13 +73,13 @@ void bgSetup()
     player.playerSprite.setPosition(600, 600);
     ground[0].setSize(Vector2f(9200, 30));
     ground[0].setPosition(-370, 800);
-    bgTexture[0].loadFromFile("Level 1-A BG.png");
+    bgTexture[0].loadFromFile(resourcePath()+"Level 1-A BG.png");
     bgSprite[0].setTexture(bgTexture[0]);
     bgSprite[0].setPosition(-370, -53);
 
     ground[1].setSize(Vector2f(5939, 30));
     ground[1].setPosition(10000, 907);
-    bgTexture[1].loadFromFile("Level 1-B-1 BG.png");
+    bgTexture[1].loadFromFile(resourcePath()+"Level 1-B-1 BG.png");
     bgSprite[1].setTexture(bgTexture[1]);
     bgSprite[1].setPosition(10000, -50);
 
@@ -93,7 +93,7 @@ void bgSetup()
 
     create(ground, 6, 700, 10, 16830, 40);
 
-    bgTexture[2].loadFromFile("Level 1-B-2 BG.png");
+    bgTexture[2].loadFromFile(resourcePath()+"Level 1-B-2 BG.png");
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
 
@@ -109,16 +109,19 @@ void bgSetup()
     create(wall, 4, 20, 140, 16830, 40);
 
 
-    bgTexture[3].loadFromFile("Level 1-C BG.png");
+    bgTexture[3].loadFromFile(resourcePath()+"Level 1-C BG.png");
     bgSprite[3].setTexture(bgTexture[3]);
     bgSprite[3].setPosition(18000, 0);
 
     ground[7].setSize(Vector2f(1640, 20));
     ground[7].setPosition(18000, 970);
 
-    bgTexture[4].loadFromFile("Level 1-D BG.png");
+    bgTexture[4].loadFromFile(resourcePath()+"Level 1-D BG.png");
     bgSprite[4].setTexture(bgTexture[4]);
     bgSprite[4].setPosition(20000, 0);
+    //4771 × 1192
+    ground[8].setSize(Vector2f(4771,20));
+    ground[8].setPosition(20000, 900);
 
 }
 void windowfunction()
@@ -126,6 +129,8 @@ void windowfunction()
 
     while (window.isOpen())
     {
+        if(Keyboard::isKeyPressed(sf::Keyboard::T))
+            player.playerSprite.setPosition(20000, 800);
         dt = clock_pl.getElapsedTime().asMicroseconds();
         dt /= 750;
         clock_pl.restart();
@@ -141,6 +146,7 @@ void windowfunction()
         //    window.draw(ground[i]);
         //for (int i = 0; i < 5; i++)
         //    window.draw(wall[i]);
+       // window.draw(ground[8]);
 
         window.draw(player.playerSprite);
         window.setView(view);
@@ -280,7 +286,7 @@ void cameraView()
 void Playersetup()
 {
 
-    player.playerTex.loadFromFile("Running Sprite Sheet u.png");
+    player.playerTex.loadFromFile(resourcePath()+"Running Sprite Sheet u.png");
     player.playerSprite.setTexture(player.playerTex);
     player.playerSprite.setTextureRect(IntRect(0, 0, 1324 / 12, 133));
 }
@@ -348,14 +354,14 @@ void plmovement()
     if (collisonPl(wall, 4))
         player.Velocity.x = 0;
 
-    if (!collisonPl(ground, 7))
+    if (!collisonPl(ground, 8))
     {
         player.Velocity.y += gravity * 0.9;
         onlymove();//function -> movement in air
     }
     else
     {
-        move_with_animation();//functoin -> movement & animation 
+        move_with_animation();//functoin -> movement & animation
     }
 
     player.playerSprite.move(player.Velocity);
@@ -367,6 +373,7 @@ void onlymove()
     {
 
         player.Velocity.x = 0.17 * dt;
+        player.playerSprite.setScale(1, 1);
         if (Keyboard::isKeyPressed(Keyboard::LShift))
         {
             player.Velocity.x *= 2;
@@ -376,6 +383,7 @@ void onlymove()
     {
 
         player.Velocity.x = -0.17 * dt;
+        player.playerSprite.setScale(-1, 1);
         if (Keyboard::isKeyPressed(Keyboard::LShift))
         {
             player.Velocity.x *= 2;
