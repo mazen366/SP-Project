@@ -13,7 +13,7 @@ struct Player
     float plcounter = 0;
     Texture playerTex;
     Sprite playerSprite;
-    // plVelocity
+    RectangleShape rec;//make rectangle to better collision
     Vector2f Velocity = { 0,0 };
     Texture playerHPTex;
     Sprite playerHPSprite;
@@ -75,16 +75,15 @@ int main()
 void bgSetup()
 {
 
-    player.playerSprite.setPosition(600, 600);
-    ground[0].setSize(Vector2f(9200, 30));
+    ground[0].setSize(Vector2f(8830, 30));
     ground[0].setPosition(-370, 800);
-    bgTexture[0].loadFromFile(resourcePath()+"Level 1-A BG.png");
+    bgTexture[0].loadFromFile("Level 1-A BG.png");
     bgSprite[0].setTexture(bgTexture[0]);
     bgSprite[0].setPosition(-370, -53);
 
     ground[1].setSize(Vector2f(5939, 30));
     ground[1].setPosition(10000, 907);
-    bgTexture[1].loadFromFile(resourcePath()+"Level 1-B-1 BG.png");
+    bgTexture[1].loadFromFile("Level 1-B-1 BG.png");
     bgSprite[1].setTexture(bgTexture[1]);
     bgSprite[1].setPosition(10000, -50);
 
@@ -98,7 +97,7 @@ void bgSetup()
 
     create(ground, 6, 700, 10, 16830, 40);
 
-    bgTexture[2].loadFromFile(resourcePath()+"Level 1-B-2 BG.png");
+    bgTexture[2].loadFromFile("Level 1-B-2 BG.png");
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
 
@@ -114,14 +113,14 @@ void bgSetup()
     create(wall, 4, 20, 140, 16830, 40);
 
 
-    bgTexture[3].loadFromFile(resourcePath()+"Level 1-C BG.png");
+    bgTexture[3].loadFromFile("Level 1-C BG.png");
     bgSprite[3].setTexture(bgTexture[3]);
     bgSprite[3].setPosition(18000, 0);
 
     ground[7].setSize(Vector2f(1640, 20));
     ground[7].setPosition(18000, 970);
 
-    bgTexture[4].loadFromFile(resourcePath()+"Level 1-D BG.png");
+    bgTexture[4].loadFromFile("Level 1-D BG.png");
     bgSprite[4].setTexture(bgTexture[4]);
     bgSprite[4].setPosition(20000, 0);
     //4771 × 1192
@@ -148,12 +147,12 @@ void windowfunction()
         for (int i = 0; i < 5; i++)
             window.draw(bgSprite[i]);
         window.draw(player.playerSprite);
-        //for (int i = 0; i < 8; i++)
-        //    window.draw(ground[i]);
-        //for (int i = 0; i < 5; i++)
-        //    window.draw(wall[i]);
-       // window.draw(ground[8]);
-
+        /* for (int i = 0; i <= 8; i++)
+             window.draw(ground[i]);
+         for (int i = 0; i <=6; i++)
+             window.draw(wall[i]);
+        */
+        //window.draw(player.rec);
         window.draw(player.playerSprite);
         window.draw(player.playerHPSprite);
         window.setView(view);
@@ -175,13 +174,13 @@ void cameraView()
 {
     if (bgCounter == 0) {
 
-        
+
         if (player.playerSprite.getPosition().x <= 7740 && player.playerSprite.getPosition().x >= 600)
-                view.setCenter(player.playerSprite.getPosition().x, 600);
+            view.setCenter(player.playerSprite.getPosition().x, 600);
         else if (player.playerSprite.getPosition().x > 7740)
-                view.setCenter(7741, 600);
+            view.setCenter(7741, 600);
         else if (player.playerSprite.getPosition().x < 600)
-                view.setCenter(599, 600);
+            view.setCenter(599, 600);
 
 
 
@@ -197,11 +196,11 @@ void cameraView()
         leftx = 10100;
         rightx = 17551;
         //14771
-       
-            if (player.playerSprite.getPosition().x <= 14771 && player.playerSprite.getPosition().x >= 11000)
-                view.setCenter(player.playerSprite.getPosition().x,  600);
-            else if (player.playerSprite.getPosition().x < 11000)
-                view.setCenter(10999, 600);
+
+        if (player.playerSprite.getPosition().x <= 14771 && player.playerSprite.getPosition().x >= 11000)
+            view.setCenter(player.playerSprite.getPosition().x, 600);
+        else if (player.playerSprite.getPosition().x < 11000)
+            view.setCenter(10999, 600);
 
         if (player.playerSprite.getPosition().x > 14771) {
             view.setCenter((14771 + rightx) / 2, 110);
@@ -232,22 +231,27 @@ void cameraView()
         leftx = 20000;
         rightx = 24771;
         view.setSize(1920, 1190);
-        if (player.playerSprite.getPosition().x <= 23800&&player.playerSprite.getPosition().x>=20950 )
-            view.setCenter(player.playerSprite.getPosition().x,600);
+        if (player.playerSprite.getPosition().x <= 23800 && player.playerSprite.getPosition().x >= 20950)
+            view.setCenter(player.playerSprite.getPosition().x, 600);
         else if (player.playerSprite.getPosition().x > 23800)
             view.setCenter(23801, 600);
-        else if (player.playerSprite.getPosition().x< 20950)
-            view.setCenter(20949,600);
+        else if (player.playerSprite.getPosition().x < 20950)
+            view.setCenter(20949, 600);
     }
 
 }
 void Playersetup()
 {
-
-    player.playerTex.loadFromFile(resourcePath()+"Running Sprite Sheet u.png");
+    //sprite
+    player.playerTex.loadFromFile("Running Sprite Sheet u.png");
     player.playerSprite.setTexture(player.playerTex);
     player.playerSprite.setTextureRect(IntRect(0, 0, 1324 / 12, 133));
-    player.playerHPTex.loadFromFile(resourcePath()+"Gradient_Health_Bar.png");
+    player.playerSprite.setPosition(600, 600);
+    //rectangle
+    player.rec.setPosition(player.playerSprite.getPosition().x - 50, player.playerSprite.getPosition().y);
+    player.rec.setSize(Vector2f(75, 130));
+    //HP
+    player.playerHPTex.loadFromFile("Gradient_Health_Bar.png");
     player.playerHPSprite.setTexture(player.playerHPTex);
     player.playerHPSprite.setTextureRect(IntRect(0, 0, 204, 30));
 }
@@ -366,7 +370,7 @@ void plmovement()
     }
 
     player.playerSprite.move(player.Velocity);
-
+    player.rec.setPosition(player.playerSprite.getPosition().x - 50, player.playerSprite.getPosition().y);
 }
 void onlymove()
 {
