@@ -46,12 +46,12 @@ View view(Vector2f(0, 0), Vector2f(1920, 1080));
 //lvl 1-b-2 animation Exit lamp
 Texture  ExitlampTex;
 Sprite  Exitlamp;
-float  ExitLampIndecator = 0;
 
 //Lvl 1-C animation Fire Torches
 Texture FireTrochestex;
 Sprite FireTroches;
-float FireTrochesIndecator = 0;
+
+float animiindecator[30];
 
 //lvl 1 FG
 Texture lvl1FGtex[30];
@@ -59,6 +59,7 @@ Sprite Lvl1FG[30];
 
 // DECLRATIONS
 void BGanimation();
+void animation(Sprite& s, int maxframe, float x, float y, int index);
 void plmovement();
 void onlymove();
 void jump();
@@ -88,62 +89,74 @@ int main()
 //DEFINITIONS
 void bgSetup()
 {
-    bgTexture[0].loadFromFile(resourcePath()+"Level 1-A BG.png");
+    // LEVEL 1 A SET UP
+    bgTexture[0].loadFromFile("Level 1-A BG.png");
     bgSprite[0].setTexture(bgTexture[0]);
     bgSprite[0].setPosition(-370, -53);
     create(ground, 0, 8830, 30, -370, 800);
     //lvl 1 ->A FG
-    lvl1FGtex[0].loadFromFile(resourcePath()+"Level 1-A FG.png");
+    lvl1FGtex[0].loadFromFile("Level 1-A FG.png");
     Lvl1FG[0].setTexture(lvl1FGtex[0]);
     Lvl1FG[0].setPosition(-370, -53);
 
-    bgTexture[1].loadFromFile(resourcePath()+"Level 1-B-1 BG.png");
+    // LEVEL 1 B->1 SET UP
+    bgTexture[1].loadFromFile("Level 1-B-1 BG.png");
     bgSprite[1].setTexture(bgTexture[1]);
     bgSprite[1].setPosition(10000, -50);
-    create(ground, 1, 5939,30,10000,907);
+    create(ground, 1, 5939, 30, 10000, 907);
     create(ground, 2, 300, 18, 15930, 840);
     create(ground, 3, 150, 10, 16230, 625);
     create(ground, 4, 160, 10, 16370, 390);
     create(ground, 5, 325, 18, 16520, 173);
     create(ground, 6, 700, 10, 16830, 40);
 
-    bgTexture[2].loadFromFile(resourcePath()+"Level 1-B-2 BG.png");
+    // LEVEL 1 B->2 SET UP
+    bgTexture[2].loadFromFile("Level 1-B-2 BG.png");
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
 
     //animation lv1-B-2(Exit lamp)
-    ExitlampTex.loadFromFile(resourcePath()+"Level 1-B-2 Exit Lamp.png");
+    ExitlampTex.loadFromFile("Level 1-B-2 Exit Lamp.png");
     Exitlamp.setTexture(ExitlampTex);
     Exitlamp.setTextureRect(IntRect(0, 0, 17328 / 6, 2087));
     Exitlamp.setPosition(14771, -940);
+
+    //FG Lv1-B-2
+    lvl1FGtex[2].loadFromFile("Level 1-B-2 FG.png");
+    Lvl1FG[2].setTexture(lvl1FGtex[2]);
+    Lvl1FG[2].setPosition(14771, -940);
+
     create(wall, 0, 20, 80, 15930, 860);
     create(wall, 1, 20, 220, 16230, 635);
     create(wall, 2, 20, 220, 16370, 404);
     create(wall, 3, 20, 200, 16520, 193);
     create(wall, 4, 20, 140, 16830, 40);
 
-    bgTexture[3].loadFromFile(resourcePath()+"Level 1-C BG.png");
+    //LEVEL 1 C SET UP   
+    bgTexture[3].loadFromFile("Level 1-C BG.png");
     bgSprite[3].setTexture(bgTexture[3]);
     bgSprite[3].setPosition(18000, 0);
 
     //fire troches lv1 ->c
-    FireTrochestex.loadFromFile(resourcePath()+"Level 1-C Fire Torches.png");
+    FireTrochestex.loadFromFile("Level 1-C Fire Torches.png");
     FireTroches.setTexture(FireTrochestex);
     FireTroches.setTextureRect(IntRect(0, 0, 13120 / 8, 1192));
     FireTroches.setPosition(18000, 0);
+
     //lvl 1 ->c FG
-    lvl1FGtex[3].loadFromFile(resourcePath()+"Level 1-C FG.png");
+    lvl1FGtex[3].loadFromFile("Level 1-C FG.png");
     Lvl1FG[3].setTexture(lvl1FGtex[3]);
     Lvl1FG[3].setPosition(18000, 0);
-    create(ground,7,1640,20,18000,970);
+    create(ground, 7, 1640, 20, 18000, 970);
 
-    bgTexture[4].loadFromFile(resourcePath()+"Level 1-D BG.png");
+    //LEVEL 1 D SET UP
+    bgTexture[4].loadFromFile("Level 1-D BG.png");
     bgSprite[4].setTexture(bgTexture[4]);
     bgSprite[4].setPosition(20000, 0);
-    create(ground, 8,1050, 20, 20000, 900);
-    create(ground, 9,1200, 20, 21700, 900);
-    create(ground, 10,750, 20, 23120, 900);
-    create(ground, 11,800, 20, 24150, 900);
+    create(ground, 8, 1050, 20, 20000, 900);
+    create(ground, 9, 1200, 20, 21700, 900);
+    create(ground, 10, 750, 20, 23120, 900);
+    create(ground, 11, 800, 20, 24150, 900);
 }
 void windowfunction()
 {
@@ -163,11 +176,14 @@ void windowfunction()
         window.clear();
         for (int i = 0; i < 5; i++)
             window.draw(bgSprite[i]);
-     //   window.draw(Exitlamp);
+        //   window.draw(Exitlamp);
         window.draw(FireTroches);
         window.draw(player.playerSprite);
-        window.draw(Lvl1FG[0]);
-        window.draw(Lvl1FG[3]);
+        for (int i = 0; i < 4; i++)
+        {
+            if (i == 1)continue;
+            window.draw(Lvl1FG[i]);
+        }
         window.draw(player.playerHPSprite);
         window.setView(view);
         transition_pos_check();
@@ -175,18 +191,8 @@ void windowfunction()
 }
 void BGanimation()
 {
-    //Exite lamp;
-    ExitLampIndecator += 0.17 * dt;
-    if (ExitLampIndecator > 6)
-        ExitLampIndecator = 0;
-    Exitlamp.setTextureRect(IntRect(int(ExitLampIndecator) * (17328 / 6), 0, 17328 / 6, 2087));
-
-    //Fire Troches
-    FireTroches.setTextureRect(IntRect((int)FireTrochesIndecator * 13120 / 8, 0, 13120 / 8, 1192));
-    FireTrochesIndecator += 0.01 * dt;
-    if (FireTrochesIndecator > 8)
-        FireTrochesIndecator = 0;
-
+    animation(Exitlamp, 6, 17328 / 6, 2087, 0);
+    animation(FireTroches, 8, 13120 / 8, 1192, 1);
 }
 void windowclose()
 {
@@ -223,7 +229,7 @@ void cameraView()
             isMoved = true;
         }
         leftx = 10100;
-        rightx = 17551;
+        rightx = 17651;
         //14771
 
         if (player.playerSprite.getPosition().x <= 14771 && player.playerSprite.getPosition().x >= 11000)
@@ -272,7 +278,7 @@ void cameraView()
 void Playersetup()
 {
     //sprite
-    player.playerTex.loadFromFile(resourcePath()+"Running Sprite Sheet u.png");
+    player.playerTex.loadFromFile("Running Sprite Sheet u.png");
     player.playerSprite.setTexture(player.playerTex);
     player.playerSprite.setTextureRect(IntRect(0, 0, 1324 / 12, 133));
     player.playerSprite.setPosition(600, 600);
@@ -280,7 +286,7 @@ void Playersetup()
     player.rec.setPosition(player.playerSprite.getPosition().x - 50, player.playerSprite.getPosition().y);
     player.rec.setSize(Vector2f(75, 130));
     //HP
-    player.playerHPTex.loadFromFile(resourcePath()+"Gradient_Health_Bar.png");
+    player.playerHPTex.loadFromFile("Gradient_Health_Bar.png");
     player.playerHPSprite.setTexture(player.playerHPTex);
     player.playerHPSprite.setTextureRect(IntRect(0, 0, 204, 30));
 }
@@ -490,7 +496,13 @@ bool collisonPl(RectangleShape arr[], int size)
     return false;
 
 }
-
+void animation(Sprite& s, int maxframe, float x, float y, int index)
+{
+    animiindecator[index] += 0.01 * dt;
+    if (animiindecator[index] > maxframe)
+        animiindecator[index] = 0;
+    s.setTextureRect(IntRect(int(animiindecator[index]) * x, 0, x, y));
+}
 
 void create(RectangleShape arr[], int index, int sizeX, int sizeY, int xPosition, int yPostions)
 {
