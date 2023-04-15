@@ -53,6 +53,10 @@ Texture FireTrochestex;
 Sprite FireTroches;
 float FireTrochesIndecator = 0;
 
+//lvl 1 FG
+Texture lvl1FGtex[30];
+Sprite Lvl1FG[30];
+
 // DECLRATIONS
 void BGanimation();
 void plmovement();
@@ -90,6 +94,10 @@ void bgSetup()
     bgTexture[0].loadFromFile("Level 1-A BG.png");
     bgSprite[0].setTexture(bgTexture[0]);
     bgSprite[0].setPosition(-370, -53);
+    //lvl 1 ->A FG
+    lvl1FGtex[0].loadFromFile("Level 1-A FG.png");
+    Lvl1FG[0].setTexture(lvl1FGtex[0]);
+    Lvl1FG[0].setPosition(-370, -53);
 
     ground[1].setSize(Vector2f(5939, 30));
     ground[1].setPosition(10000, 907);
@@ -132,10 +140,15 @@ void bgSetup()
     bgSprite[3].setTexture(bgTexture[3]);
     bgSprite[3].setPosition(18000, 0);
 
+    //fire troches lv1 ->c
     FireTrochestex.loadFromFile("Level 1-C Fire Torches.png");
     FireTroches.setTexture(FireTrochestex);
     FireTroches.setTextureRect(IntRect(0, 0, 13120 / 8, 1192));
     FireTroches.setPosition(18000, 0);
+    //lvl 1 ->c FG
+    lvl1FGtex[3].loadFromFile("Level 1-C FG.png");
+    Lvl1FG[3].setTexture(lvl1FGtex[3]);
+    Lvl1FG[3].setPosition(18000, 0);
 
     ground[7].setSize(Vector2f(1640, 20));
     ground[7].setPosition(18000, 970);
@@ -168,6 +181,7 @@ void windowfunction()
             window.draw(bgSprite[i]);
         //window.draw(Exitlamp);
         window.draw(FireTroches);
+
         window.draw(player.playerSprite);
         /* for (int i = 0; i <= 8; i++)
              window.draw(ground[i]);
@@ -176,6 +190,8 @@ void windowfunction()
         */
         //window.draw(player.rec);
         window.draw(player.playerSprite);
+        window.draw(Lvl1FG[0]);
+        window.draw(Lvl1FG[3]);
         window.draw(player.playerHPSprite);
         window.setView(view);
         transition_pos_check();
@@ -252,8 +268,8 @@ void cameraView()
             player.playerSprite.setPosition(18400, 800);
             ismoved2 = true;
         }
-        leftx = 18100;
-        rightx = 19500;
+        leftx = 18030;
+        rightx = 19650;
         view.setCenter(18820, 596);
         view.setSize(1600, 1080);
     }
