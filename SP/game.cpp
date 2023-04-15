@@ -88,78 +88,62 @@ int main()
 //DEFINITIONS
 void bgSetup()
 {
-
-    ground[0].setSize(Vector2f(8830, 30));
-    ground[0].setPosition(-370, 800);
-    bgTexture[0].loadFromFile("Level 1-A BG.png");
+    bgTexture[0].loadFromFile(resourcePath()+"Level 1-A BG.png");
     bgSprite[0].setTexture(bgTexture[0]);
     bgSprite[0].setPosition(-370, -53);
+    create(ground, 0, 8830, 30, -370, 800);
     //lvl 1 ->A FG
-    lvl1FGtex[0].loadFromFile("Level 1-A FG.png");
+    lvl1FGtex[0].loadFromFile(resourcePath()+"Level 1-A FG.png");
     Lvl1FG[0].setTexture(lvl1FGtex[0]);
     Lvl1FG[0].setPosition(-370, -53);
 
-    ground[1].setSize(Vector2f(5939, 30));
-    ground[1].setPosition(10000, 907);
-    bgTexture[1].loadFromFile("Level 1-B-1 BG.png");
+    bgTexture[1].loadFromFile(resourcePath()+"Level 1-B-1 BG.png");
     bgSprite[1].setTexture(bgTexture[1]);
     bgSprite[1].setPosition(10000, -50);
-
+    create(ground, 1, 5939,30,10000,907);
     create(ground, 2, 300, 18, 15930, 840);
-
     create(ground, 3, 150, 10, 16230, 625);
-
     create(ground, 4, 160, 10, 16370, 390);
-
     create(ground, 5, 325, 18, 16520, 173);
-
     create(ground, 6, 700, 10, 16830, 40);
 
-    bgTexture[2].loadFromFile("Level 1-B-2 BG.png");
+    bgTexture[2].loadFromFile(resourcePath()+"Level 1-B-2 BG.png");
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
 
     //animation lv1-B-2(Exit lamp)
-    ExitlampTex.loadFromFile("Level 1-B-2 Exit Lamp.png");
+    ExitlampTex.loadFromFile(resourcePath()+"Level 1-B-2 Exit Lamp.png");
     Exitlamp.setTexture(ExitlampTex);
     Exitlamp.setTextureRect(IntRect(0, 0, 17328 / 6, 2087));
     Exitlamp.setPosition(14771, -940);
-
     create(wall, 0, 20, 80, 15930, 860);
-
     create(wall, 1, 20, 220, 16230, 635);
-
     create(wall, 2, 20, 220, 16370, 404);
-
     create(wall, 3, 20, 200, 16520, 193);
-
     create(wall, 4, 20, 140, 16830, 40);
 
-
-    bgTexture[3].loadFromFile("Level 1-C BG.png");
+    bgTexture[3].loadFromFile(resourcePath()+"Level 1-C BG.png");
     bgSprite[3].setTexture(bgTexture[3]);
     bgSprite[3].setPosition(18000, 0);
 
     //fire troches lv1 ->c
-    FireTrochestex.loadFromFile("Level 1-C Fire Torches.png");
+    FireTrochestex.loadFromFile(resourcePath()+"Level 1-C Fire Torches.png");
     FireTroches.setTexture(FireTrochestex);
     FireTroches.setTextureRect(IntRect(0, 0, 13120 / 8, 1192));
     FireTroches.setPosition(18000, 0);
     //lvl 1 ->c FG
-    lvl1FGtex[3].loadFromFile("Level 1-C FG.png");
+    lvl1FGtex[3].loadFromFile(resourcePath()+"Level 1-C FG.png");
     Lvl1FG[3].setTexture(lvl1FGtex[3]);
     Lvl1FG[3].setPosition(18000, 0);
+    create(ground,7,1640,20,18000,970);
 
-    ground[7].setSize(Vector2f(1640, 20));
-    ground[7].setPosition(18000, 970);
-
-    bgTexture[4].loadFromFile("Level 1-D BG.png");
+    bgTexture[4].loadFromFile(resourcePath()+"Level 1-D BG.png");
     bgSprite[4].setTexture(bgTexture[4]);
     bgSprite[4].setPosition(20000, 0);
-    //4771 × 1192
-    ground[8].setSize(Vector2f(4771, 20));
-    ground[8].setPosition(20000, 900);
-
+    create(ground, 8,1050, 20, 20000, 900);
+    create(ground, 9,1200, 20, 21700, 900);
+    create(ground, 10,750, 20, 23120, 900);
+    create(ground, 11,800, 20, 24150, 900);
 }
 void windowfunction()
 {
@@ -179,16 +163,8 @@ void windowfunction()
         window.clear();
         for (int i = 0; i < 5; i++)
             window.draw(bgSprite[i]);
-        //window.draw(Exitlamp);
+     //   window.draw(Exitlamp);
         window.draw(FireTroches);
-
-        window.draw(player.playerSprite);
-        /* for (int i = 0; i <= 8; i++)
-             window.draw(ground[i]);
-         for (int i = 0; i <=6; i++)
-             window.draw(wall[i]);
-        */
-        //window.draw(player.rec);
         window.draw(player.playerSprite);
         window.draw(Lvl1FG[0]);
         window.draw(Lvl1FG[3]);
@@ -296,7 +272,7 @@ void cameraView()
 void Playersetup()
 {
     //sprite
-    player.playerTex.loadFromFile("Running Sprite Sheet u.png");
+    player.playerTex.loadFromFile(resourcePath()+"Running Sprite Sheet u.png");
     player.playerSprite.setTexture(player.playerTex);
     player.playerSprite.setTextureRect(IntRect(0, 0, 1324 / 12, 133));
     player.playerSprite.setPosition(600, 600);
@@ -304,7 +280,7 @@ void Playersetup()
     player.rec.setPosition(player.playerSprite.getPosition().x - 50, player.playerSprite.getPosition().y);
     player.rec.setSize(Vector2f(75, 130));
     //HP
-    player.playerHPTex.loadFromFile("Gradient_Health_Bar.png");
+    player.playerHPTex.loadFromFile(resourcePath()+"Gradient_Health_Bar.png");
     player.playerHPSprite.setTexture(player.playerHPTex);
     player.playerHPSprite.setTextureRect(IntRect(0, 0, 204, 30));
 }
@@ -401,7 +377,7 @@ void plmovement()
     if (collisonPl(wall, 4))
         player.Velocity.x = 0;
 
-    if (!collisonPl(ground, 8))
+    if (!collisonPl(ground, 12))
     {
         if (Keyboard::isKeyPressed(Keyboard::A) && canDoubleJump)
         {
