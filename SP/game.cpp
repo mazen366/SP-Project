@@ -43,8 +43,18 @@ bool isBlackscreen = false, isMoved = false, ismoved2 = 0, ismoved3 = 0;
 Clock blackscreenTimer;
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
 
+//lvl 1-b-2 animation Exit lamp
+Texture  ExitlampTex;
+Sprite  Exitlamp;
+float  ExitLampIndecator = 0;
+
+//Lvl 1-C animation Fire Torches
+Texture FireTrochestex;
+Sprite FireTroches;
+float FireTrochesIndecator = 0;
 
 // DECLRATIONS
+void BGanimation();
 void plmovement();
 void onlymove();
 void jump();
@@ -101,6 +111,11 @@ void bgSetup()
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
 
+    //animation lv1-B-2(Exit lamp)
+    ExitlampTex.loadFromFile("Level 1-B-2 Exit Lamp.png");
+    Exitlamp.setTexture(ExitlampTex);
+    Exitlamp.setTextureRect(IntRect(0, 0, 17328 / 6, 2087));
+    Exitlamp.setPosition(14771, -940);
 
     create(wall, 0, 20, 80, 15930, 860);
 
@@ -116,6 +131,11 @@ void bgSetup()
     bgTexture[3].loadFromFile("Level 1-C BG.png");
     bgSprite[3].setTexture(bgTexture[3]);
     bgSprite[3].setPosition(18000, 0);
+
+    FireTrochestex.loadFromFile("Level 1-C Fire Torches.png");
+    FireTroches.setTexture(FireTrochestex);
+    FireTroches.setTextureRect(IntRect(0, 0, 13120 / 8, 1192));
+    FireTroches.setPosition(18000, 0);
 
     ground[7].setSize(Vector2f(1640, 20));
     ground[7].setPosition(18000, 970);
@@ -141,11 +161,13 @@ void windowfunction()
         cameraView();
         plmovement();
         player.playerHPSprite.setPosition(view.getCenter().x - 960, view.getCenter().y - 500);
-        // lampAnimation();
+        BGanimation();
         windowclose();
         window.clear();
         for (int i = 0; i < 5; i++)
             window.draw(bgSprite[i]);
+        //window.draw(Exitlamp);
+        window.draw(FireTroches);
         window.draw(player.playerSprite);
         /* for (int i = 0; i <= 8; i++)
              window.draw(ground[i]);
@@ -158,6 +180,21 @@ void windowfunction()
         window.setView(view);
         transition_pos_check();
     }
+}
+void BGanimation()
+{
+    //Exite lamp;
+    ExitLampIndecator += 0.17 * dt;
+    if (ExitLampIndecator > 6)
+        ExitLampIndecator = 0;
+    Exitlamp.setTextureRect(IntRect(int(ExitLampIndecator) * (17328 / 6), 0, 17328 / 6, 2087));
+
+    //Fire Troches
+    FireTroches.setTextureRect(IntRect((int)FireTrochesIndecator * 13120 / 8, 0, 13120 / 8, 1192));
+    FireTrochesIndecator += 0.01 * dt;
+    if (FireTrochesIndecator > 8)
+        FireTrochesIndecator = 0;
+
 }
 void windowclose()
 {
@@ -407,12 +444,14 @@ void move_with_animation()
     if (Keyboard::isKeyPressed(Keyboard::Space))
     {
         jump();
+
         canDoubleJump = 1;
     }
     else
         canDoubleJump = 0;
     if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(player.playerSprite, leftx))
     {
+
 
         player.playerSprite.setScale(-1, 1);
         player.playerSprite.setTextureRect(IntRect((int)player.plcounter * (1324 / 12), 0, (1324 / 12), 133));
