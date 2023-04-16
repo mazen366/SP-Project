@@ -18,8 +18,21 @@ struct Player
     Texture playerHPTex;
     Sprite playerHPSprite;
     float health = 100.0;
+    float cooldown = 0;
+    bool canshoot = 0;
 };
 Player player;
+// shooting
+struct Pistol
+{
+    float speed;
+    RectangleShape coll; // hitbox 
+    Texture pistol_Ammo_Tex;
+    Sprite pistol_Ammo_Sprite;
+    float cooldown;
+};
+Pistol pistol;
+
 
 //ground & wall
 RectangleShape ground[30], wall[30];
@@ -64,6 +77,9 @@ void plmovement();
 void onlymove();
 void jump();
 void move_with_animation();
+void Pistolsetup(); // pistol setup
+void moviebullet(Player& ,Pistol&); // moving bullets
+void cooldown(Player&); // cooldown for shooting
 void Playersetup();
 void bgSetup();
 void windowclose();
@@ -82,11 +98,13 @@ int main()
 {
     window.setFramerateLimit(60);
     bgSetup();
+    Pistolsetup();
     Playersetup();
     windowfunction();
     return 0;
 }
 //DEFINITIONS
+
 void bgSetup()
 {
     // LEVEL 1 A SET UP
@@ -163,6 +181,18 @@ void windowfunction()
 
     while (window.isOpen())
     {
+
+        //shooting
+        moviebullet(player,pistol);
+        cooldown(player);
+        if (Keyboard::isKeyPressed(Keyboard::J))
+        {
+            player.cooldown = 30;
+            player.canshoot = -1;
+            pistol.coll.setPosition(Vector2f(player.playerSprite.getPosition().x+30, player.playerSprite.getPosition().y+50));
+
+        }
+
         if (Keyboard::isKeyPressed(sf::Keyboard::T))
             player.playerSprite.setPosition(20000, 800);
         dt = clock_pl.getElapsedTime().asMicroseconds();
@@ -185,6 +215,7 @@ void windowfunction()
             window.draw(Lvl1FG[i]);
         }
         window.draw(player.playerHPSprite);
+        window.draw(pistol.coll);
         window.setView(view);
         transition_pos_check();
     }
@@ -290,6 +321,31 @@ void Playersetup()
     player.playerHPSprite.setTexture(player.playerHPTex);
     player.playerHPSprite.setTextureRect(IntRect(0, 0, 204, 30));
 }
+void Pistolsetup()
+{
+    pistol.coll.setSize(Vector2f(15, 10.5));
+    pistol.speed = 25;
+    pistol.cooldown = 30;
+}
+void cooldown(Player& player)
+{
+    if (player.cooldown > 0)
+    {
+        player.cooldown -= -0.00001;
+    }
+    if (player.cooldown <= 0)
+    {
+        player.canshoot = 1;
+    }
+}
+void moviebullet(Player& player,Pistol& pistol)
+{
+    
+   
+        pistol.coll.move(Vector2f(pistol.speed, 0));
+
+}
+
 void transition()
 {
     Clock t1;
