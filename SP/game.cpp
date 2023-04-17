@@ -18,8 +18,11 @@ struct Player
     Texture playerHPTex;
     Sprite playerHPSprite;
     float health = 100.0;
+    // shooting
+    int arr[5] = {};
     float cooldown = 0;
     bool canshoot = 0;
+    int last_key = 0;
 };
 Player player;
 // shooting
@@ -183,8 +186,16 @@ void windowfunction()
     {
 
         //shooting
-        moviebullet(player,pistol);
+        moviebullet(player, pistol);
         cooldown(player);
+
+        if (Keyboard::isKeyPressed(Keyboard::R))
+        {
+            for (int i = 0; i < 5;i++)
+            {
+                player.arr[i] == 1;
+            }
+        }
         if (Keyboard::isKeyPressed(Keyboard::J))
         {
             player.cooldown = 30;
@@ -325,13 +336,13 @@ void Pistolsetup()
 {
     pistol.coll.setSize(Vector2f(15, 10.5));
     pistol.speed = 25;
-    pistol.cooldown = 30;
+    pistol.cooldown = 3000;
 }
 void cooldown(Player& player)
 {
     if (player.cooldown > 0)
     {
-        player.cooldown -= -0.00001;
+        player.cooldown -= 0.0000000001;
     }
     if (player.cooldown <= 0)
     {
@@ -340,12 +351,17 @@ void cooldown(Player& player)
 }
 void moviebullet(Player& player,Pistol& pistol)
 {
-    
-   
+    if (player.last_key == 1)
+    {
+        pistol.coll.move(Vector2f(-1 * pistol.speed, 0));
+    }
+    else
+    {
         pistol.coll.move(Vector2f(pistol.speed, 0));
+    }
+   
 
 }
-
 void transition()
 {
     Clock t1;
@@ -506,7 +522,7 @@ void move_with_animation()
     if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(player.playerSprite, leftx))
     {
 
-
+        player.last_key = 1;
         player.playerSprite.setScale(-1, 1);
         player.playerSprite.setTextureRect(IntRect((int)player.plcounter * (1324 / 12), 0, (1324 / 12), 133));
         player.plcounter += 0.01 * dt;
@@ -519,7 +535,7 @@ void move_with_animation()
     }
     else if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(player.playerSprite, rightx))
     {
-
+        player.last_key = 2;
         player.playerSprite.setScale(1, 1);
         player.playerSprite.setTextureRect(IntRect((int)player.plcounter * (1324 / 12), 0, (1324 / 12), 133));
         player.plcounter += 0.01 * dt;
