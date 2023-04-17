@@ -44,7 +44,7 @@ struct Pistol
 struct Menu
 {
     int selected = 1;
-    bool start_selected = false, options_selected = false, exit_selected = false;
+    bool start_selected = false, options_selected = false;
 
     void move_up()
     {
@@ -141,14 +141,14 @@ void Menu()
 {
     while (window.isOpen())
     {
-        cout << menu.selected << endl;
-        if (menu.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter) || menu.start_selected)
+        //cout << menu.selected << endl;
+        if (menu.selected == START && Keyboard::isKeyPressed(Keyboard::Enter) || menu.start_selected)
         {
             menu.start_selected = true;
             windowfunction();
         }
 
-        if (menu.selected == 3 && Keyboard::isKeyPressed(Keyboard::Enter))
+        if (menu.selected == EXIT && Keyboard::isKeyPressed(Keyboard::Enter))
             window.close();
 
         if (Keyboard::isKeyPressed(Keyboard::Up))
@@ -171,7 +171,6 @@ void Menu()
             {
                 if (timer1.getElapsedTime().asMilliseconds() > 300)
                 {
-
                     menu.move_down();
                     break;
                 }
