@@ -83,7 +83,7 @@ void onlymove(Sprite& s);
 void jump();
 void move_with_animation(Sprite& s, float maxframe, float x, float y, float delay, int index);
 void Pistolsetup(); // pistol setup
-void moviebullet(Player& ,Pistol&); // moving bullets
+void moviebullet(Player&, Pistol&); // moving bullets
 void cooldown(Player&); // cooldown for shooting
 void Playersetup();
 void bgSetup();
@@ -186,6 +186,10 @@ void windowfunction()
 
     while (window.isOpen())
     {
+        //delta time
+        dt = clock_pl.getElapsedTime().asMicroseconds();
+        dt /= 750;
+        clock_pl.restart();
 
         //shooting
         moviebullet(player, pistol);
@@ -193,7 +197,7 @@ void windowfunction()
 
         if (Keyboard::isKeyPressed(Keyboard::R))
         {
-            for (int i = 0; i < 5;i++)
+            for (int i = 0; i < 5; i++)
             {
                 player.arr[i] == 1;
             }
@@ -202,18 +206,16 @@ void windowfunction()
         {
             player.cooldown = 30;
             player.canshoot = -1;
-            pistol.coll.setPosition(Vector2f(player.upperbodySprite.getPosition().x+30, player.upperbodySprite.getPosition().y+50));
+            pistol.coll.setPosition(Vector2f(player.upperbodySprite.getPosition().x + 30, player.upperbodySprite.getPosition().y + 50));
 
         }
 
         if (Keyboard::isKeyPressed(sf::Keyboard::T))
             player.upperbodySprite.setPosition(20000, 800);
-        dt = clock_pl.getElapsedTime().asMicroseconds();
-        dt /= 750;
-        clock_pl.restart();
+
         cameraView();
-        plmovement(player.lowerbodySprite, 11.9, 408 / 12, 41,0.01, 2);
-       // plmovement(player.upperbodySprite, 11.9, 408/12, 41, 2);
+        plmovement(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
+        // plmovement(player.upperbodySprite, 11.9, 408/12, 41, 2);
         player.playerHPSprite.setPosition(view.getCenter().x - 960, view.getCenter().y - 500);
         BGanimation();
         windowclose();
@@ -222,13 +224,13 @@ void windowfunction()
             window.draw(bgSprite[i]);
         //   window.draw(Exitlamp);
         window.draw(FireTroches);
-        window.draw(player.rec);
+        //window.draw(player.rec);
         window.draw(player.lowerbodySprite);
         window.draw(player.upperbodySprite);
-        for (int i = 0; i < 7; i++)
+        /*for (int i = 0; i < 7; i++)
             window.draw(ground[i]);
         for (int i = 0; i < 5; i++)
-            window.draw(wall[i]);
+            window.draw(wall[i]);*/
 
         for (int i = 0; i < 4; i++)
         {
@@ -243,8 +245,8 @@ void windowfunction()
 }
 void BGanimation()
 {
-    animation(Exitlamp, 6, 17328 / 6, 2087,0.01, 0);
-    animation(FireTroches, 8, 13120 / 8, 1192,0.01, 1);
+    animation(Exitlamp, 6, 17328 / 6, 2087, 0.01, 0);
+    animation(FireTroches, 8, 13120 / 8, 1192, 0.01, 1);
 }
 void windowclose()
 {
@@ -268,9 +270,6 @@ void cameraView()
             view.setCenter(7741, 600);
         else if (player.upperbodySprite.getPosition().x < 600)
             view.setCenter(599, 600);
-
-
-
 
     }
     else if (bgCounter == 1)
@@ -369,7 +368,7 @@ void cooldown(Player& player)
         player.canshoot = 1;
     }
 }
-void moviebullet(Player& player,Pistol& pistol)
+void moviebullet(Player& player, Pistol& pistol)
 {
     if (player.last_key == 1)
     {
@@ -379,7 +378,7 @@ void moviebullet(Player& player,Pistol& pistol)
     {
         pistol.coll.move(Vector2f(pistol.speed, 0));
     }
-   
+
 
 }
 void transition()
@@ -466,7 +465,7 @@ bool canMoveleft(Sprite object, int xPoisition)
 void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int index)
 {
     //gravity
-    s.setOrigin(x/2, 0);
+    s.setOrigin(x / 2, 0);
     player.upperbodySprite.setOrigin(x / 2, 0);
     if (!canMoveleft(s, leftx) || !canMoveRight(s, rightx)) {
         player.Velocity.x = 0;
@@ -491,10 +490,10 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
     else
     {
 
-        move_with_animation(s,maxframe,x,y,delay,index);//functoin -> movement & animation
-        move_with_animation(player.upperbodySprite, maxframe, x, y,delay, index);
+        move_with_animation(s, maxframe, x, y, delay, index);//functoin -> movement & animation
+        move_with_animation(player.upperbodySprite, maxframe, x, y, delay, index);
     }
-    
+
     s.move(player.Velocity);
     player.upperbodySprite.move(player.Velocity);
     player.rec.setPosition(s.getPosition().x - 50, s.getPosition().y);
@@ -527,10 +526,10 @@ void onlymove(Sprite& s)
     else
     {
         player.upperbodyTex.loadFromFile("Idle (Pistol) Sprite Sheet Upper Body.png");
-        animation(player.upperbodySprite, 3.9, 128 / 4, 37,idle, 3);
+        animation(player.upperbodySprite, 3.9, 128 / 4, 37, idle, 3);
 
         player.lowerbodyTex.loadFromFile("Idle (Pistol) Sprite Sheet Lower Body.png");
-        animation(player.lowerbodySprite, 3.9, 128 / 4, 37,idle, 3);
+        animation(player.lowerbodySprite, 3.9, 128 / 4, 37, idle, 3);
 
         player.Velocity.x = 0;
     }
@@ -553,14 +552,15 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
         player.lowerbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
         player.last_key = 1;
         s.setScale(-3.25, 3.25);
-        //player.upperbodySprite.setTextureRect(IntRect((int)player.plcounter * (1324 / 12), 0, (1324 / 12), 133));
-        //player.plcounter += 0.01 * dt;
-        //if (player.plcounter > 11.9) player.plcounter = 0;
-        animation(s, 11.9, 408 / 12, 41,delay, 2);
         player.Velocity.x = -0.17 * dt;
         if (Keyboard::isKeyPressed(Keyboard::LShift))
         {
             player.Velocity.x *= 2;
+            animation(s, maxframe, x, y, 0.007, index);
+        }
+        else
+        {
+            animation(s, maxframe, x, y, delay, index);
         }
     }
     else if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(s, rightx))
@@ -569,24 +569,26 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
         player.lowerbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
         player.last_key = 2;
         s.setScale(3.25, 3.25);
-        //player.upperbodySprite.setTextureRect(IntRect((int)player.plcounter * (1324 / 12), 0, (1324 / 12), 133));
-        //player.plcounter += 0.01 * dt;
-        //if (player.plcounter > 11.9) player.plcounter = 0;
         player.Velocity.x = 0.17 * dt;
-        animation(s, 11.9, 408 / 12, 41,delay, 2);
         if (Keyboard::isKeyPressed(Keyboard::LShift))
         {
             player.Velocity.x *= 2;
+
+            animation(s, maxframe, x, y, 0.007, index);
+        }
+        else
+        {
+            animation(s, maxframe, x, y, delay, index);
         }
     }
 
     else
     {
         player.upperbodyTex.loadFromFile("Idle (Pistol) Sprite Sheet Upper Body.png");
-        animation(player.upperbodySprite, 3.9, 128 / 4, 37,idle, 3);
+        animation(player.upperbodySprite, 3.9, 128 / 4, 37, idle, 3);
 
         player.lowerbodyTex.loadFromFile("Idle (Pistol) Sprite Sheet Lower Body.png");
-        animation(player.lowerbodySprite, 3.9, 128 / 4, 37,idle, 3);
+        animation(player.lowerbodySprite, 3.9, 128 / 4, 37, idle, 3);
 
         player.Velocity.x = 0;
     }
@@ -601,13 +603,13 @@ bool collisonPl(RectangleShape arr[], int size)
 {
     for (int i = 0; i <= size; i++)
     {
-        if (player.upperbodySprite.getGlobalBounds().intersects(arr[i].getGlobalBounds()))
+        if (player.rec.getGlobalBounds().intersects(arr[i].getGlobalBounds()))
             return true;
     }
     return false;
 
 }
-void animation(Sprite& s, float maxframe, float x, float y,float delay, int index)
+void animation(Sprite& s, float maxframe, float x, float y, float delay, int index)
 {
     animiindecator[index] += delay * dt;
     if (animiindecator[index] > maxframe)
