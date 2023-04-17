@@ -1,6 +1,9 @@
 #include <SFML/Graphics.hpp>
 #include<thread>
 #include <iostream>
+#define START 1
+#define OPTIONS 2
+#define EXIT 3
 using namespace std;
 using namespace sf;
 
@@ -35,8 +38,31 @@ struct Pistol
     Texture pistol_Ammo_Tex;
     Sprite pistol_Ammo_Sprite;
     float cooldown;
-};
-Pistol pistol;
+} pistol;
+
+
+struct Menu
+{
+    int selected = 1;
+    bool start_selected = false, options_selected = false, exit_selected = false;
+
+    void move_up()
+    {
+        if (selected == 1)
+            selected = 3;
+        else
+            selected--;
+    }
+
+    void move_down()
+    {
+        if (selected == 3)
+            selected = 1;
+        else
+            selected++;
+    }
+
+} menu;
 
 
 //ground & wall
@@ -76,6 +102,7 @@ Texture lvl1FGtex[30];
 Sprite Lvl1FG[30];
 
 // DECLRATIONS
+void Menu();
 void BGanimation();
 void animation(Sprite& s, float maxframe, float x, float y, float delay, int index);
 void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int index);
@@ -105,11 +132,53 @@ int main()
     bgSetup();
     Pistolsetup();
     Playersetup();
-    windowfunction();
+    Menu();
     return 0;
 }
 //DEFINITIONS
 
+void Menu()
+{
+    while (window.isOpen())
+    {
+        cout << menu.selected << endl;
+        if (menu.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter) || menu.start_selected)
+        {
+            menu.start_selected = true;
+            windowfunction();
+        }
+
+        if (menu.selected == 3 && Keyboard::isKeyPressed(Keyboard::Enter))
+            window.close();
+
+        if (Keyboard::isKeyPressed(Keyboard::Up))
+        {
+            Clock timer1;
+            while (true) 
+            {
+                if (timer1.getElapsedTime().asMilliseconds() > 300)
+                {
+                    menu.move_up();
+                    break;
+                }
+            }
+
+        }
+        if (Keyboard::isKeyPressed(Keyboard::Down))
+        {
+            Clock timer1;
+            while (true)
+            {
+                if (timer1.getElapsedTime().asMilliseconds() > 300)
+                {
+
+                    menu.move_down();
+                    break;
+                }
+            }
+        }
+    }
+}
 void bgSetup()
 {
     // LEVEL 1 A SET UP
@@ -184,8 +253,6 @@ void bgSetup()
 void windowfunction()
 {
 
-    while (window.isOpen())
-    {
         //delta time
         dt = clock_pl.getElapsedTime().asMicroseconds();
         dt /= 750;
@@ -241,7 +308,6 @@ void windowfunction()
         window.draw(pistol.coll);
         window.setView(view);
         transition_pos_check();
-    }
 }
 void BGanimation()
 {
