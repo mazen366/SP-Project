@@ -11,9 +11,11 @@ RenderWindow window(sf::VideoMode(1920, 1080), "Game");
 Event event;
 
 //player
+//?
 const float idle = 0.001;
 struct Player
 {
+    //?
     float plcounter = 0;
     Texture upperbodyTex, lowerbodyTex;
     Sprite upperbodySprite, lowerbodySprite;
@@ -34,7 +36,7 @@ Player player;
 struct Pistol
 {
     float speed;
-    RectangleShape coll; // hitbox 
+    RectangleShape coll; // hitbox
     Texture pistol_Ammo_Tex;
     Sprite pistol_Ammo_Sprite;
     float cooldown;
@@ -82,8 +84,8 @@ float timer = 0;
 Texture bgTexture[30];
 Sprite bgSprite[30];
 
-int bgCounter = 0, leftx = -300, rightx = 8643;
-bool isBlackscreen = false, isMoved = false, ismoved2 = 0, ismoved3 = 0;
+int bgCounter = 0, leftEnd , rightEnd ;//indicator for current map, start of map, end of map
+bool  isMoved = false, ismoved2 = 0, ismoved3 = 0;//flags for clearing the previous map
 Clock blackscreenTimer;
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
 
@@ -104,16 +106,16 @@ Sprite Lvl1FG[30];
 // DECLRATIONS
 void Menu();
 void BGanimation();
-void animation(Sprite& s, float maxframe, float x, float y, float delay, int index);
-void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int index);
-void onlymove(Sprite& s);
+void animation(Sprite&, float, float, float, float, int);
+void plmovement(Sprite&, float, float, float, float, int);
+void onlymove(Sprite&);
 void jump();
-void moveToRight(Sprite& s);
-void moveToLeft(Sprite& s);
-void move_with_animation(Sprite& s, float maxframe, float x, float y, float delay, int index);
-void Pistolsetup(); // pistol setup
-void moviebullet(Player&, Pistol&); // moving bullets
-void cooldown(Player&); // cooldown for shooting
+void moveToRight(Sprite&);
+void moveToLeft(Sprite&);
+void move_with_animation(Sprite&, float, float, float, float, int);
+void Pistolsetup();
+void moviebullet(Player&, Pistol&);
+void shootingCooldown(Player&);
 void Playersetup();
 void bgSetup();
 void windowclose();
@@ -123,9 +125,9 @@ void transition();
 void transition_reverse();
 void transition_pos_check();
 bool canMoveRight(Sprite, int);
-bool canMoveleft(Sprite object, int xPoisition);
+bool canMoveleft(Sprite, int);
 bool collisonPl(RectangleShape[], int);
-void create(RectangleShape arr[], int index, int sizeX, int sizeY, int xPosition, int yPostions);
+void create(RectangleShape[], int, int, int, int, int);
 
 
 int main()
@@ -144,7 +146,7 @@ void Menu()
     while (window.isOpen())
     {
         //cout << menu.selected << endl;
-        if (menu.selected == START && Keyboard::isKeyPressed(Keyboard::Enter) || menu.start_selected)
+        if ((menu.selected == START && Keyboard::isKeyPressed(Keyboard::Enter)) || menu.start_selected)
         {
             menu.start_selected = true;
             windowfunction();
@@ -225,7 +227,7 @@ void bgSetup()
     create(wall, 3, 10, 200, 16520, 198);
     create(wall, 4, 10, 140, 16840, 60);
 
-    //LEVEL 1 C SET UP   
+    //LEVEL 1 C SET UP
     bgTexture[3].loadFromFile("Level 1-C BG.png");
     bgSprite[3].setTexture(bgTexture[3]);
     bgSprite[3].setPosition(18000, 0);
@@ -261,13 +263,13 @@ void windowfunction()
 
     //shooting
     moviebullet(player, pistol);
-    cooldown(player);
+    shootingCooldown(player);
 
     if (Keyboard::isKeyPressed(Keyboard::R))
     {
         for (int i = 0; i < 5; i++)
         {
-            player.arr[i] == 1;
+            player.arr[i] = 1;
         }
     }
     if (Keyboard::isKeyPressed(Keyboard::J))
@@ -277,7 +279,8 @@ void windowfunction()
         pistol.coll.setPosition(Vector2f(player.upperbodySprite.getPosition().x + 30, player.upperbodySprite.getPosition().y + 50));
 
     }
-
+    
+    //map shortcut
     if (Keyboard::isKeyPressed(sf::Keyboard::T))
         player.upperbodySprite.setPosition(20000, 800);
 
@@ -327,69 +330,83 @@ void windowclose()
 }
 void cameraView()
 {
+    //first map
     if (bgCounter == 0) {
-
-
+    
+        leftEnd = -300;
+        rightEnd = 8643;
+        //area where no black edges can appear
         if (player.upperbodySprite.getPosition().x <= 7740 && player.upperbodySprite.getPosition().x >= 600)
-            view.setCenter(player.upperbodySprite.getPosition().x, 600);
-        else if (player.upperbodySprite.getPosition().x > 7740)
+            view.setCenter(player.upperbodySprite.getPosition().x, 600);  //camera focus on player
+        //area where  black edge appear from right
+        else if (player.upperbodySprite.getPosition().x > 7740)  //camera stop
             view.setCenter(7741, 600);
+        //area where  black edge appear from left
         else if (player.upperbodySprite.getPosition().x < 600)
-            view.setCenter(599, 600);
+            view.setCenter(599, 600);  //camera stop
 
     }
     else if (bgCounter == 1)
     {
+        //second map
+    
         if (!isMoved)
-        {
+        {   //intial position for the map
             player.upperbodySprite.setPosition(10400, 600);
             player.lowerbodySprite.setPosition(10400, 600);
             isMoved = true;
         }
-        leftx = 10100;
-        rightx = 17651;
-        //14771
-
+        leftEnd = 10100;
+        rightEnd = 17651;
+        
+        //area where no black edges can appear
         if (player.upperbodySprite.getPosition().x <= 14771 && player.upperbodySprite.getPosition().x >= 11000)
-            view.setCenter(player.upperbodySprite.getPosition().x, 600);
+            view.setCenter(player.upperbodySprite.getPosition().x, 600);  //camera focus on player
+        //area where  black edge appear from left
         else if (player.upperbodySprite.getPosition().x < 11000)
-            view.setCenter(10999, 600);
+            view.setCenter(10999, 600);  //camera stop
 
-        if (player.upperbodySprite.getPosition().x > 14771) {
-            view.setCenter((14771 + rightx) / 2, 110);
-            view.setSize(rightx - 14771, 2087);
+        if (player.upperbodySprite.getPosition().x > 14771)//enter area of staires
+        {
+            view.setCenter((14771 + rightEnd) / 2, 110);//camera stop
+            view.setSize(rightEnd - 14771, 2087);//zoomed out view for stairs
         }
-        else view.setSize(1920, 1080);
+        else view.setSize(1920, 1080);//normal size view
     }
     else if (bgCounter == 2)
     {
+        // third map
         if (!ismoved2)
-        {
+        {//start postion of the map
             player.upperbodySprite.setPosition(18400, 800);
             player.lowerbodySprite.setPosition(18400, 800);
             ismoved2 = true;
         }
-        leftx = 18030;
-        rightx = 19650;
-        view.setCenter(18820, 596);
-        view.setSize(1600, 1080);
+        leftEnd = 18030;
+        rightEnd = 19650;
+        view.setCenter(18820, 596);//no player tracing
+        view.setSize(1600, 1080);//whole map size
     }
     else if (bgCounter == 3)
     {
+        //forth map
         if (!ismoved3)
-        {
-            view.setSize(1920, 1080);
+        {   //start postion of nao
             player.upperbodySprite.setPosition(20400, 600);
             player.lowerbodySprite.setPosition(20400, 600);
             ismoved3 = true;
         }
-        leftx = 20000;
-        rightx = 24771;
-        view.setSize(1920, 1190);
+        leftEnd = 20000;
+        rightEnd = 24771;
+        view.setSize(1920, 1190);//whole map hight
+        
+        //area where no black edges can appear
         if (player.upperbodySprite.getPosition().x <= 23800 && player.upperbodySprite.getPosition().x >= 20950)
             view.setCenter(player.upperbodySprite.getPosition().x, 600);
+        //area where  black edge appear from right
         else if (player.upperbodySprite.getPosition().x > 23800)
             view.setCenter(23801, 600);
+        //area where  black edge appear from left
         else if (player.upperbodySprite.getPosition().x < 20950)
             view.setCenter(20949, 600);
     }
@@ -423,7 +440,7 @@ void Pistolsetup()
     pistol.speed = 25;
     pistol.cooldown = 3000;
 }
-void cooldown(Player& player)
+void shootingCooldown(Player& player)
 {
     if (player.cooldown > 0)
     {
@@ -483,7 +500,7 @@ void transition_reverse()
 }
 void transition_pos_check()
 {
-    if (player.upperbodySprite.getPosition().x > rightx && bgCounter == 0)
+    if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 0)
     {
         transition();
         transition_reverse();
@@ -491,7 +508,7 @@ void transition_pos_check()
         this_thread::sleep_for(chrono::milliseconds(300));
 
     }
-    else if (player.upperbodySprite.getPosition().x > rightx && bgCounter == 1)
+    else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 1)
     {
         transition();
         transition_reverse();
@@ -499,7 +516,7 @@ void transition_pos_check()
         this_thread::sleep_for(chrono::milliseconds(300));
 
     }
-    else if (player.upperbodySprite.getPosition().x > rightx && bgCounter == 2)
+    else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 2)
     {
         transition();
         transition_reverse();
@@ -510,18 +527,18 @@ void transition_pos_check()
     else
         window.display();
 }
-bool canMoveRight(Sprite object, int xPoisition)
+bool canMoveRight(Sprite object, int rightLimit)
 {
-    if (object.getPosition().x <= xPoisition && !collisonPl(wall, 4))
+    if (object.getPosition().x < rightLimit && !collisonPl(wall, 4))
         return true;
 
     return false;
 
 }
 
-bool canMoveleft(Sprite object, int xPoisition)
+bool canMoveleft(Sprite object, int leftLimit)
 {
-    if (object.getPosition().x >= xPoisition)
+    if (object.getPosition().x > leftLimit)
         return true;
 
     return false;
@@ -534,7 +551,7 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
     player.upperbodySprite.setOrigin(x / 2, 0);
 
     //check collision
-    if (!canMoveleft(s, leftx) || !canMoveRight(s, rightx)) {
+    if (!canMoveleft(s, leftEnd) || !canMoveRight(s, rightEnd)) {
         player.Velocity.x = 0;
         player.Velocity.y += gravity * 0.9;
 
@@ -559,7 +576,7 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
         move_with_animation(player.upperbodySprite, maxframe, x, y, delay, index);
     }
 
-    //move player  
+    //move player
     s.move(player.Velocity);
     player.upperbodySprite.move(player.Velocity);
     player.rec.setPosition(s.getPosition().x - 50, s.getPosition().y);
@@ -574,9 +591,9 @@ void onlymove(Sprite& s)
         canDoubleJump = 0;
     }
 
-    if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(s, rightx))
+    if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(s, rightEnd))
         moveToRight(s);
-    else if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(s, leftx))
+    else if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(s, leftEnd))
         moveToLeft(s);
     else
         player.Velocity.x = 0;
@@ -598,7 +615,7 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
     }
     else
         canDoubleJump = 0;
-    if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(s, leftx))
+    if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(s, leftEnd))
     {
         //if player move load running sprite sheet
         player.upperbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Upper Body.png");
@@ -615,7 +632,7 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             animation(s, maxframe, x, y, delay, index);
 
     }
-    else if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(s, rightx))
+    else if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(s, rightEnd))
     {
         //if player move load running sprite sheet
         player.upperbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Upper Body.png");
@@ -635,7 +652,7 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
 
     else
     {
-        //if player not move then load idle sprite sheet 
+        //if player not move then load idle sprite sheet
         player.upperbodyTex.loadFromFile("Idle (Pistol) Sprite Sheet Upper Body.png");
         animation(player.upperbodySprite, 3.9, 128 / 4, 37, idle, 3);
 
@@ -687,8 +704,8 @@ void animation(Sprite& s, float maxframe, float x, float y, float delay, int ind
     s.setTextureRect(IntRect(int(animiindecator[index]) * x, 0, x, y));
 }
 
-void create(RectangleShape arr[], int index, int sizeX, int sizeY, int xPosition, int yPostions)
+void create(RectangleShape arr[], int index, int width, int hight, int xPosition, int yPostions)
 {
-    arr[index].setSize(Vector2f(sizeX, sizeY));
+    arr[index].setSize(Vector2f(width, hight));
     arr[index].setPosition(xPosition, yPostions);
 }
