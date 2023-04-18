@@ -6,7 +6,10 @@
 #define EXIT 3
 #define RIGHT 4
 #define LEFT 5
-
+#define LEVEL_1_A_BG 0
+#define LEVEL_1_B_BG 1
+#define LEVEL_1_C_BG 2
+#define LEVEL_1_D_BG 3
 using namespace std;
 using namespace sf;
 
@@ -104,7 +107,7 @@ Sprite FireTroches;
 float animiindecator[30];
 
 //lvl 1 FG
-Texture lvl1FGtex[30];
+Texture lvl1FGtex[30];  
 Sprite Lvl1FG[30];
 
 // DECLRATIONS
@@ -339,7 +342,7 @@ void windowclose()
 void cameraView()
 {
     //first map
-    if (bgCounter == 0) {
+    if (bgCounter == LEVEL_1_A_BG) {
     
         leftEnd = -300;
         rightEnd = 8643;
@@ -354,7 +357,7 @@ void cameraView()
             view.setCenter(599, 600);  //camera stop
 
     }
-    else if (bgCounter == 1)
+    else if (bgCounter == LEVEL_1_B_BG)
     {
         //second map
     
@@ -381,7 +384,7 @@ void cameraView()
         }
         else view.setSize(1920, 1080);//normal size view
     }
-    else if (bgCounter == 2)
+    else if (bgCounter == LEVEL_1_C_BG)
     {
         // third map
         if (!ismoved2)
@@ -395,7 +398,7 @@ void cameraView()
         view.setCenter(18820, 596);//no player tracing
         view.setSize(1600, 1080);//whole map size
     }
-    else if (bgCounter == 3)
+    else if (bgCounter == LEVEL_1_D_BG)
     {
         //forth map
         if (!ismoved3)
