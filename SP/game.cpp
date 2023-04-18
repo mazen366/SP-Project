@@ -4,6 +4,9 @@
 #define START 1
 #define OPTIONS 2
 #define EXIT 3
+#define RIGHT 4
+#define LEFT 5
+
 using namespace std;
 using namespace sf;
 
@@ -36,6 +39,7 @@ Player player;
 struct Pistol
 {
     float speed;
+    int direction = 0; // Right/Left
     RectangleShape coll; // hitbox
     Texture pistol_Ammo_Tex;
     Sprite pistol_Ammo_Sprite;
@@ -152,10 +156,10 @@ void Menu()
             windowfunction();
         }
 
-        if (menu.selected == EXIT && Keyboard::isKeyPressed(Keyboard::Enter))
+        else if (menu.selected == EXIT && Keyboard::isKeyPressed(Keyboard::Enter))
             window.close();
 
-        if (Keyboard::isKeyPressed(Keyboard::Up))
+        else if (Keyboard::isKeyPressed(Keyboard::Up))
         {
             Clock timer1;
             while (true)
@@ -168,7 +172,7 @@ void Menu()
             }
 
         }
-        if (Keyboard::isKeyPressed(Keyboard::Down))
+        else if (Keyboard::isKeyPressed(Keyboard::Down))
         {
             Clock timer1;
             while (true)
@@ -276,6 +280,10 @@ void windowfunction()
     {
         player.cooldown = 30;
         player.canshoot = -1;
+        if (player.last_key == RIGHT)
+            pistol.direction = RIGHT;
+        else
+            pistol.direction = LEFT;
         pistol.coll.setPosition(Vector2f(player.upperbodySprite.getPosition().x + 30, player.upperbodySprite.getPosition().y + 50));
 
     }
@@ -453,8 +461,9 @@ void shootingCooldown(Player& player)
 }
 void moviebullet(Player& player, Pistol& pistol)
 {
-    if (player.last_key == 1)
+    if (player.last_key == RIGHT || pistol.direction == RIGHT)
     {
+        pistol.direction = RIGHT;
         pistol.coll.move(Vector2f(-1 * pistol.speed, 0));
     }
     else
@@ -667,6 +676,7 @@ void moveToRight(Sprite& s)
 {
     s.setScale(3.25, 3.25);
     player.Velocity.x = 0.17 * dt;
+    player.last_key = RIGHT;
 
     if (Keyboard::isKeyPressed(Keyboard::LShift))
         player.Velocity.x *= 2;
@@ -676,7 +686,7 @@ void moveToLeft(Sprite& s)
 {
     s.setScale(-3.25, 3.25);
     player.Velocity.x = -0.17 * dt;
-
+    player.last_key = LEFT;
     if (Keyboard::isKeyPressed(Keyboard::LShift))
         player.Velocity.x *= 2;
 
