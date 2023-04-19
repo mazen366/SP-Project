@@ -18,7 +18,7 @@ Event event;
 
 //player
 //?
-const float idle = 0.001;
+const float idle = 0.001, shooting_delay = 0.007;
 struct Player
 {
     //?
@@ -35,6 +35,9 @@ struct Player
     int arr[5] = {};
     float cooldown = 0;
     bool canshoot = 0;
+    bool crouch = 0;
+    bool is_shooting = 0;
+    bool one_sprite_needed = 0;
     int last_key = 0;
 };
 Player player;
@@ -279,17 +282,7 @@ void windowfunction()
             player.arr[i] = 1;
         }
     }
-    if (Keyboard::isKeyPressed(Keyboard::J))
-    {
-        player.cooldown = 30;
-        player.canshoot = -1;
-        if (player.last_key == RIGHT)
-            pistol.direction = RIGHT;
-        else
-            pistol.direction = LEFT;
-        pistol.coll.setPosition(Vector2f(player.upperbodySprite.getPosition().x + 30, player.upperbodySprite.getPosition().y + 50));
 
-    }
     
     //map shortcut
     if (Keyboard::isKeyPressed(sf::Keyboard::T))
@@ -307,6 +300,7 @@ void windowfunction()
     window.draw(FireTroches);
     //window.draw(player.rec);
     window.draw(player.lowerbodySprite);
+    if (!player.one_sprite_needed)
     window.draw(player.upperbodySprite);
     /*for (int i = 0; i < 7; i++)
         window.draw(ground[i]);
@@ -547,7 +541,6 @@ bool canMoveRight(Sprite object, int rightLimit)
     return false;
 
 }
-
 bool canMoveleft(Sprite object, int leftLimit)
 {
     if (object.getPosition().x > leftLimit)
@@ -580,6 +573,12 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
         //function -> movement in air
         onlymove(s);
         onlymove(player.upperbodySprite);
+
+        // jumping animation
+        player.upperbodyTex.loadFromFile("Jumping (Pistol) Sprite Sheet Upper Body.png");
+        player.lowerbodyTex.loadFromFile("Jumping (Pistol) Sprite Sheet Lower Body.png");
+        animation(player.upperbodySprite, 10.9, 319.0 / 11, 49, delay, 5);
+        animation(s, 10.9, 319.0 / 11, 49, delay, 6);
     }
     else
     {
@@ -615,64 +614,124 @@ void onlymove(Sprite& s)
 void move_with_animation(Sprite& s, float maxframe, float x, float y, float delay, int index)
 {
     player.Velocity.y = 0;
-    if (Keyboard::isKeyPressed(Keyboard::Space))
-    {
-        //Temporarily
-           //if player move load running sprite sheet
-        player.upperbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Upper Body.png");
-        player.lowerbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
-
-        jump();
-        canDoubleJump = 1;
+    // player crouches
+    if (Keyboard::isKeyPressed(Keyboard::C)) {
+        player.crouch = 1;
+        player.one_sprite_needed = 1;
+        player.lowerbodyTex.loadFromFile("Idle - Crouching (Pistol) Sprite Sheet.png");
+        player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y+player.upperbodyTex.getSize().y);
+        animation(player.lowerbodySprite, 3.9, 136 / 4, 24, idle, 4);
     }
-    else
-        canDoubleJump = 0;
-    if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(s, leftEnd))
-    {
-        //if player move load running sprite sheet
-        player.upperbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Upper Body.png");
-        player.lowerbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
-
-        player.last_key = 1;
-
-        moveToLeft(s);
-
-        //when press shift speed up the animation
-        if (Keyboard::isKeyPressed(Keyboard::LShift))
-            animation(s, maxframe, x, y, 0.007, index);
+    else {
+        player.one_sprite_needed = 0;
+        player.crouch = 0;
+        player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition());
+        if (Keyboard::isKeyPressed(Keyboard::Space))
+        {
+            jump();
+            canDoubleJump = 1;
+        }
         else
-            animation(s, maxframe, x, y, delay, index);
+            canDoubleJump = 0;
+        if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(s, leftEnd))
+        {
+            // if player shoots while running
+            if (Keyboard::isKeyPressed(Keyboard::J))
+            {
+                player.cooldown = 30;
+                player.canshoot = -1;
+                if (player.last_key == RIGHT)
+                    pistol.direction = RIGHT;
+                else
+                    pistol.direction = LEFT;
+                pistol.coll.setPosition(Vector2f(player.upperbodySprite.getPosition().x + 30, player.upperbodySprite.getPosition().y + 50));
+                player.upperbodyTex.loadFromFile("Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
 
-    }
-    else if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(s, rightEnd))
-    {
-        //if player move load running sprite sheet
-        player.upperbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Upper Body.png");
-        player.lowerbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
+            }
+            //if player move load running sprite sheet
+            else
+            player.upperbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Upper Body.png");
 
-        player.last_key = 2;
+            player.lowerbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
 
-        moveToRight(s);
+            player.last_key = 1;
 
-        //when press shift speed up the animation
-        if (Keyboard::isKeyPressed(Keyboard::LShift))
-            animation(s, maxframe, x, y, 0.007, index);
+            moveToLeft(s);
+
+            //when press shift speed up the animation
+            if (Keyboard::isKeyPressed(Keyboard::LShift))
+                animation(s, maxframe, x, y, 0.007, index);
+            else
+                animation(s, maxframe, x, y, delay, index);
+
+        }
+        else if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(s, rightEnd))
+        {
+            // if player shoots while running
+            if (Keyboard::isKeyPressed(Keyboard::J))
+            {
+                player.cooldown = 30;
+                player.canshoot = -1;
+                if (player.last_key == RIGHT)
+                    pistol.direction = RIGHT;
+                else
+                    pistol.direction = LEFT;
+                pistol.coll.setPosition(Vector2f(player.upperbodySprite.getPosition().x + 30, player.upperbodySprite.getPosition().y + 50));
+                player.upperbodyTex.loadFromFile("Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
+
+            }
+            //if player move load running sprite sheet
+            else
+            player.upperbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Upper Body.png");
+            player.lowerbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
+
+            player.last_key = 2;
+
+            moveToRight(s);
+
+            //when press shift speed up the animation
+            if (Keyboard::isKeyPressed(Keyboard::LShift))
+                animation(s, maxframe, x, y, 0.007, index);
+            else
+                animation(s, maxframe, x, y, delay, index);
+
+        }
+
         else
-            animation(s, maxframe, x, y, delay, index);
+        {
+            if (Keyboard::isKeyPressed(Keyboard::J))
+            {
+                player.is_shooting = 1;
+                player.cooldown = 30;
+                player.canshoot = -1;
+                if (player.last_key == RIGHT)
+                    pistol.direction = RIGHT;
+                else
+                    pistol.direction = LEFT;
+                pistol.coll.setPosition(Vector2f(player.upperbodySprite.getPosition().x + 30, player.upperbodySprite.getPosition().y + 50));
+                // shooting animation
+                player.lowerbodyTex.loadFromFile("Idle (Pistol) Sprite Sheet Lower Body.png");
+                animation(player.lowerbodySprite, 3.9, 128 / 4, 37, idle, 3);
+                player.upperbodyTex.loadFromFile("Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
+                animation(player.upperbodySprite, 9.9, 520 / 10, 41, shooting_delay, 7);
+            }
+            //if player not move then load idle sprite sheet
+            else {
+                player.lowerbodyTex.loadFromFile("Idle (Pistol) Sprite Sheet Lower Body.png");
+                animation(player.lowerbodySprite, 3.9, 128 / 4, 37, idle, 3);
+             
+                player.is_shooting = 0;
+                player.upperbodyTex.loadFromFile("Idle (Pistol) Sprite Sheet Upper Body.png");
+                animation(player.upperbodySprite, 3.9, 128 / 4, 37, idle, 3);
+            }
+
+            player.Velocity.x = 0;
+
+
+        }
 
     }
 
-    else
-    {
-        //if player not move then load idle sprite sheet
-        player.upperbodyTex.loadFromFile("Idle (Pistol) Sprite Sheet Upper Body.png");
-        animation(player.upperbodySprite, 3.9, 128 / 4, 37, idle, 3);
-
-        player.lowerbodyTex.loadFromFile("Idle (Pistol) Sprite Sheet Lower Body.png");
-        animation(player.lowerbodySprite, 3.9, 128 / 4, 37, idle, 3);
-
-        player.Velocity.x = 0;
-    }
 
 }
 void moveToRight(Sprite& s)
