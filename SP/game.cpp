@@ -584,6 +584,10 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
     {
         //functoin -> movement & animation
         move_with_animation(s, maxframe, x, y, delay, index);
+        if (Keyboard::isKeyPressed(Keyboard::J)) {
+            move_with_animation(player.upperbodySprite, 9.9, 520 / 10, 41, 0.07, 7);
+        }
+        else
         move_with_animation(player.upperbodySprite, maxframe, x, y, delay, index);
     }
 
