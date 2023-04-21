@@ -56,26 +56,36 @@ struct Pistol
     float cooldown;
 } pistol;
 
+struct Pause
+{
+    int selected = 1;
+    bool is_paused = false;
 
+    void exit()
+    {
+        is_paused = false;
+    }
+    void move_up()
+    {
+        selected = (selected == 1 ? 3 : selected - 1);
+    }
+    void move_down()
+    {
+        selected = (selected == 3 ? 1 : selected + 1);
+    }
+}pause_menu;
 struct Menu
 {
     int selected = 1;
-    bool start_selected = false, options_selected = false;
+    bool start_selected = false, options_selected = false, is_paused = false;
 
     void move_up()
     {
-        if (selected == 1)
-            selected = 3;
-        else
-            selected--;
+        selected = (selected == 1 ? 3 : selected - 1);
     }
-
     void move_down()
     {
-        if (selected == 3)
-            selected = 1;
-        else
-            selected++;
+        selected = (selected == 3 ? 1 : selected + 1);
     }
 
 } menu;
@@ -162,8 +172,51 @@ void Menu()
 {
     while (window.isOpen())
     {
-        //cout << menu.selected << endl;
-        if ((menu.selected == START && Keyboard::isKeyPressed(Keyboard::Enter)) || menu.start_selected)
+        cout << pause_menu.is_paused << endl;
+        if (pause_menu.is_paused)
+        {
+            if (Keyboard::isKeyPressed(Keyboard::Escape))
+            {
+                Clock timer;
+                while (true)
+                {
+                    if (timer.getElapsedTime().asMilliseconds() > 300)
+                    {
+                        pause_menu.is_paused = false;
+                        break;
+                    }
+                }    
+            }
+            else if (pause_menu.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter))
+                pause_menu.exit();
+            else if (pause_menu.selected == 3 && Keyboard::isKeyPressed(Keyboard::Enter))
+                window.close();
+            else if (Keyboard::isKeyPressed(Keyboard::Up))
+            {
+                Clock timer1;
+                while (true)
+                {
+                    if (timer1.getElapsedTime().asMilliseconds() > 300)
+                    {
+                        pause_menu.move_up();
+                        break;
+                    }
+                }
+            }
+            else if (Keyboard::isKeyPressed(Keyboard::Down))
+            {
+                Clock timer1;
+                while (true)
+                {
+                    if (timer1.getElapsedTime().asMilliseconds() > 300)
+                    {
+                        pause_menu.move_down();
+                        break;
+                    }
+                }
+            }
+        }
+        else if ((menu.selected == START && Keyboard::isKeyPressed(Keyboard::Enter)) || menu.start_selected)
         {
             menu.start_selected = true;
             windowfunction();
@@ -281,7 +334,18 @@ void windowfunction()
     //shooting
     moviebullet(player, pistol);
     shootingCooldown(player);
-
+    if (Keyboard::isKeyPressed(Keyboard::Escape))
+    {
+        Clock timer;
+        while (true)
+        {
+            if (timer.getElapsedTime().asMilliseconds() > 300)
+            {
+                pause_menu.is_paused = true;
+                break;
+            }
+        }
+    }
     if (Keyboard::isKeyPressed(Keyboard::R))
     {
         for (int i = 0; i < 5; i++)
@@ -335,9 +399,6 @@ void windowclose()
     {
         if (event.type == sf::Event::Closed)
             window.close();
-        if (Keyboard::isKeyPressed(Keyboard::Key::Escape)) {
-            window.close();
-        }
     }
 }
 void cameraView()
