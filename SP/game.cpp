@@ -798,3 +798,4 @@ void create(RectangleShape arr[], int index, int width, int hight, int xPosition
     arr[index].setSize(Vector2f(width, hight));
     arr[index].setPosition(xPosition, yPostions);
 }
+//a comment 34an mazen hassan
