@@ -16,14 +16,13 @@ using namespace sf;
 RenderWindow window(sf::VideoMode(1920, 1080), "Game");
 Event event;
 
-//player
-//?
 const float idle = 0.001,
 shooting_delay = 0.007,
 plVelocity = 0.2,
 plScale = 3.25,
 melee_delay = 0.003;
 
+//player
 struct Player
 {
     //?
@@ -46,6 +45,7 @@ struct Player
     int last_key = 0;
 };
 Player player;
+
 // shooting
 struct Pistol
 {
@@ -57,6 +57,7 @@ struct Pistol
     float cooldown;
 } pistol;
 
+//pause manu
 struct Pause
 {
     int selected = 1;
@@ -75,6 +76,8 @@ struct Pause
         selected = (selected == 3 ? 1 : selected + 1);
     }
 }pause_menu;
+
+//menu
 struct Menu
 {
     int selected = 1;
@@ -90,10 +93,61 @@ struct Menu
     }
 
 } menu;
-
-
 //ground & wall
 RectangleShape ground[30], wall[30];
+
+//enemy map 1
+struct Enemy1
+{
+    Texture texture;
+    Sprite sprite;
+    RectangleShape rec;
+    Vector2f velocity = { 0,0 };
+    int damage = 1;
+    int health = 10;
+    void setup()
+    {
+        enemy1[1].texture.loadFromFile("");
+        enemy1->sprite.setTexture(enemy1[1].texture);
+        for (int i = 0; i < 10; i++)
+        {
+            enemy1[i].rec.setSize(Vector2f(50, 100));
+            enemy1[i].rec.setPosition(Vector2f(500 + 700 * i, 600));
+        }
+    }
+    void movement()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            if (abs(player.upperbodySprite.getPosition().x - enemy1[i].rec.getPosition().x) < 700)
+            {
+                if (player.upperbodySprite.getPosition().x > enemy1[i].rec.getPosition().x)
+                    enemy1[i].velocity.x = 2;
+                else
+                    enemy1[i].velocity.x = -2;
+            }
+        }
+        for (int i = 0; i < 10; i++)
+        {
+            enemy1[i].rec.move(enemy1[i].velocity);
+        }
+    }
+    void Gravity()
+    {
+        for (int j = 0; j < 10; j++)
+        {
+            if (enemy1[1].rec.getGlobalBounds().intersects(ground[0].getGlobalBounds()))
+            {
+                enemy1[j].velocity.y = 0;
+            }
+            else
+            {
+                enemy1[j].velocity.y += 0.7 * 0.9;
+            }
+        }
+    }
+}enemy1[10];
+
 
 //gravity
 float gravity = 0.7;
@@ -157,12 +211,12 @@ void transition_pos_check();
 bool canMoveRight(Sprite, int);
 bool canMoveleft(Sprite, int);
 bool collisonPl(RectangleShape[], int);
-void create(RectangleShape[], int, int, int, int, int);
-
+void create(RectangleShape[], int, int, int, int, int);//make ground
 
 int main()
 {
     window.setFramerateLimit(60);
+    enemy1->setup();
     bgSetup();
     Pistolsetup();
     Playersetup();
@@ -363,6 +417,8 @@ void windowfunction()
         player.upperbodySprite.setPosition(20000, 800);
 
     cameraView();
+    enemy1->movement();
+    enemy1->Gravity();
     plmovement(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
     player.playerHPSprite.setPosition(view.getCenter().x - 960, view.getCenter().y - 500);
     BGanimation();
@@ -373,6 +429,8 @@ void windowfunction()
     //   window.draw(Exitlamp);
     window.draw(FireTroches);
     //window.draw(player.rec);
+    for (int i = 0; i < 10; i++)
+        window.draw(enemy1[i].rec);
     window.draw(player.lowerbodySprite);
     if (!player.one_sprite_needed)
         window.draw(player.upperbodySprite);
@@ -895,4 +953,4 @@ void create(RectangleShape arr[], int index, int width, int hight, int xPosition
     arr[index].setSize(Vector2f(width, hight));
     arr[index].setPosition(xPosition, yPostions);
 }
-//a comment 34an mazen hassan
+
