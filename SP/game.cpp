@@ -21,7 +21,8 @@ Event event;
 const float idle = 0.001,
 shooting_delay = 0.007,
 plVelocity = 0.2,
-plScale = 3.25;
+plScale = 3.25,
+melee_delay = 0.003;
 
 struct Player
 {
@@ -128,6 +129,8 @@ Texture lvl1FGtex[30];
 Sprite Lvl1FG[30];
 
 // DECLRATIONS
+void jumpingAnimation(float);
+void meeleAnimation();
 void ShootingAnimation();
 void crouchingAnimation();
 void IdleAnimation();
@@ -185,7 +188,7 @@ void Menu()
                         pause_menu.is_paused = false;
                         break;
                     }
-                }    
+                }
             }
             else if (pause_menu.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter))
                 pause_menu.exit();
@@ -646,11 +649,7 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
         onlymove(s);
         onlymove(player.upperbodySprite);
 
-        // jumping animation
-        player.upperbodyTex.loadFromFile("Jumping (Pistol) Sprite Sheet Upper Body.png");
-        player.lowerbodyTex.loadFromFile("Jumping (Pistol) Sprite Sheet Lower Body.png");
-        animation(player.upperbodySprite, 10.9, 319.0 / 11, 49, delay, 5);
-        animation(s, 10.9, 319.0 / 11, 49, delay, 6);
+        jumpingAnimation(delay);
     }
     else
     {
@@ -686,6 +685,7 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
     // player crouches
     if (Keyboard::isKeyPressed(Keyboard::C))
     {
+        player.Velocity.x = 0;
         crouchingAnimation();
     }
     else
@@ -773,6 +773,10 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
                 player.upperbodyTex.loadFromFile("Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
                 animation(player.upperbodySprite, 9.9, 520 / 10, 41, shooting_delay, 10);
             }
+            else  if (Keyboard::isKeyPressed(Keyboard::K))
+            {
+                meeleAnimation();
+            }
             //if player not move then load idle sprite sheet
             else
             {
@@ -832,9 +836,41 @@ void crouchingAnimation()
 {
     player.crouch = 1;
     player.one_sprite_needed = 1;
-    player.lowerbodyTex.loadFromFile("Idle - Crouching (Pistol) Sprite Sheet.png");
-    player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y);
-    animation(player.lowerbodySprite, 3.9, 136 / 4, 24, idle, 4);
+    if (Keyboard::isKeyPressed(Keyboard::J))
+    {
+        player.lowerbodyTex.loadFromFile("Shooting - Crouching (Pistol) Sprite Sheet.png");
+        player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y - 10);
+        animation(player.lowerbodySprite, 9.9, 520 / 10, 29, shooting_delay, 14);
+    }
+    else if (Keyboard::isKeyPressed(Keyboard::K))
+    {
+        player.lowerbodyTex.loadFromFile("Melee - Crouching (Pistol) Sprite Sheet.png");
+        player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y - 30);
+        animation(player.lowerbodySprite, 6.9, 294 / 7, 35, shooting_delay, 15);
+    }
+    else
+    {
+        player.lowerbodyTex.loadFromFile("Idle - Crouching (Pistol) Sprite Sheet.png");
+        player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y);
+        animation(player.lowerbodySprite, 3.9, 136 / 4, 24, idle, 4);
+    }
+
+}
+void meeleAnimation()
+{
+    // melee animation when pl standing
+    player.lowerbodyTex.loadFromFile("Melee (Pistol) Sprite Sheet Lower Body.png");
+    animation(player.lowerbodySprite, 5.9, 288 / 6, 53, melee_delay, 12);
+    player.upperbodyTex.loadFromFile("Melee (Pistol) Sprite Sheet Upper Body.png");
+    animation(player.upperbodySprite, 5.9, 288 / 6, 53, melee_delay, 12);
+
+}
+void jumpingAnimation(float delay)
+{
+    player.upperbodyTex.loadFromFile("Jumping (Pistol) Sprite Sheet Upper Body.png");
+    player.lowerbodyTex.loadFromFile("Jumping (Pistol) Sprite Sheet Lower Body.png");
+    animation(player.upperbodySprite, 10.9, 319.0 / 11, 49, delay, 5);
+    animation(player.lowerbodySprite, 10.9, 319.0 / 11, 49, delay, 6);
 }
 bool collisonPl(RectangleShape arr[], int size)
 {
