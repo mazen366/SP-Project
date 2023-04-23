@@ -17,7 +17,7 @@ RenderWindow window(sf::VideoMode(1920, 1080), "Game");
 Event event;
 
 //make the variable=""
-string pathh=resourcePath();
+string pathh = "";
 const float idle = 0.001,
 shooting_delay = 0.007,
 plVelocity = 0.2,
