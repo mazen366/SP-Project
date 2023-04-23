@@ -917,17 +917,17 @@ void jump()
 }
 void IdleAnimation()
 {
-    player.lowerbodyTex.loadFromFile(resourcePath()+"Idle (Pistol) Sprite Sheet Lower Body.png");
+    player.lowerbodyTex.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Lower Body.png");
     animation(player.lowerbodySprite, 3.9, 128 / 4, 37, idle, 3);
     player.is_shooting = 0;
-    player.upperbodyTex.loadFromFile(resourcePath()+"Idle (Pistol) Sprite Sheet Upper Body.png");
+    player.upperbodyTex.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Upper Body.png");
     animation(player.upperbodySprite, 3.9, 128 / 4, 37, idle, 3);
 }
 void ShootingAnimation()
 {
-    player.lowerbodyTex.loadFromFile(resourcePath()+"Running (Pistol) Sprite Sheet Lower Body.png");
+    player.lowerbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Lower Body.png");
     animation(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
-    player.upperbodyTex.loadFromFile(resourcePath()+"Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
+    player.upperbodyTex.loadFromFile(pathh+"Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
     animation(player.upperbodySprite, 9.9, 520 / 10, 41, shooting_delay, 10);
 }
 void crouchingAnimation()
