@@ -1,4 +1,4 @@
-#include <SFML/Graphics.hpp>
+﻿#include <SFML/Graphics.hpp>
 #include<thread>
 #include <iostream>
 #define START 1
@@ -16,13 +16,15 @@ using namespace sf;
 RenderWindow window(sf::VideoMode(1920, 1080), "Game");
 Event event;
 
-//player
-//?
+//make the variable=""
+string pathh=resourcePath();
 const float idle = 0.001,
 shooting_delay = 0.007,
 plVelocity = 0.2,
-plScale = 3.25;
+plScale = 3.25,
+melee_delay = 0.003;
 
+//player
 struct Player
 {
     //?
@@ -45,44 +47,144 @@ struct Player
     int last_key = 0;
 };
 Player player;
+
 // shooting
 struct Pistol
 {
+    //code الصيني
     float speed;
     int direction = 0; // Right/Left
     RectangleShape coll; // hitbox
     Texture pistol_Ammo_Tex;
     Sprite pistol_Ammo_Sprite;
     float cooldown;
+    void setup(Pistol pistol)
+    {
+        pistol.coll.setSize(Vector2f(15, 10.5));
+        pistol.speed = 25;
+        pistol.cooldown = 3000;
+    }
+
+    //new code
+    int damage = 1;
+
+
 } pistol;
+float shoot_timer = 0;
+vector<pair<RectangleShape, int>>rects;
 
+//pause manu
+struct Pause
+{
+    int selected = 1;
+    bool is_paused = false;
 
+    void exit()
+    {
+        is_paused = false;
+    }
+    void move_up()
+    {
+        selected = (selected == 1 ? 3 : selected - 1);
+    }
+    void move_down()
+    {
+        selected = (selected == 3 ? 1 : selected + 1);
+    }
+}pause_menu;
+
+//menu
 struct Menu
 {
     int selected = 1;
-    bool start_selected = false, options_selected = false;
+    bool start_selected = false, options_selected = false, is_paused = false;
 
     void move_up()
     {
-        if (selected == 1)
-            selected = 3;
-        else
-            selected--;
+        selected = (selected == 1 ? 3 : selected - 1);
     }
-
     void move_down()
     {
-        if (selected == 3)
-            selected = 1;
-        else
-            selected++;
+        selected = (selected == 3 ? 1 : selected + 1);
     }
 
 } menu;
-
-
 //ground & wall
 RectangleShape ground[30], wall[30];
+
+//enemy map 1
+struct Enemy1
+{
+    Texture texture;
+    Sprite sprite;
+    RectangleShape rec;
+    Vector2f velocity = { 0,0 };
+    int damage = 1;
+    int health = 10;
+    bool live = 1;
+    void setup(Enemy1 enemy1[10])
+    {
+        enemy1[1].texture.loadFromFile("");
+        enemy1->sprite.setTexture(enemy1[1].texture);
+        for (int i = 0; i < 10; i++)
+        {
+            enemy1[i].rec.setSize(Vector2f(50, 100));
+            enemy1[i].rec.setPosition(Vector2f(500 + 700 * i, 600));
+        }
+    }
+    void movement(Enemy1 enemy1[10])
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            if (abs(player.upperbodySprite.getPosition().x - enemy1[i].rec.getPosition().x) < 700)
+            {
+                if (player.upperbodySprite.getPosition().x > enemy1[i].rec.getPosition().x)
+                    enemy1[i].velocity.x = 2;
+                else
+                    enemy1[i].velocity.x = -2;
+            }
+        }
+        for (int i = 0; i < 10; i++)
+        {
+            enemy1[i].rec.move(enemy1[i].velocity);
+        }
+    }
+    void Gravity(Enemy1 enemy1[10])
+    {
+        for (int j = 0; j < 10; j++)
+        {
+            if (enemy1[j].rec.getGlobalBounds().intersects(ground[0].getGlobalBounds()))
+            {
+                enemy1[j].velocity.y = 0;
+            }
+            else
+            {
+                enemy1[j].velocity.y += 0.7 * 0.9;
+            }
+
+        }
+    }
+    void Damage(Enemy1 enemy1[10])
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            if (enemy1[i].live)
+            {
+                for (int j = 0; j < rects.size(); j++)
+                {
+                    if (enemy1[i].rec.getGlobalBounds().intersects(rects[j].first.getGlobalBounds()) && rects[j].second != 0)
+                    {
+                        enemy1[i].health -= 1;
+                        rects[j].second = 0;
+                    }
+                }
+                if (enemy1[i].health <= 0)
+                    enemy1[i].live = 0;
+            }
+        }
+    }
+}enemy1[10];
+
 
 //gravity
 float gravity = 0.7;
@@ -91,8 +193,6 @@ bool canDoubleJump;
 //make clock & timer to plmovement
 Clock clock_pl;
 float dt = 0;
-float delay = 0.1f;
-float timer = 0;
 
 //background Textures&Sprites
 Texture bgTexture[30];
@@ -118,6 +218,9 @@ Texture lvl1FGtex[30];
 Sprite Lvl1FG[30];
 
 // DECLRATIONS
+void shooting();
+void jumpingAnimation(float);
+void meeleAnimation();
 void ShootingAnimation();
 void crouchingAnimation();
 void IdleAnimation();
@@ -130,7 +233,6 @@ void jump();
 void moveToRight(Sprite&);
 void moveToLeft(Sprite&);
 void move_with_animation(Sprite&, float, float, float, float, int);
-void Pistolsetup();
 void moviebullet(Player&, Pistol&);
 void shootingCooldown(Player&);
 void Playersetup();
@@ -144,14 +246,16 @@ void transition_pos_check();
 bool canMoveRight(Sprite, int);
 bool canMoveleft(Sprite, int);
 bool collisonPl(RectangleShape[], int);
-void create(RectangleShape[], int, int, int, int, int);
+void create(RectangleShape[], int, int, int, int, int);//make ground
+
 
 
 int main()
 {
     window.setFramerateLimit(60);
+    enemy1->setup(enemy1);
     bgSetup();
-    Pistolsetup();
+    pistol.setup(pistol);
     Playersetup();
     Menu();
     return 0;
@@ -162,8 +266,50 @@ void Menu()
 {
     while (window.isOpen())
     {
-        //cout << menu.selected << endl;
-        if ((menu.selected == START && Keyboard::isKeyPressed(Keyboard::Enter)) || menu.start_selected)
+        if (pause_menu.is_paused)
+        {
+            if (Keyboard::isKeyPressed(Keyboard::Escape))
+            {
+                Clock timer;
+                while (true)
+                {
+                    if (timer.getElapsedTime().asMilliseconds() > 300)
+                    {
+                        pause_menu.is_paused = false;
+                        break;
+                    }
+                }
+            }
+            else if (pause_menu.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter))
+                pause_menu.exit();
+            else if (pause_menu.selected == 3 && Keyboard::isKeyPressed(Keyboard::Enter))
+                window.close();
+            else if (Keyboard::isKeyPressed(Keyboard::Up))
+            {
+                Clock timer1;
+                while (true)
+                {
+                    if (timer1.getElapsedTime().asMilliseconds() > 300)
+                    {
+                        pause_menu.move_up();
+                        break;
+                    }
+                }
+            }
+            else if (Keyboard::isKeyPressed(Keyboard::Down))
+            {
+                Clock timer1;
+                while (true)
+                {
+                    if (timer1.getElapsedTime().asMilliseconds() > 300)
+                    {
+                        pause_menu.move_down();
+                        break;
+                    }
+                }
+            }
+        }
+        else if ((menu.selected == START && Keyboard::isKeyPressed(Keyboard::Enter)) || menu.start_selected)
         {
             menu.start_selected = true;
             windowfunction();
@@ -202,17 +348,17 @@ void Menu()
 void bgSetup()
 {
     // LEVEL 1 A SET UP
-    bgTexture[0].loadFromFile("Level 1-A BG.png");
+    bgTexture[0].loadFromFile(pathh+"Level 1-A BG.png");
     bgSprite[0].setTexture(bgTexture[0]);
     bgSprite[0].setPosition(-370, -53);
     create(ground, 0, 8830, 30, -370, 800);
     //lvl 1 ->A FG
-    lvl1FGtex[0].loadFromFile("Level 1-A FG.png");
+    lvl1FGtex[0].loadFromFile(pathh+"Level 1-A FG.png");
     Lvl1FG[0].setTexture(lvl1FGtex[0]);
     Lvl1FG[0].setPosition(-370, -53);
 
     // LEVEL 1 B->1 SET UP
-    bgTexture[1].loadFromFile("Level 1-B-1 BG.png");
+    bgTexture[1].loadFromFile(pathh+"Level 1-B-1 BG.png");
     bgSprite[1].setTexture(bgTexture[1]);
     bgSprite[1].setPosition(10000, -50);
     create(ground, 1, 5939, 30, 10000, 907);
@@ -223,18 +369,18 @@ void bgSetup()
     create(ground, 6, 700, 10, 16850, 40);
 
     // LEVEL 1 B->2 SET UP
-    bgTexture[2].loadFromFile("Level 1-B-2 BG.png");
+    bgTexture[2].loadFromFile(pathh+"Level 1-B-2 BG.png");
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
 
     //animation lv1-B-2(Exit lamp)
-    ExitlampTex.loadFromFile("Level 1-B-2 Exit Lamp.png");
+    ExitlampTex.loadFromFile(pathh+"Level 1-B-2 Exit Lamp.png");
     Exitlamp.setTexture(ExitlampTex);
     Exitlamp.setTextureRect(IntRect(0, 0, 17328 / 6, 2087));
     Exitlamp.setPosition(14771, -940);
 
     //FG Lv1-B-2
-    lvl1FGtex[2].loadFromFile("Level 1-B-2 FG.png");
+    lvl1FGtex[2].loadFromFile(pathh+"Level 1-B-2 FG.png");
     Lvl1FG[2].setTexture(lvl1FGtex[2]);
     Lvl1FG[2].setPosition(14771, -940);
 
@@ -245,30 +391,33 @@ void bgSetup()
     create(wall, 4, 10, 140, 16840, 60);
 
     //LEVEL 1 C SET UP
-    bgTexture[3].loadFromFile("Level 1-C BG.png");
+    bgTexture[3].loadFromFile(pathh+"Level 1-C BG.png");
     bgSprite[3].setTexture(bgTexture[3]);
     bgSprite[3].setPosition(18000, 0);
 
     //fire troches lv1 ->c
-    FireTrochestex.loadFromFile("Level 1-C Fire Torches.png");
+    FireTrochestex.loadFromFile(pathh+"Level 1-C Fire Torches.png");
     FireTroches.setTexture(FireTrochestex);
     FireTroches.setTextureRect(IntRect(0, 0, 13120 / 8, 1192));
     FireTroches.setPosition(18000, 0);
 
     //lvl 1 ->c FG
-    lvl1FGtex[3].loadFromFile("Level 1-C FG.png");
+    lvl1FGtex[3].loadFromFile(pathh+"Level 1-C FG.png");
     Lvl1FG[3].setTexture(lvl1FGtex[3]);
     Lvl1FG[3].setPosition(18000, 0);
     create(ground, 7, 1640, 20, 18000, 970);
 
     //LEVEL 1 D SET UP
-    bgTexture[4].loadFromFile("Level 1-D BG.png");
+    bgTexture[4].loadFromFile(pathh+"Level 1-D BG.png");
     bgSprite[4].setTexture(bgTexture[4]);
     bgSprite[4].setPosition(20000, 0);
     create(ground, 8, 1050, 20, 20000, 900);
     create(ground, 9, 1200, 20, 21700, 900);
     create(ground, 10, 750, 20, 23120, 900);
     create(ground, 11, 800, 20, 24150, 900);
+    //first platform
+    create(ground, 12, 500, 20, 20300, 700);
+    
 }
 void windowfunction()
 {
@@ -282,6 +431,18 @@ void windowfunction()
     moviebullet(player, pistol);
     shootingCooldown(player);
 
+    if (Keyboard::isKeyPressed(Keyboard::Escape))
+    {
+        Clock timer;
+        while (true)
+        {
+            if (timer.getElapsedTime().asMilliseconds() > 300)
+            {
+                pause_menu.is_paused = true;
+                break;
+            }
+        }
+    }
     if (Keyboard::isKeyPressed(Keyboard::R))
     {
         for (int i = 0; i < 5; i++)
@@ -296,6 +457,9 @@ void windowfunction()
         player.upperbodySprite.setPosition(20000, 800);
 
     cameraView();
+    enemy1->movement(enemy1);
+    enemy1->Gravity(enemy1);
+    enemy1->Damage(enemy1);
     plmovement(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
     player.playerHPSprite.setPosition(view.getCenter().x - 960, view.getCenter().y - 500);
     BGanimation();
@@ -306,18 +470,36 @@ void windowfunction()
     //   window.draw(Exitlamp);
     window.draw(FireTroches);
     //window.draw(player.rec);
+    for (int i = 0; i < 10; i++) {
+        if (enemy1[i].live == 1)
+            window.draw(enemy1[i].rec);
+    }
+    window.draw(ground[12]);
+
     window.draw(player.lowerbodySprite);
     if (!player.one_sprite_needed)
         window.draw(player.upperbodySprite);
-    /*for (int i = 0; i < 7; i++)
-        window.draw(ground[i]);
-    for (int i = 0; i < 5; i++)
-        window.draw(wall[i]);*/
 
+    
     for (int i = 0; i < 4; i++)
     {
         if (i == 1)continue;
         window.draw(Lvl1FG[i]);
+    }
+    for (int x = 0; x < rects.size(); x++)
+    {
+        // Only move the rect here, don't set the origin.
+
+        if (rects[x].second == LEFT)
+        {
+            rects[x].first.move(-10, 0);
+            window.draw(rects[x].first);
+        }
+        else if (rects[x].second == RIGHT)
+        {
+            window.draw(rects[x].first);
+            rects[x].first.move(10, 0);
+        }
     }
     window.draw(player.playerHPSprite);
     window.draw(pistol.coll);
@@ -335,9 +517,6 @@ void windowclose()
     {
         if (event.type == sf::Event::Closed)
             window.close();
-        if (Keyboard::isKeyPressed(Keyboard::Key::Escape)) {
-            window.close();
-        }
     }
 }
 void cameraView()
@@ -427,13 +606,13 @@ void cameraView()
 void Playersetup()
 {
     //sprite upperbody
-    player.upperbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Upper Body.png");
+    player.upperbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Upper Body.png");
     player.upperbodySprite.setTexture(player.upperbodyTex);
     player.upperbodySprite.setTextureRect(IntRect(0, 0, 408 / 12, 41));
     player.upperbodySprite.setPosition(600, 600);
     player.upperbodySprite.setScale(plScale, plScale);
     //sprite lowerbody
-    player.lowerbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
+    player.lowerbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Lower Body.png");
     player.lowerbodySprite.setTexture(player.lowerbodyTex);
     player.lowerbodySprite.setTextureRect(IntRect(0, 0, 408 / 12, 41));
     player.lowerbodySprite.setPosition(600, 600);
@@ -442,16 +621,11 @@ void Playersetup()
     player.rec.setPosition(player.upperbodySprite.getPosition().x - 50, player.upperbodySprite.getPosition().y);
     player.rec.setSize(Vector2f(75, 130));
     //HP
-    player.playerHPTex.loadFromFile("Gradient_Health_Bar.png");
+    player.playerHPTex.loadFromFile(pathh+"Gradient_Health_Bar.png");
     player.playerHPSprite.setTexture(player.playerHPTex);
     player.playerHPSprite.setTextureRect(IntRect(0, 0, 204, 30));
 }
-void Pistolsetup()
-{
-    pistol.coll.setSize(Vector2f(15, 10.5));
-    pistol.speed = 25;
-    pistol.cooldown = 3000;
-}
+
 void shootingCooldown(Player& player)
 {
     if (player.cooldown > 0)
@@ -468,11 +642,11 @@ void moviebullet(Player& player, Pistol& pistol)
     if (player.last_key == RIGHT || pistol.direction == RIGHT)
     {
         pistol.direction = RIGHT;
-        pistol.coll.move(Vector2f(-1 * pistol.speed, 0));
+        pistol.coll.move(Vector2f(pistol.speed, 0));
     }
     else
     {
-        pistol.coll.move(Vector2f(pistol.speed, 0));
+        pistol.coll.move(Vector2f(-1 * pistol.speed, 0));
     }
 
 
@@ -576,7 +750,7 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
         player.Velocity.x = 0;
     }
 
-    if (!collisonPl(ground, 12))
+    if (!collisonPl(ground, 20))
     {
         //gravity
         player.Velocity.y += gravity * 0.9;
@@ -585,11 +759,8 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
         onlymove(s);
         onlymove(player.upperbodySprite);
 
-        // jumping animation
-        player.upperbodyTex.loadFromFile("Jumping (Pistol) Sprite Sheet Upper Body.png");
-        player.lowerbodyTex.loadFromFile("Jumping (Pistol) Sprite Sheet Lower Body.png");
-        animation(player.upperbodySprite, 10.9, 319.0 / 11, 49, delay, 5);
-        animation(s, 10.9, 319.0 / 11, 49, delay, 6);
+        jumpingAnimation(delay);
+        shoot_timer = 0;
     }
     else
     {
@@ -625,7 +796,9 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
     // player crouches
     if (Keyboard::isKeyPressed(Keyboard::C))
     {
+        player.Velocity.x = 0;
         crouchingAnimation();
+        shoot_timer = 0;
     }
     else
     {
@@ -641,24 +814,19 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             canDoubleJump = 0;
         if (Keyboard::isKeyPressed(Keyboard::Left) && canMoveleft(s, leftEnd))
         {
+            player.last_key = LEFT;
             // if player shoots while running
             if (Keyboard::isKeyPressed(Keyboard::J))
             {
-                player.cooldown = 30;
-                player.canshoot = -1;
-                if (player.last_key == RIGHT)
-                    pistol.direction = RIGHT;
-                else
-                    pistol.direction = LEFT;
-                pistol.coll.setPosition(Vector2f(player.upperbodySprite.getPosition().x + 30, player.upperbodySprite.getPosition().y + 50));
-
+                shooting();
                 ShootingAnimation();//when pl (move&&shoot)
             }
             //if player move load running sprite sheet
             else
             {
-                player.upperbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Upper Body.png");
-                player.lowerbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
+                shoot_timer = 0;
+                player.upperbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Upper Body.png");
+                player.lowerbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Lower Body.png");
                 animation(s, maxframe, x, y, delay, index);
             }
             player.last_key = 1;
@@ -668,23 +836,19 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
         }
         else if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(s, rightEnd))
         {
+            player.last_key = RIGHT;
             // if player shoots while running
             if (Keyboard::isKeyPressed(Keyboard::J))
             {
-                player.cooldown = 30;
-                player.canshoot = -1;
-                if (player.last_key == RIGHT)
-                    pistol.direction = RIGHT;
-                else
-                    pistol.direction = LEFT;
-                pistol.coll.setPosition(Vector2f(player.upperbodySprite.getPosition().x + 30, player.upperbodySprite.getPosition().y + 50));
+                shooting();
                 ShootingAnimation();//when pl (move&&shoot)
             }
             //if player move load running sprite sheet
             else
             {
-                player.upperbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Upper Body.png");
-                player.lowerbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
+                shoot_timer = 0;
+                player.upperbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Upper Body.png");
+                player.lowerbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Lower Body.png");
                 animation(s, maxframe, x, y, delay, index);
             }
             player.last_key = 2;
@@ -697,25 +861,24 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
         {
             if (Keyboard::isKeyPressed(Keyboard::J))
             {
-                player.is_shooting = 1;
-                player.cooldown = 30;
-                player.canshoot = -1;
-                if (player.last_key == RIGHT)
-                    pistol.direction = RIGHT;
-                else
-                    pistol.direction = LEFT;
-                pistol.coll.setPosition(Vector2f(player.upperbodySprite.getPosition().x + 30, player.upperbodySprite.getPosition().y + 50));
 
+                shooting();
                 // shooting animation when pl standing
-                player.lowerbodyTex.loadFromFile("Idle (Pistol) Sprite Sheet Lower Body.png");
+                player.lowerbodyTex.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Lower Body.png");
                 animation(player.lowerbodySprite, 3.9, 128 / 4, 37, 0.04, 3);
-                player.upperbodyTex.loadFromFile("Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
+                player.upperbodyTex.loadFromFile(pathh+"Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
                 animation(player.upperbodySprite, 9.9, 520 / 10, 41, shooting_delay, 10);
+            }
+            else  if (Keyboard::isKeyPressed(Keyboard::K))
+            {
+                meeleAnimation();
+                shoot_timer = 0;
             }
             //if player not move then load idle sprite sheet
             else
             {
                 IdleAnimation();
+                shoot_timer = 0;
             }
 
             player.Velocity.x = 0;
@@ -754,26 +917,59 @@ void jump()
 }
 void IdleAnimation()
 {
-    player.lowerbodyTex.loadFromFile("Idle (Pistol) Sprite Sheet Lower Body.png");
+    player.lowerbodyTex.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Lower Body.png");
     animation(player.lowerbodySprite, 3.9, 128 / 4, 37, idle, 3);
     player.is_shooting = 0;
-    player.upperbodyTex.loadFromFile("Idle (Pistol) Sprite Sheet Upper Body.png");
+    player.upperbodyTex.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Upper Body.png");
     animation(player.upperbodySprite, 3.9, 128 / 4, 37, idle, 3);
 }
 void ShootingAnimation()
 {
-    player.lowerbodyTex.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
+    player.lowerbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Lower Body.png");
     animation(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
-    player.upperbodyTex.loadFromFile("Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
+    player.upperbodyTex.loadFromFile(pathh+"Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
     animation(player.upperbodySprite, 9.9, 520 / 10, 41, shooting_delay, 10);
 }
 void crouchingAnimation()
 {
     player.crouch = 1;
     player.one_sprite_needed = 1;
-    player.lowerbodyTex.loadFromFile("Idle - Crouching (Pistol) Sprite Sheet.png");
-    player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y);
-    animation(player.lowerbodySprite, 3.9, 136 / 4, 24, idle, 4);
+    if (Keyboard::isKeyPressed(Keyboard::J))
+    {
+        shooting();
+        player.lowerbodyTex.loadFromFile(pathh+"Shooting - Crouching (Pistol) Sprite Sheet.png");
+        player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y - 10);
+        animation(player.lowerbodySprite, 9.9, 520 / 10, 29, shooting_delay, 14);
+    }
+    else if (Keyboard::isKeyPressed(Keyboard::K))
+    {
+        player.lowerbodyTex.loadFromFile(pathh+"Melee - Crouching (Pistol) Sprite Sheet.png");
+        player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y - 30);
+        animation(player.lowerbodySprite, 6.9, 294 / 7, 35, shooting_delay, 15);
+    }
+    else
+    {
+        player.lowerbodyTex.loadFromFile(pathh+"Idle - Crouching (Pistol) Sprite Sheet.png");
+        player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y);
+        animation(player.lowerbodySprite, 3.9, 136 / 4, 24, idle, 4);
+    }
+
+}
+void meeleAnimation()
+{
+    // melee animation when pl standing
+    player.lowerbodyTex.loadFromFile(pathh+"Melee (Pistol) Sprite Sheet Lower Body.png");
+    animation(player.lowerbodySprite, 5.9, 288 / 6, 53, melee_delay, 12);
+    player.upperbodyTex.loadFromFile(pathh+"Melee (Pistol) Sprite Sheet Upper Body.png");
+    animation(player.upperbodySprite, 5.9, 288 / 6, 53, melee_delay, 12);
+
+}
+void jumpingAnimation(float delay)
+{
+    player.upperbodyTex.loadFromFile(pathh+"Jumping (Pistol) Sprite Sheet Upper Body.png");
+    player.lowerbodyTex.loadFromFile(pathh+"Jumping (Pistol) Sprite Sheet Lower Body.png");
+    animation(player.upperbodySprite, 10.9, 319.0 / 11, 49, delay, 5);
+    animation(player.lowerbodySprite, 10.9, 319.0 / 11, 49, delay, 6);
 }
 bool collisonPl(RectangleShape arr[], int size)
 {
@@ -792,10 +988,20 @@ void animation(Sprite& s, float maxframe, float x, float y, float delay, int ind
         animiindecator[index] = 0;
     s.setTextureRect(IntRect(int(animiindecator[index]) * x, 0, x, y));
 }
+void shooting()
+{
+    shoot_timer += 0.03;
+    if (shoot_timer > 1 || shoot_timer == 0.03) {
+        Vector2f pl = player.lowerbodySprite.getPosition();
+        RectangleShape rect(sf::Vector2f(40, 10));
+        rect.setOrigin(-pl.x, -(pl.y + 50));
+        rects.push_back({ rect ,player.last_key });
+        shoot_timer = 0;
+    }
 
+}
 void create(RectangleShape arr[], int index, int width, int hight, int xPosition, int yPostions)
 {
     arr[index].setSize(Vector2f(width, hight));
     arr[index].setPosition(xPosition, yPostions);
 }
-//a comment 34an mazen hassan
