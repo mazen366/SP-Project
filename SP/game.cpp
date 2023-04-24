@@ -17,12 +17,13 @@ RenderWindow window(sf::VideoMode(1920, 1080), "Game");
 Event event;
 
 //make the variable=""
-string pathh=resourcePath();
+string pathh = "";
 const float idle = 0.001,
 shooting_delay = 0.007,
 plVelocity = 0.2,
 plScale = 3.25,
 melee_delay = 0.003;
+
 
 //player
 struct Player
@@ -45,6 +46,8 @@ struct Player
     bool is_shooting = 0;
     bool one_sprite_needed = 0;
     int last_key = 0;
+    bool live = 1;
+    bool isdead = 0;
 };
 Player player;
 
@@ -71,7 +74,9 @@ struct Pistol
 
 } pistol;
 float shoot_timer = 0;
-vector<pair<RectangleShape, int>>rects;
+vector<pair<RectangleShape, int>>rects;//player pistol
+
+
 
 //pause manu
 struct Pause
@@ -129,19 +134,24 @@ struct Enemy1
     float indicator[10];
     bool isEqu = 0;
     bool isdead = 0;
+    bool check = 1;
+    int last_key = RIGHT;
+    float shoot_timer = 0;
+    bool stopshooting = 0;
+    vector<pair<RectangleShape, int>>bullet;//enemy1 pistol
     //int distance= player.upperbodySprite.getPosition().x - enemy1[i].rec.getPosition().x
     bool live = 1;
     void setup(Enemy1 enemy1[10])
     {
         for (int i = 0; i < 10; i++)
         {
-            enemy1[i].texture.loadFromFile(pathh+"RS Running Sprite Sheet.png");
+            enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
             enemy1[i].sprite.setTexture(enemy1[i].texture);
             enemy1[i].sprite.setTextureRect(IntRect(0, 0, 312 / 12, 40));
         }
         for (int i = 0; i < 10; i++)
         {
-            enemy1[i].rec.setSize(Vector2f(50, 100));
+            enemy1[i].rec.setSize(Vector2f(100, 130));
             enemy1[i].rec.setPosition(Vector2f(500 + 700 * i, 600));
             enemy1[i].sprite.setPosition(Vector2f(500 + 700 * i, 600));
             enemy1[i].sprite.setScale(plScale, plScale);
@@ -151,14 +161,15 @@ struct Enemy1
     {
         for (int i = 0; i < 10; i++)
         {
-            if (abs(player.upperbodySprite.getPosition().x - enemy1[i].sprite.getPosition().x) < 700)
+            if (abs(player.upperbodySprite.getPosition().x - enemy1[i].rec.getPosition().x) < 700 && !enemy1[i].stopshooting)
             {
-                if (abs(player.upperbodySprite.getPosition().x - enemy1[i].sprite.getPosition().x) <= 300)
+                if (abs(player.upperbodySprite.getPosition().x - enemy1[i].rec.getPosition().x)+10*i<= 400)
                 {
                     if (!enemy1[i].isEqu)
                     {
+                        enemy1[i].check = 0;
                         enemy1[i].velocity.x = 0;
-                        enemy1[i].texture.loadFromFile(pathh+"RS Equipping Sprite Sheet.png");
+                        enemy1[i].texture.loadFromFile(pathh + "RS Equipping Sprite Sheet.png");
                         enemy1[i].sprite.setOrigin(322 / 7 / 2, 0);
                         //   animation(enemy1[i].sprite, 6.9, 322 / 7, 44, 0.002, 9);
                         enemy1[i].indicator[1] += 0.2;
@@ -171,32 +182,44 @@ struct Enemy1
                     }
                     else
                     {
-
+                        enemy1[i].shooting(i);
+                        enemy1[i].check = 1;
                         enemy1[i].velocity.x = 0;
-                        enemy1[i].texture.loadFromFile(pathh+"RS Shooting Sprite Sheet.png");
-                        enemy1[i].sprite.setOrigin(183 / 3 / 3, 0);
+                        enemy1[i].texture.loadFromFile(pathh + "RS Shooting Sprite Sheet.png");
                         EnemiAnimation(enemy1[i].sprite, 2.9, 183 / 3, 38, 0.008, enemy1[i].indicator[0]);
                         if (player.upperbodySprite.getPosition().x > enemy1[i].sprite.getPosition().x)
+                        {
                             enemy1[i].sprite.setScale(-plScale, plScale);
+                            enemy1[i].sprite.setOrigin(0, 0);
+                            enemy1[i].last_key = RIGHT;
+                        }
                         else
+                        {
                             enemy1[i].sprite.setScale(plScale, plScale);
+                            enemy1[i].sprite.setOrigin(enemy1[i].sprite.getLocalBounds().width, 0);
+                            enemy1[i].last_key = LEFT;
+                        }
                     }
                 }
                 else
                 {
+                    enemy1[i].shoot_timer = 1;
                     enemy1[i].isEqu = 0;
-                    enemy1[i].texture.loadFromFile(pathh+"RS Running Sprite Sheet.png");
-                    enemy1[i].sprite.setOrigin(312 / 12 / 3, 0);
+                    enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");                   
                     EnemiAnimation(enemy1[i].sprite, 11.9, 312 / 12, 40, 0.017, enemy1[i].indicator[2]);
                     if (player.upperbodySprite.getPosition().x > enemy1[i].sprite.getPosition().x)
                     {
                         enemy1[i].velocity.x = 2;
                         enemy1[i].sprite.setScale(-plScale, plScale);
+                        enemy1[i].sprite.setOrigin(0, 0);
+                        enemy1[i].last_key = RIGHT;
                     }
                     else
                     {
                         enemy1[i].velocity.x = -2;
                         enemy1[i].sprite.setScale(plScale, plScale);
+                        enemy1[i].sprite.setOrigin(enemy1[i].sprite.getLocalBounds().width, 0);
+                        enemy1[i].last_key = LEFT;
                     }
                 }
             }
@@ -207,14 +230,26 @@ struct Enemy1
         }
         for (int i = 0; i < 10; i++)
         {
-            enemy1[i].sprite.move(enemy1[i].velocity);
+
+            enemy1[i].rec.move(enemy1[i].velocity);
+            if (enemy1[i].check)
+            {
+                enemy1[i].sprite.setPosition(enemy1[i].rec.getPosition());
+            }
+            else
+            {
+                if(player.upperbodySprite.getPosition().x > enemy1[i].sprite.getPosition().x)
+                    enemy1[i].sprite.setPosition(enemy1[i].rec.getPosition().x - 60 , enemy1[i].rec.getPosition().y - 22);
+                else
+                    enemy1[i].sprite.setPosition(enemy1[i].rec.getPosition().x - 58 , enemy1[i].rec.getPosition().y - 22);
+            }
         }
     }
     void Gravity(Enemy1 enemy1[10])
     {
         for (int j = 0; j < 10; j++)
         {
-            if (enemy1[j].sprite.getGlobalBounds().intersects(ground[0].getGlobalBounds()))
+            if (enemy1[j].rec.getGlobalBounds().intersects(ground[0].getGlobalBounds()))
             {
                 enemy1[j].velocity.y = 0;
             }
@@ -225,7 +260,7 @@ struct Enemy1
 
         }
     }
-    void Damage(Enemy1 enemy1[10])
+    void Damaged(Enemy1 enemy1[10])
     {
         for (int i = 0; i < 10; i++)
         {
@@ -235,16 +270,18 @@ struct Enemy1
                 {
                     if (enemy1[i].sprite.getGlobalBounds().intersects(rects[j].first.getGlobalBounds()) && rects[j].second != 0)
                     {
+                        enemy1[i].velocity.x = 0;
                         enemy1[i].health -= 1;
                         rects[j].second = 0;
                     }
                 }
                 if (enemy1[i].health <= 0)
                 {
+                    enemy1[i].stopshooting = 1;
                     if (!enemy1[i].isdead)
                     {
                         enemy1[i].velocity.x = 0;
-                        enemy1[i].texture.loadFromFile(pathh+"RS Dying Sprite Sheet.png");
+                        enemy1[i].texture.loadFromFile(pathh + "RS Dying Sprite Sheet.png");
                         enemy1[i].sprite.setOrigin(341 / 11 / 2, 0);
                         enemy1[i].indicator[1] += 0.1;
                         if (enemy1[i].indicator[1] > 10.9)
@@ -263,6 +300,17 @@ struct Enemy1
                 }
 
             }
+        }
+    }
+    void shooting(int i)
+    {
+        enemy1[i].shoot_timer += 0.05;
+        if (enemy1[i].shoot_timer > 1 || enemy1[i].shoot_timer == 0.03) {
+            Vector2f pl = enemy1[i].sprite.getPosition();
+            RectangleShape rect(sf::Vector2f(40, 10));
+            rect.setOrigin(-pl.x, -(pl.y + 50));
+            enemy1[i].bullet.push_back({ rect ,enemy1[i].last_key});
+            enemy1[i].shoot_timer = 0;
         }
     }
 }enemy1[10];
@@ -327,7 +375,48 @@ bool canMoveleft(Sprite, int);
 bool collisonPl(RectangleShape[], int);
 void create(RectangleShape[], int, int, int, int, int);//make ground
 void animation(Sprite&, float, float, float, float, int);
+void Damaged()
+{
+    if (player.live)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            for (int j = 0; j < enemy1[i].bullet.size(); j++)
+            {
+                if ((player.lowerbodySprite.getGlobalBounds().intersects(enemy1[i].bullet[j].first.getGlobalBounds()) || player.upperbodySprite.getGlobalBounds().intersects(enemy1[i].bullet[j].first.getGlobalBounds())) && enemy1[i].bullet[j].second != 0)
+                {
+                    player.health -= enemy1[i].damage;
+                    enemy1[i].bullet[j].second = 0;
+                }
+            }
+            if (player.health <= 0)
+            {
+                //don't remove this comment
+                /*
+                if (!player.isdead)
+                {
+                    player.Velocity.x = 0;
+                    player.lowerbodyTex.loadFromFile(pathh + "RS Dying Sprite Sheet.png");
+                    enemy1[i].sprite.setOrigin(341 / 11 / 2, 0);
+                    enemy1[i].indicator[1] += 0.1;
+                    if (enemy1[i].indicator[1] > 10.9)
+                    {
+                        enemy1[i].indicator[1] = 0.2;
+                        enemy1[i].isdead = 1;
+                    }
+                    enemy1[i].sprite.setTextureRect(IntRect(int(enemy1[i].indicator[1]) * 341 / 11, 0, 341 / 11, 39));
 
+
+                }
+                else
+                {*/
+                player.live = 0;
+                //}
+            }
+
+        }
+    }
+}
 int main()
 {
     window.setFramerateLimit(60);
@@ -426,17 +515,17 @@ void Menu()
 void bgSetup()
 {
     // LEVEL 1 A SET UP
-    bgTexture[0].loadFromFile(pathh+"Level 1-A BG.png");
+    bgTexture[0].loadFromFile(pathh + "Level 1-A BG.png");
     bgSprite[0].setTexture(bgTexture[0]);
     bgSprite[0].setPosition(-370, -53);
     create(ground, 0, 8830, 30, -370, 800);
     //lvl 1 ->A FG
-    lvl1FGtex[0].loadFromFile(pathh+"Level 1-A FG.png");
+    lvl1FGtex[0].loadFromFile(pathh + "Level 1-A FG.png");
     Lvl1FG[0].setTexture(lvl1FGtex[0]);
     Lvl1FG[0].setPosition(-370, -53);
 
     // LEVEL 1 B->1 SET UP
-    bgTexture[1].loadFromFile(pathh+"Level 1-B-1 BG.png");
+    bgTexture[1].loadFromFile(pathh + "Level 1-B-1 BG.png");
     bgSprite[1].setTexture(bgTexture[1]);
     bgSprite[1].setPosition(10000, -50);
     create(ground, 1, 5939, 30, 10000, 907);
@@ -447,18 +536,18 @@ void bgSetup()
     create(ground, 6, 700, 10, 16850, 40);
 
     // LEVEL 1 B->2 SET UP
-    bgTexture[2].loadFromFile(pathh+"Level 1-B-2 BG.png");
+    bgTexture[2].loadFromFile(pathh + "Level 1-B-2 BG.png");
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
 
     //animation lv1-B-2(Exit lamp)
-    ExitlampTex.loadFromFile(pathh+"Level 1-B-2 Exit Lamp.png");
+    ExitlampTex.loadFromFile(pathh + "Level 1-B-2 Exit Lamp.png");
     Exitlamp.setTexture(ExitlampTex);
     Exitlamp.setTextureRect(IntRect(0, 0, 17328 / 6, 2087));
     Exitlamp.setPosition(14771, -940);
 
     //FG Lv1-B-2
-    lvl1FGtex[2].loadFromFile(pathh+"Level 1-B-2 FG.png");
+    lvl1FGtex[2].loadFromFile(pathh + "Level 1-B-2 FG.png");
     Lvl1FG[2].setTexture(lvl1FGtex[2]);
     Lvl1FG[2].setPosition(14771, -940);
 
@@ -469,24 +558,24 @@ void bgSetup()
     create(wall, 4, 10, 140, 16840, 60);
 
     //LEVEL 1 C SET UP
-    bgTexture[3].loadFromFile(pathh+"Level 1-C BG.png");
+    bgTexture[3].loadFromFile(pathh + "Level 1-C BG.png");
     bgSprite[3].setTexture(bgTexture[3]);
     bgSprite[3].setPosition(18000, 0);
 
     //fire troches lv1 ->c
-    FireTrochestex.loadFromFile(pathh+"Level 1-C Fire Torches.png");
+    FireTrochestex.loadFromFile(pathh + "Level 1-C Fire Torches.png");
     FireTroches.setTexture(FireTrochestex);
     FireTroches.setTextureRect(IntRect(0, 0, 13120 / 8, 1192));
     FireTroches.setPosition(18000, 0);
 
     //lvl 1 ->c FG
-    lvl1FGtex[3].loadFromFile(pathh+"Level 1-C FG.png");
+    lvl1FGtex[3].loadFromFile(pathh + "Level 1-C FG.png");
     Lvl1FG[3].setTexture(lvl1FGtex[3]);
     Lvl1FG[3].setPosition(18000, 0);
     create(ground, 7, 1640, 20, 18000, 970);
 
     //LEVEL 1 D SET UP
-    bgTexture[4].loadFromFile(pathh+"Level 1-D BG.png");
+    bgTexture[4].loadFromFile(pathh + "Level 1-D BG.png");
     bgSprite[4].setTexture(bgTexture[4]);
     bgSprite[4].setPosition(20000, 0);
     create(ground, 8, 1050, 20, 20000, 900);
@@ -537,8 +626,8 @@ void windowfunction()
     cameraView();
     enemy1->movement(enemy1);
     enemy1->Gravity(enemy1);
-    enemy1->Damage(enemy1);
-
+    enemy1->Damaged(enemy1);
+    Damaged();
     plmovement(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
     player.playerHPSprite.setPosition(view.getCenter().x - 960, view.getCenter().y - 500);
     BGanimation();
@@ -557,10 +646,12 @@ void windowfunction()
     }
     window.draw(ground[12]);
 
-    window.draw(player.lowerbodySprite);
-    if (!player.one_sprite_needed)
-        window.draw(player.upperbodySprite);
-
+    if (player.live)
+    {
+        window.draw(player.lowerbodySprite);
+        if (!player.one_sprite_needed)
+            window.draw(player.upperbodySprite);
+    }
 
     for (int i = 0; i < 4; i++)
     {
@@ -582,6 +673,24 @@ void windowfunction()
             rects[x].first.move(10, 0);
         }
     }
+    for (int i = 0; i < 10; i++)
+    {
+        for (int x = 0; x < enemy1[i].bullet.size(); x++)
+        {
+            
+            if (enemy1[i].bullet[x].second == LEFT)
+            {
+                enemy1[i].bullet[x].first.move(-10, 0);
+                window.draw(enemy1[i].bullet[x].first);
+            }
+            else if (enemy1[i].bullet[x].second == RIGHT)
+            {
+                window.draw(enemy1[i].bullet[x].first);
+                enemy1[i].bullet[x].first.move(10, 0);
+            }
+        }
+    }
+   // window.draw(ground[0]);
     window.draw(player.playerHPSprite);
     window.draw(pistol.coll);
     window.setView(view);
@@ -599,6 +708,7 @@ void windowclose()
         if (event.type == sf::Event::Closed)
             window.close();
     }
+
 }
 void cameraView()
 {
@@ -687,22 +797,22 @@ void cameraView()
 void Playersetup()
 {
     //sprite upperbody
-    player.upperbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Upper Body.png");
+    player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
     player.upperbodySprite.setTexture(player.upperbodyTex);
     player.upperbodySprite.setTextureRect(IntRect(0, 0, 408 / 12, 41));
-    player.upperbodySprite.setPosition(600, 600);
+    player.upperbodySprite.setPosition(100, 600);
     player.upperbodySprite.setScale(plScale, plScale);
     //sprite lowerbody
-    player.lowerbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Lower Body.png");
+    player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
     player.lowerbodySprite.setTexture(player.lowerbodyTex);
     player.lowerbodySprite.setTextureRect(IntRect(0, 0, 408 / 12, 41));
-    player.lowerbodySprite.setPosition(600, 600);
+    player.lowerbodySprite.setPosition(100, 600);
     player.lowerbodySprite.setScale(plScale, plScale);
     //rectangle
     player.rec.setPosition(player.upperbodySprite.getPosition().x - 50, player.upperbodySprite.getPosition().y);
     player.rec.setSize(Vector2f(75, 130));
     //HP
-    player.playerHPTex.loadFromFile(pathh+"Gradient_Health_Bar.png");
+    player.playerHPTex.loadFromFile(pathh + "Gradient_Health_Bar.png");
     player.playerHPSprite.setTexture(player.playerHPTex);
     player.playerHPSprite.setTextureRect(IntRect(0, 0, 204, 30));
 }
@@ -905,8 +1015,8 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             else
             {
                 shoot_timer = 0;
-                player.upperbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Upper Body.png");
-                player.lowerbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Lower Body.png");
+                player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
+                player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
                 animation(s, maxframe, x, y, delay, index);
             }
             player.last_key = 1;
@@ -927,8 +1037,8 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             else
             {
                 shoot_timer = 0;
-                player.upperbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Upper Body.png");
-                player.lowerbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Lower Body.png");
+                player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
+                player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
                 animation(s, maxframe, x, y, delay, index);
             }
             player.last_key = 2;
@@ -944,9 +1054,9 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
 
                 shooting();
                 // shooting animation when pl standing
-                player.lowerbodyTex.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Lower Body.png");
+                player.lowerbodyTex.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Lower Body.png");
                 animation(player.lowerbodySprite, 3.9, 128 / 4, 37, 0.04, 3);
-                player.upperbodyTex.loadFromFile(pathh+"Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
+                player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
                 animation(player.upperbodySprite, 9.9, 520 / 10, 41, shooting_delay, 10);
             }
             else  if (Keyboard::isKeyPressed(Keyboard::K))
@@ -997,17 +1107,17 @@ void jump()
 }
 void IdleAnimation()
 {
-    player.lowerbodyTex.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Lower Body.png");
+    player.lowerbodyTex.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Lower Body.png");
     animation(player.lowerbodySprite, 3.9, 128 / 4, 37, idle, 3);
     player.is_shooting = 0;
-    player.upperbodyTex.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Upper Body.png");
+    player.upperbodyTex.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Upper Body.png");
     animation(player.upperbodySprite, 3.9, 128 / 4, 37, idle, 3);
 }
 void ShootingAnimation()
 {
-    player.lowerbodyTex.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Lower Body.png");
+    player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
     animation(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
-    player.upperbodyTex.loadFromFile(pathh+"Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
+    player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
     animation(player.upperbodySprite, 9.9, 520 / 10, 41, shooting_delay, 10);
 }
 void crouchingAnimation()
@@ -1017,19 +1127,19 @@ void crouchingAnimation()
     if (Keyboard::isKeyPressed(Keyboard::J))
     {
         shooting();
-        player.lowerbodyTex.loadFromFile(pathh+"Shooting - Crouching (Pistol) Sprite Sheet.png");
+        player.lowerbodyTex.loadFromFile(pathh + "Shooting - Crouching (Pistol) Sprite Sheet.png");
         player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y - 10);
         animation(player.lowerbodySprite, 9.9, 520 / 10, 29, shooting_delay, 14);
     }
     else if (Keyboard::isKeyPressed(Keyboard::K))
     {
-        player.lowerbodyTex.loadFromFile(pathh+"Melee - Crouching (Pistol) Sprite Sheet.png");
+        player.lowerbodyTex.loadFromFile(pathh + "Melee - Crouching (Pistol) Sprite Sheet.png");
         player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y - 30);
         animation(player.lowerbodySprite, 6.9, 294 / 7, 35, shooting_delay, 15);
     }
     else
     {
-        player.lowerbodyTex.loadFromFile(pathh+"Idle - Crouching (Pistol) Sprite Sheet.png");
+        player.lowerbodyTex.loadFromFile(pathh + "Idle - Crouching (Pistol) Sprite Sheet.png");
         player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y);
         animation(player.lowerbodySprite, 3.9, 136 / 4, 24, idle, 4);
     }
@@ -1038,16 +1148,16 @@ void crouchingAnimation()
 void meeleAnimation()
 {
     // melee animation when pl standing
-    player.lowerbodyTex.loadFromFile(pathh+"Melee (Pistol) Sprite Sheet Lower Body.png");
+    player.lowerbodyTex.loadFromFile(pathh + "Melee (Pistol) Sprite Sheet Lower Body.png");
     animation(player.lowerbodySprite, 5.9, 288 / 6, 53, melee_delay, 12);
-    player.upperbodyTex.loadFromFile(pathh+"Melee (Pistol) Sprite Sheet Upper Body.png");
+    player.upperbodyTex.loadFromFile(pathh + "Melee (Pistol) Sprite Sheet Upper Body.png");
     animation(player.upperbodySprite, 5.9, 288 / 6, 53, melee_delay, 12);
 
 }
 void jumpingAnimation(float delay)
 {
-    player.upperbodyTex.loadFromFile(pathh+"Jumping (Pistol) Sprite Sheet Upper Body.png");
-    player.lowerbodyTex.loadFromFile(pathh+"Jumping (Pistol) Sprite Sheet Lower Body.png");
+    player.upperbodyTex.loadFromFile(pathh + "Jumping (Pistol) Sprite Sheet Upper Body.png");
+    player.lowerbodyTex.loadFromFile(pathh + "Jumping (Pistol) Sprite Sheet Lower Body.png");
     animation(player.upperbodySprite, 10.9, 319.0 / 11, 49, delay, 5);
     animation(player.lowerbodySprite, 10.9, 319.0 / 11, 49, delay, 6);
 }
