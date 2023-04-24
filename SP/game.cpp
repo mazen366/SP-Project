@@ -17,7 +17,7 @@ RenderWindow window(sf::VideoMode(1920, 1080), "Game");
 Event event;
 
 //make the variable=""
-string pathh = "";
+string pathh = resourcePath();
 const float idle = 0.001,
 shooting_delay = 0.007,
 plVelocity = 0.2,
@@ -26,6 +26,7 @@ melee_delay = 0.003;
 
 
 //player
+int powerupCounter=120;//ten seconds
 struct Player
 {
     //?
@@ -48,6 +49,29 @@ struct Player
     int last_key = 0;
     bool live = 1;
     bool isdead = 0;
+    void speedPowerup()
+    {
+        Velocity.x=100;
+        powerupCounter=600;
+    }
+    void HelthPowerup()
+    {
+        health=10;
+    }
+    bool isPowerupfinished()
+    {
+        if(powerupCounter>0)
+        {
+            powerupCounter--;
+            return false;
+        }
+        else
+            return true;
+        
+    }
+                            
+    //void
+    
 };
 Player player;
 
@@ -61,15 +85,20 @@ struct Pistol
     Texture pistol_Ammo_Tex;
     Sprite pistol_Ammo_Sprite;
     float cooldown;
+    int damage = 1;
     void setup(Pistol pistol)
     {
         pistol.coll.setSize(Vector2f(15, 10.5));
         pistol.speed = 25;
         pistol.cooldown = 3000;
     }
-
-    //new code
-    int damage = 1;
+    
+    void dmgPowerup(Pistol pistol)
+    {
+        damage=5;
+        powerupCounter=600;
+    }
+    
 
 
 } pistol;
@@ -182,7 +211,7 @@ struct Enemy1
                     }
                     else
                     {
-                        enemy1[i].shooting(i);
+                        enemy1[i].shooting(i,enemy1);
                         enemy1[i].check = 1;
                         enemy1[i].velocity.x = 0;
                         enemy1[i].texture.loadFromFile(pathh + "RS Shooting Sprite Sheet.png");
@@ -205,7 +234,7 @@ struct Enemy1
                 {
                     enemy1[i].shoot_timer = 1;
                     enemy1[i].isEqu = 0;
-                    enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");                   
+                    enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
                     EnemiAnimation(enemy1[i].sprite, 11.9, 312 / 12, 40, 0.017, enemy1[i].indicator[2]);
                     if (player.upperbodySprite.getPosition().x > enemy1[i].sprite.getPosition().x)
                     {
@@ -302,7 +331,7 @@ struct Enemy1
             }
         }
     }
-    void shooting(int i)
+    void shooting(int i,Enemy1 enemy1[10])
     {
         enemy1[i].shoot_timer += 0.05;
         if (enemy1[i].shoot_timer > 1 || enemy1[i].shoot_timer == 0.03) {
@@ -345,6 +374,8 @@ float animiindecator[30];
 Texture lvl1FGtex[30];
 Sprite Lvl1FG[30];
 
+//powerups
+RectangleShape powerups(Vector2f(50,50));
 // DECLRATIONS
 void shooting();
 void jumpingAnimation(float);
@@ -375,48 +406,7 @@ bool canMoveleft(Sprite, int);
 bool collisonPl(RectangleShape[], int);
 void create(RectangleShape[], int, int, int, int, int);//make ground
 void animation(Sprite&, float, float, float, float, int);
-void Damaged()
-{
-    if (player.live)
-    {
-        for (int i = 0; i < 10; i++)
-        {
-            for (int j = 0; j < enemy1[i].bullet.size(); j++)
-            {
-                if ((player.lowerbodySprite.getGlobalBounds().intersects(enemy1[i].bullet[j].first.getGlobalBounds()) || player.upperbodySprite.getGlobalBounds().intersects(enemy1[i].bullet[j].first.getGlobalBounds())) && enemy1[i].bullet[j].second != 0)
-                {
-                    player.health -= enemy1[i].damage;
-                    enemy1[i].bullet[j].second = 0;
-                }
-            }
-            if (player.health <= 0)
-            {
-                //don't remove this comment
-                /*
-                if (!player.isdead)
-                {
-                    player.Velocity.x = 0;
-                    player.lowerbodyTex.loadFromFile(pathh + "RS Dying Sprite Sheet.png");
-                    enemy1[i].sprite.setOrigin(341 / 11 / 2, 0);
-                    enemy1[i].indicator[1] += 0.1;
-                    if (enemy1[i].indicator[1] > 10.9)
-                    {
-                        enemy1[i].indicator[1] = 0.2;
-                        enemy1[i].isdead = 1;
-                    }
-                    enemy1[i].sprite.setTextureRect(IntRect(int(enemy1[i].indicator[1]) * 341 / 11, 0, 341 / 11, 39));
-
-
-                }
-                else
-                {*/
-                player.live = 0;
-                //}
-            }
-
-        }
-    }
-}
+void Damaged();
 int main()
 {
     window.setFramerateLimit(60);
@@ -519,6 +509,7 @@ void bgSetup()
     bgSprite[0].setTexture(bgTexture[0]);
     bgSprite[0].setPosition(-370, -53);
     create(ground, 0, 8830, 30, -370, 800);
+    powerups.setPosition(500, 750);
     //lvl 1 ->A FG
     lvl1FGtex[0].loadFromFile(pathh + "Level 1-A FG.png");
     Lvl1FG[0].setTexture(lvl1FGtex[0]);
@@ -627,6 +618,16 @@ void windowfunction()
     enemy1->movement(enemy1);
     enemy1->Gravity(enemy1);
     enemy1->Damaged(enemy1);
+    if(player.isPowerupfinished())
+    {
+        player.Velocity.x=0;
+        pistol.damage=1;
+    }
+    else if(powerups.getGlobalBounds().intersects(player.lowerbodySprite.getGlobalBounds()))
+    {
+        pistol.dmgPowerup(pistol);
+        player.speedPowerup();
+    }
     Damaged();
     plmovement(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
     player.playerHPSprite.setPosition(view.getCenter().x - 960, view.getCenter().y - 500);
@@ -693,6 +694,7 @@ void windowfunction()
    // window.draw(ground[0]);
     window.draw(player.playerHPSprite);
     window.draw(pistol.coll);
+    window.draw(powerups);
     window.setView(view);
     transition_pos_check();
 }
@@ -1201,3 +1203,46 @@ void create(RectangleShape arr[], int index, int width, int hight, int xPosition
     arr[index].setSize(Vector2f(width, hight));
     arr[index].setPosition(xPosition, yPostions);
 }
+void Damaged()
+{
+    if (player.live)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            for (int j = 0; j < enemy1[i].bullet.size(); j++)
+            {
+                if ((player.lowerbodySprite.getGlobalBounds().intersects(enemy1[i].bullet[j].first.getGlobalBounds()) || player.upperbodySprite.getGlobalBounds().intersects(enemy1[i].bullet[j].first.getGlobalBounds())) && enemy1[i].bullet[j].second != 0)
+                {
+                    player.health -= enemy1[i].damage;
+                    enemy1[i].bullet[j].second = 0;
+                }
+            }
+            if (player.health <= 0)
+            {
+                //don't remove this comment
+                /*
+                if (!player.isdead)
+                {
+                    player.Velocity.x = 0;
+                    player.lowerbodyTex.loadFromFile(pathh + "RS Dying Sprite Sheet.png");
+                    enemy1[i].sprite.setOrigin(341 / 11 / 2, 0);
+                    enemy1[i].indicator[1] += 0.1;
+                    if (enemy1[i].indicator[1] > 10.9)
+                    {
+                        enemy1[i].indicator[1] = 0.2;
+                        enemy1[i].isdead = 1;
+                    }
+                    enemy1[i].sprite.setTextureRect(IntRect(int(enemy1[i].indicator[1]) * 341 / 11, 0, 341 / 11, 39));
+
+
+                }
+                else
+                {*/
+                player.live = 0;
+                //}
+            }
+
+        }
+    }
+}
+
