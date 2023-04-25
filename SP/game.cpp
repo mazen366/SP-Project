@@ -41,7 +41,7 @@ float AlphaPE = 255;
 int TS_ButtonsCnt = 0;
 
 //player
-int powerupCounter=120;//ten seconds
+int powerupCounter = 120;//ten seconds
 struct Player
 {
     //?
@@ -66,27 +66,27 @@ struct Player
     bool isdead = 0;
     void speedPowerup()
     {
-        Velocity.x=100;
-        powerupCounter=600;
+        Velocity.x = 100;
+        powerupCounter = 600;
     }
     void HelthPowerup()
     {
-        health=10;
+        health = 10;
     }
     bool isPowerupfinished()
     {
-        if(powerupCounter>0)
+        if (powerupCounter > 0)
         {
             powerupCounter--;
             return false;
         }
         else
             return true;
-        
+
     }
-                            
+
     //void
-    
+
 };
 Player player;
 
@@ -107,13 +107,13 @@ struct Pistol
         pistol.speed = 25;
         pistol.cooldown = 3000;
     }
-    
+
     void dmgPowerup(Pistol pistol)
     {
-        damage=5;
-        powerupCounter=600;
+        damage = 5;
+        powerupCounter = 600;
     }
-    
+
 
 
 } pistol;
@@ -247,7 +247,7 @@ struct Enemy1
         {
             if (abs(player.upperbodySprite.getPosition().x - enemy1[i].rec.getPosition().x) < 700 && !enemy1[i].stopshooting)
             {
-                if (abs(player.upperbodySprite.getPosition().x - enemy1[i].rec.getPosition().x)+10*i<= 400)
+                if (abs(player.upperbodySprite.getPosition().x - enemy1[i].rec.getPosition().x) + 10 * i <= 400)
                 {
                     if (!enemy1[i].isEqu)
                     {
@@ -266,7 +266,7 @@ struct Enemy1
                     }
                     else
                     {
-                        enemy1[i].shooting(i,enemy1);
+                        enemy1[i].shooting(i, enemy1);
                         enemy1[i].check = 1;
                         enemy1[i].velocity.x = 0;
                         enemy1[i].texture.loadFromFile(pathh + "RS Shooting Sprite Sheet.png");
@@ -322,10 +322,10 @@ struct Enemy1
             }
             else
             {
-                if(player.upperbodySprite.getPosition().x > enemy1[i].sprite.getPosition().x)
-                    enemy1[i].sprite.setPosition(enemy1[i].rec.getPosition().x - 60 , enemy1[i].rec.getPosition().y - 22);
+                if (player.upperbodySprite.getPosition().x > enemy1[i].sprite.getPosition().x)
+                    enemy1[i].sprite.setPosition(enemy1[i].rec.getPosition().x - 60, enemy1[i].rec.getPosition().y - 22);
                 else
-                    enemy1[i].sprite.setPosition(enemy1[i].rec.getPosition().x - 58 , enemy1[i].rec.getPosition().y - 22);
+                    enemy1[i].sprite.setPosition(enemy1[i].rec.getPosition().x - 58, enemy1[i].rec.getPosition().y - 22);
             }
         }
     }
@@ -386,14 +386,14 @@ struct Enemy1
             }
         }
     }
-    void shooting(int i,Enemy1 enemy1[10])
+    void shooting(int i, Enemy1 enemy1[10])
     {
         enemy1[i].shoot_timer += 0.05;
         if (enemy1[i].shoot_timer > 1 || enemy1[i].shoot_timer == 0.03) {
             Vector2f pl = enemy1[i].sprite.getPosition();
             RectangleShape rect(sf::Vector2f(40, 10));
             rect.setOrigin(-pl.x, -(pl.y + 50));
-            enemy1[i].bullet.push_back({ rect ,enemy1[i].last_key});
+            enemy1[i].bullet.push_back({ rect ,enemy1[i].last_key });
             enemy1[i].shoot_timer = 0;
         }
     }
@@ -430,7 +430,7 @@ Texture lvl1FGtex[30];
 Sprite Lvl1FG[30];
 
 //powerups
-RectangleShape powerups(Vector2f(50,50));
+RectangleShape powerups(Vector2f(50, 50));
 // DECLRATIONS
 void TS_Setups();
 void shooting();
@@ -692,12 +692,12 @@ void windowfunction()
     enemy1->movement(enemy1);
     enemy1->Gravity(enemy1);
     enemy1->Damaged(enemy1);
-    if(player.isPowerupfinished())
+    if (player.isPowerupfinished())
     {
-        player.Velocity.x=0;
-        pistol.damage=1;
+        player.Velocity.x = 0;
+        pistol.damage = 1;
     }
-    else if(powerups.getGlobalBounds().intersects(player.lowerbodySprite.getGlobalBounds()))
+    else if (powerups.getGlobalBounds().intersects(player.lowerbodySprite.getGlobalBounds()))
     {
         pistol.dmgPowerup(pistol);
         player.speedPowerup();
@@ -752,7 +752,7 @@ void windowfunction()
     {
         for (int x = 0; x < enemy1[i].bullet.size(); x++)
         {
-            
+
             if (enemy1[i].bullet[x].second == LEFT)
             {
                 enemy1[i].bullet[x].first.move(-10, 0);
@@ -765,7 +765,7 @@ void windowfunction()
             }
         }
     }
-   // window.draw(ground[0]);
+    // window.draw(ground[0]);
     window.draw(player.playerHPSprite);
     window.draw(pistol.coll);
     window.draw(powerups);
@@ -1330,7 +1330,7 @@ void TS_Setups()
     TS_BGSpr.setTexture(TS_BGTex);
     TS_BGTheme.openFromFile("Title Screen _ Main Menu Theme.wav");
     TS_BGTheme.play();
-    TS_BGTheme.setVolume(50.f);     
+    TS_BGTheme.setVolume(50.f);
     TS_BGTheme.setLoop(true);
     TS_BGFireFX.openFromFile("Title Screen _ Main Menu Fire Sound.wav");
     TS_BGFireFX.play();
@@ -1342,7 +1342,7 @@ void TS_Setups()
     TS_TandGSpr.setPosition(659.f, 208.f);
     TS_TandGTex.loadFromFile("TS Torches _ Gate Sprite Sheet.png");
     TS_TandGSpr.setTexture(TS_TandGTex);
-    
+
 
 
     TS_LSpr.setPosition(722.f, 0.f);
@@ -1376,4 +1376,3 @@ void TS_Setups()
     MenuScroll.setBuffer(MenuScrollB);
     MenuScroll.setVolume(100);
 }
-
