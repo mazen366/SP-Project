@@ -19,7 +19,7 @@ RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Default);
 Event event;
 
 //make the variable=""
-string pathh = "";
+string pathh = resourcePath();
 const float idle = 0.001,
 shooting_delay = 0.007,
 plVelocity = 0.2,
@@ -481,6 +481,7 @@ void Menu()
 {
     while (window.isOpen())
     {
+        windowclose();
         if (pause_menu.is_paused)
         {
             if (Keyboard::isKeyPressed(Keyboard::Escape))
@@ -768,7 +769,7 @@ void windowfunction()
     // window.draw(ground[0]);
     window.draw(player.playerHPSprite);
     window.draw(pistol.coll);
-    window.draw(powerups);
+    //window.draw(powerups);
     window.setView(view);
     transition_pos_check();
 }
@@ -1326,13 +1327,13 @@ void TS_Setups()
     //Sets up the Title Screen & Main Menu Background, Music and Fire Sound Effect.
 
     TS_BGSpr.setPosition(0.f, 0.f);
-    TS_BGTex.loadFromFile("TS BG.png");
+    TS_BGTex.loadFromFile(pathh+"TS BG.png");
     TS_BGSpr.setTexture(TS_BGTex);
-    TS_BGTheme.openFromFile("Title Screen _ Main Menu Theme.wav");
+    TS_BGTheme.openFromFile(pathh+"Title Screen _ Main Menu Theme.wav");
     TS_BGTheme.play();
     TS_BGTheme.setVolume(50.f);
     TS_BGTheme.setLoop(true);
-    TS_BGFireFX.openFromFile("Title Screen _ Main Menu Fire Sound.wav");
+    TS_BGFireFX.openFromFile(pathh+"Title Screen _ Main Menu Fire Sound.wav");
     TS_BGFireFX.play();
     TS_BGFireFX.setVolume(30.f);
     TS_BGFireFX.setLoop(true);
@@ -1340,39 +1341,39 @@ void TS_Setups()
 
     //Sets up the Title Screen & Main Menu Torches & Gate Animation.
     TS_TandGSpr.setPosition(659.f, 208.f);
-    TS_TandGTex.loadFromFile("TS Torches _ Gate Sprite Sheet.png");
+    TS_TandGTex.loadFromFile(pathh+"TS Torches _ Gate Sprite Sheet.png");
     TS_TandGSpr.setTexture(TS_TandGTex);
 
 
 
     TS_LSpr.setPosition(722.f, 0.f);
-    TS_LTex.loadFromFile("TS Lamp Sprite Sheet.png");
+    TS_LTex.loadFromFile(pathh+"TS Lamp Sprite Sheet.png");
     TS_LSpr.setTexture(TS_LTex);
 
 
     TS_VSpr.setPosition(0.f, 0.f);
-    TS_VTex.loadFromFile("Vignette.png");
+    TS_VTex.loadFromFile(pathh+"Vignette.png");
     TS_VSpr.setTexture(TS_VTex);
 
 
     TS_LogoSpr.setPosition(269.f, 465.f);
-    TS_LogoTex.loadFromFile("TS 1 Sprite Sheet.png");
+    TS_LogoTex.loadFromFile(pathh+"TS 1 Sprite Sheet.png");
     TS_LogoSpr.setTexture(TS_LogoTex);
 
     TS_PESpr.setPosition(612.f, 874.f);
-    TS_PETex.loadFromFile("TS Press Enter Sprite Sheet.png");
+    TS_PETex.loadFromFile(pathh+"TS Press Enter Sprite Sheet.png");
     TS_PESpr.setTexture(TS_PETex);
 
 
     TS_buttonsSpr.setPosition(769.f, 650.f);
-    TS_buttonsTex.loadFromFile("Main Menu Sprite Sheet.png");
+    TS_buttonsTex.loadFromFile(pathh+"Main Menu Sprite Sheet.png");
     TS_buttonsSpr.setTexture(TS_buttonsTex);
     TS_buttonsSpr.setTextureRect(IntRect(0, 0, 360, 315));
 
-    MenuClickB.loadFromFile("Menu Click FX.wav");
+    MenuClickB.loadFromFile(pathh+"Menu Click FX.wav");
     MenuClick.setBuffer(MenuClickB);
 
-    MenuScrollB.loadFromFile("Menu Scrolling FX.wav");
+    MenuScrollB.loadFromFile(pathh+"Menu Scrolling FX.wav");
     MenuScroll.setBuffer(MenuScrollB);
     MenuScroll.setVolume(100);
 }
