@@ -1,9 +1,11 @@
 ﻿#include <SFML/Graphics.hpp>
 #include<thread>
+#include <SFML/Audio.hpp>
 #include <iostream>
 #define START 1
 #define OPTIONS 2
-#define EXIT 3
+#define CREDITS 3
+#define EXIT 4
 #define RIGHT 4
 #define LEFT 5
 #define LEVEL_1_A_BG 0
@@ -13,17 +15,30 @@
 using namespace std;
 using namespace sf;
 
-RenderWindow window(sf::VideoMode(1920, 1080), "Game");
+RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Default);
 Event event;
 
 //make the variable=""
-string pathh = resourcePath();
+string pathh = "";
 const float idle = 0.001,
 shooting_delay = 0.007,
 plVelocity = 0.2,
 plScale = 3.25,
 melee_delay = 0.003;
+Texture TS_BGTex, TS_TandGTex, TS_LTex, TS_VTex, TS_LogoTex, TS_PETex, TS_buttonsTex;
+Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr;
+Music TS_BGTheme;
+Music TS_BGFireFX;
+SoundBuffer MenuClickB, MenuScrollB;
+Sound MenuClick, MenuScroll;
+Clock timer;
 
+float TS_TandGCnt = 0;
+float TS_LCnt = 0;
+float TS_LogoCnt = 0;
+float TS_PECnt = 0;
+float AlphaPE = 255;
+int TS_ButtonsCnt = 0;
 
 //player
 int powerupCounter=120;//ten seconds
@@ -131,17 +146,57 @@ struct Pause
 struct Menu
 {
     int selected = 1;
-    bool start_selected = false, options_selected = false, is_paused = false;
+    bool start_selected = false, options_selected = false, is_paused = false, ts_escaped = false;
 
     void move_up()
     {
-        selected = (selected == 1 ? 3 : selected - 1);
+        selected = (selected == 1 ? 4 : selected - 1);
+        TS_ButtonsCnt = selected - 1;
+        MenuScroll.play();
     }
     void move_down()
     {
-        selected = (selected == 3 ? 1 : selected + 1);
+        selected = (selected == 4 ? 1 : selected + 1);
+        TS_ButtonsCnt = selected - 1;
+        MenuScroll.play();
     }
+    void draw()
+    {
+        window.clear();
+        TS_TandGCnt += 0.139;
+        if (TS_TandGCnt > 8)
+            TS_TandGCnt -= 8;
+        TS_TandGSpr.setTextureRect(IntRect((int)TS_TandGCnt * 600, 0, 600, 600));
 
+        TS_LCnt += 0.139;
+        if (TS_LCnt > 10)
+            TS_LCnt -= 10;
+        TS_LSpr.setTextureRect(IntRect((int)TS_LCnt * 473, 0, 473, 261));
+
+        TS_LogoCnt += 0.139;
+        if (TS_LogoCnt > 10)
+            TS_LogoCnt -= 10;
+        TS_LogoSpr.setTextureRect(IntRect((int)TS_LogoCnt * 1382, 0, 1382, 170));
+
+        TS_PECnt += 0.139;
+        if (TS_PECnt > 10)
+            TS_PECnt -= 10;
+        TS_PESpr.setTextureRect(IntRect((int)TS_PECnt * 695, 0, 695, 81));
+        window.draw(TS_BGSpr);
+        window.draw(TS_TandGSpr);
+        window.draw(TS_LSpr);
+        window.draw(TS_VSpr);
+        window.draw(TS_LogoSpr);
+        if (ts_escaped)
+        {
+            TS_buttonsSpr.setTextureRect(IntRect(TS_ButtonsCnt * 360, 0, 360, 315));
+            window.draw(TS_buttonsSpr);
+        }
+        else
+            window.draw(TS_PESpr);
+        window.display();
+
+    }
 } menu;
 //ground & wall
 RectangleShape ground[30], wall[30];
@@ -377,6 +432,7 @@ Sprite Lvl1FG[30];
 //powerups
 RectangleShape powerups(Vector2f(50,50));
 // DECLRATIONS
+void TS_Setups();
 void shooting();
 void jumpingAnimation(float);
 void meeleAnimation();
@@ -412,8 +468,10 @@ int main()
     window.setFramerateLimit(60);
     enemy1->setup(enemy1);
     bgSetup();
+    TS_Setups();
     pistol.setup(pistol);
     Playersetup();
+    timer.restart();
     Menu();
     return 0;
 }
@@ -466,37 +524,53 @@ void Menu()
                 }
             }
         }
-        else if ((menu.selected == START && Keyboard::isKeyPressed(Keyboard::Enter)) || menu.start_selected)
-        {
-            menu.start_selected = true;
-            windowfunction();
-        }
-
-        else if (menu.selected == EXIT && Keyboard::isKeyPressed(Keyboard::Enter))
-            window.close();
-
-        else if (Keyboard::isKeyPressed(Keyboard::Up))
-        {
-            Clock timer1;
-            while (true)
+        else {
+            if (menu.start_selected)
             {
-                if (timer1.getElapsedTime().asMilliseconds() > 300)
-                {
-                    menu.move_up();
-                    break;
-                }
+                TS_PESpr.setColor(Color(255, 255, 255, AlphaPE));
+                if (AlphaPE > 0)
+                    AlphaPE -= 0.05;
+                windowfunction();
             }
-
-        }
-        else if (Keyboard::isKeyPressed(Keyboard::Down))
-        {
-            Clock timer1;
-            while (true)
+            else
             {
-                if (timer1.getElapsedTime().asMilliseconds() > 300)
+                menu.draw();
+                if (Keyboard::isKeyPressed(Keyboard::Enter) || menu.ts_escaped)
                 {
-                    menu.move_down();
-                    break;
+                    if (!menu.ts_escaped)
+                    {
+                        MenuClick.play();
+                        Clock t;
+                        while (true)
+                            if (t.getElapsedTime().asMilliseconds() > 300)
+                                break;
+                    }
+
+                    menu.ts_escaped = true;
+
+
+                    if ((menu.selected == START && Keyboard::isKeyPressed(Keyboard::Enter)))
+                    {
+                        MenuClick.play();
+                        menu.start_selected = true;
+                        windowfunction();
+                    }
+                    else if (menu.selected == EXIT && Keyboard::isKeyPressed(Keyboard::Enter))
+                        window.close();
+
+                    else if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
+                    {
+                        menu.move_up();
+                        timer.restart();
+
+                    }
+                    else if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
+                    {
+
+                        menu.move_down();
+                        timer.restart();
+
+                    }
                 }
             }
         }
@@ -1244,5 +1318,62 @@ void Damaged()
 
         }
     }
+}
+
+
+void TS_Setups()
+{
+    //Sets up the Title Screen & Main Menu Background, Music and Fire Sound Effect.
+
+    TS_BGSpr.setPosition(0.f, 0.f);
+    TS_BGTex.loadFromFile("TS BG.png");
+    TS_BGSpr.setTexture(TS_BGTex);
+    TS_BGTheme.openFromFile("Title Screen _ Main Menu Theme.wav");
+    TS_BGTheme.play();
+    TS_BGTheme.setVolume(50.f);     
+    TS_BGTheme.setLoop(true);
+    TS_BGFireFX.openFromFile("Title Screen _ Main Menu Fire Sound.wav");
+    TS_BGFireFX.play();
+    TS_BGFireFX.setVolume(30.f);
+    TS_BGFireFX.setLoop(true);
+
+
+    //Sets up the Title Screen & Main Menu Torches & Gate Animation.
+    TS_TandGSpr.setPosition(659.f, 208.f);
+    TS_TandGTex.loadFromFile("TS Torches _ Gate Sprite Sheet.png");
+    TS_TandGSpr.setTexture(TS_TandGTex);
+    
+
+
+    TS_LSpr.setPosition(722.f, 0.f);
+    TS_LTex.loadFromFile("TS Lamp Sprite Sheet.png");
+    TS_LSpr.setTexture(TS_LTex);
+
+
+    TS_VSpr.setPosition(0.f, 0.f);
+    TS_VTex.loadFromFile("Vignette.png");
+    TS_VSpr.setTexture(TS_VTex);
+
+
+    TS_LogoSpr.setPosition(269.f, 465.f);
+    TS_LogoTex.loadFromFile("TS 1 Sprite Sheet.png");
+    TS_LogoSpr.setTexture(TS_LogoTex);
+
+    TS_PESpr.setPosition(612.f, 874.f);
+    TS_PETex.loadFromFile("TS Press Enter Sprite Sheet.png");
+    TS_PESpr.setTexture(TS_PETex);
+
+
+    TS_buttonsSpr.setPosition(769.f, 650.f);
+    TS_buttonsTex.loadFromFile("Main Menu Sprite Sheet.png");
+    TS_buttonsSpr.setTexture(TS_buttonsTex);
+    TS_buttonsSpr.setTextureRect(IntRect(0, 0, 360, 315));
+
+    MenuClickB.loadFromFile("Menu Click FX.wav");
+    MenuClick.setBuffer(MenuClickB);
+
+    MenuScrollB.loadFromFile("Menu Scrolling FX.wav");
+    MenuScroll.setBuffer(MenuScrollB);
+    MenuScroll.setVolume(100);
 }
 
