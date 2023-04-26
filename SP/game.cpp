@@ -12,6 +12,8 @@
 #define LEVEL_1_B_BG 1
 #define LEVEL_1_C_BG 2
 #define LEVEL_1_D_BG 3
+#define PISTOL 1
+#define RIFLE 2
 using namespace std;
 using namespace sf;
 
@@ -19,7 +21,7 @@ RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Default);
 Event event;
 
 //make the variable=""
-string pathh = resourcePath();
+string pathh = "";
 const float idle = 0.001,
 shooting_delay = 0.007,
 plVelocity = 0.2,
@@ -41,7 +43,6 @@ float AlphaPE = 255;
 int TS_ButtonsCnt = 0;
 
 //player
-int powerupCounter = 120;//ten seconds
 struct Player
 {
     //?
@@ -54,6 +55,7 @@ struct Player
     Texture playerHPTex;
     Sprite playerHPSprite;
     float health = 100.0;
+    int gun = PISTOL;
     // shooting
     int arr[5] = {};
     float cooldown = 0;
@@ -64,61 +66,29 @@ struct Player
     int last_key = 0;
     bool live = 1;
     bool isdead = 0;
-    void speedPowerup()
-    {
-        Velocity.x = 100;
-        powerupCounter = 600;
-    }
-    void HelthPowerup()
-    {
-        health = 10;
-    }
-    bool isPowerupfinished()
-    {
-        if (powerupCounter > 0)
-        {
-            powerupCounter--;
-            return false;
-        }
-        else
-            return true;
-
-    }
-
-    //void
-
+    
 };
 Player player;
 
-// shooting
+// shooting <pistol>
 struct Pistol
 {
-    //code الصيني
-    float speed;
-    int direction = 0; // Right/Left
-    RectangleShape coll; // hitbox
-    Texture pistol_Ammo_Tex;
-    Sprite pistol_Ammo_Sprite;
-    float cooldown;
-    int damage = 1;
-    void setup(Pistol pistol)
-    {
-        pistol.coll.setSize(Vector2f(15, 10.5));
-        pistol.speed = 25;
-        pistol.cooldown = 3000;
-    }
+   float  damage = 0.8;
+   float shoot_timer = 0;
+   vector<pair<RectangleShape, int>>rects;//player pistol
 
-    void dmgPowerup(Pistol pistol)
-    {
-        damage = 5;
-        powerupCounter = 600;
-    }
-
-
-
+   void shooting()
+   {
+       pistol.shoot_timer += 0.03;
+       if(pistol.shoot_timer > 1 || pistol.shoot_timer == 0.03) {
+           Vector2f pl = player.lowerbodySprite.getPosition();
+           RectangleShape rect(sf::Vector2f(40, 10));
+           rect.setOrigin(-pl.x, -(pl.y + 50));
+           pistol.rects.push_back({ rect ,player.last_key });
+           pistol.shoot_timer = 0;
+       }
+   }
 } pistol;
-float shoot_timer = 0;
-vector<pair<RectangleShape, int>>rects;//player pistol
 
 
 
@@ -201,11 +171,13 @@ struct Menu
 //ground & wall
 RectangleShape ground[30], wall[30];
 
-//enemy map 1
+
 //make clock & timer to plmovement
 Clock clock_pl;
 float dt = 0;
 int ntimer[10] = { };
+
+//enemy map 1
 void EnemiAnimation(Sprite& s, float maxframe, float x, float y, float delay, float& indecator);
 struct Enemy1
 {
@@ -216,12 +188,15 @@ struct Enemy1
     int damage = 1;
     int health = 10;
     float indicator[10];
-    bool isEqu = 0;
+    bool isCarrying_a_weapon = 0;
     bool isdead = 0;
     bool check = 1;
     int last_key = RIGHT;
     float shoot_timer = 0;
-    bool stopshooting = 0;
+    bool stop = 0;
+    float position;
+    bool goBack = 0;
+    
     vector<pair<RectangleShape, int>>bullet;//enemy1 pistol
     //int distance= player.upperbodySprite.getPosition().x - enemy1[i].rec.getPosition().x
     bool live = 1;
@@ -236,8 +211,9 @@ struct Enemy1
         for (int i = 0; i < 10; i++)
         {
             enemy1[i].rec.setSize(Vector2f(100, 130));
-            enemy1[i].rec.setPosition(Vector2f(500 + 700 * i, 600));
-            enemy1[i].sprite.setPosition(Vector2f(500 + 700 * i, 600));
+            enemy1[i].rec.setPosition(Vector2f(500 + 700 * i+200, 600));
+            enemy1[i].sprite.setPosition(Vector2f(500 + 700 * i+ 200, 600));
+            enemy1[i].position = 500 + 700 * i;
             enemy1[i].sprite.setScale(plScale, plScale);
         }
     }
@@ -245,71 +221,30 @@ struct Enemy1
     {
         for (int i = 0; i < 10; i++)
         {
-            if (abs(player.upperbodySprite.getPosition().x - enemy1[i].rec.getPosition().x) < 700 && !enemy1[i].stopshooting)
+            if (abs(player.upperbodySprite.getPosition().x - enemy1[i].rec.getPosition().x) < 700 && !enemy1[i].stop&& enemy1[i].position + 150 < enemy1[i].rec.getPosition().x)
             {
-                if (abs(player.upperbodySprite.getPosition().x - enemy1[i].rec.getPosition().x) + 10 * i <= 400)
+                if (abs(player.upperbodySprite.getPosition().x - enemy1[i].rec.getPosition().x) + 10 * i <= 400&&player.health > 0)
                 {
-                    if (!enemy1[i].isEqu)
+                    if (!enemy1[i].isCarrying_a_weapon)
                     {
-                        enemy1[i].check = 0;
-                        enemy1[i].velocity.x = 0;
-                        enemy1[i].texture.loadFromFile(pathh + "RS Equipping Sprite Sheet.png");
-                        enemy1[i].sprite.setOrigin(322 / 7 / 2, 0);
-                        //   animation(enemy1[i].sprite, 6.9, 322 / 7, 44, 0.002, 9);
-                        enemy1[i].indicator[1] += 0.2;
-                        if (enemy1[i].indicator[1] > 6.9)
-                        {
-                            enemy1[i].indicator[1] = 0;
-                            enemy1[i].isEqu = 1;
-                        }
-                        enemy1[i].sprite.setTextureRect(IntRect(int(enemy1[i].indicator[1]) * 322 / 7, 0, 322 / 7, 44));
+                        Carrying_a_weapon(i);
                     }
                     else
                     {
-                        enemy1[i].shooting(i, enemy1);
-                        enemy1[i].check = 1;
-                        enemy1[i].velocity.x = 0;
-                        enemy1[i].texture.loadFromFile(pathh + "RS Shooting Sprite Sheet.png");
-                        EnemiAnimation(enemy1[i].sprite, 2.9, 183 / 3, 38, 0.008, enemy1[i].indicator[0]);
-                        if (player.upperbodySprite.getPosition().x > enemy1[i].sprite.getPosition().x)
-                        {
-                            enemy1[i].sprite.setScale(-plScale, plScale);
-                            enemy1[i].sprite.setOrigin(0, 0);
-                            enemy1[i].last_key = RIGHT;
-                        }
-                        else
-                        {
-                            enemy1[i].sprite.setScale(plScale, plScale);
-                            enemy1[i].sprite.setOrigin(enemy1[i].sprite.getLocalBounds().width, 0);
-                            enemy1[i].last_key = LEFT;
-                        }
+                        EnemyShootingAnimation(i);
                     }
                 }
                 else
                 {
-                    enemy1[i].shoot_timer = 1;
-                    enemy1[i].isEqu = 0;
-                    enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
-                    EnemiAnimation(enemy1[i].sprite, 11.9, 312 / 12, 40, 0.017, enemy1[i].indicator[2]);
-                    if (player.upperbodySprite.getPosition().x > enemy1[i].sprite.getPosition().x)
-                    {
-                        enemy1[i].velocity.x = 2;
-                        enemy1[i].sprite.setScale(-plScale, plScale);
-                        enemy1[i].sprite.setOrigin(0, 0);
-                        enemy1[i].last_key = RIGHT;
-                    }
-                    else
-                    {
-                        enemy1[i].velocity.x = -2;
-                        enemy1[i].sprite.setScale(plScale, plScale);
-                        enemy1[i].sprite.setOrigin(enemy1[i].sprite.getLocalBounds().width, 0);
-                        enemy1[i].last_key = LEFT;
-                    }
+                    EnemyRunningToPl(i);
                 }
             }
             else
             {
-                enemy1[i].velocity.x = 0;
+                if (!enemy1[i].stop)
+                {
+                    Aimless_Walking(i);
+                }
             }
         }
         for (int i = 0; i < 10; i++)
@@ -350,18 +285,18 @@ struct Enemy1
         {
             if (enemy1[i].live)
             {
-                for (int j = 0; j < rects.size(); j++)
+                for (int j = 0; j < pistol.rects.size(); j++)
                 {
-                    if (enemy1[i].sprite.getGlobalBounds().intersects(rects[j].first.getGlobalBounds()) && rects[j].second != 0)
+                    if (enemy1[i].sprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second != 0)
                     {
                         enemy1[i].velocity.x = 0;
                         enemy1[i].health -= 1;
-                        rects[j].second = 0;
+                        pistol.rects[j].second = 0;
                     }
                 }
                 if (enemy1[i].health <= 0)
                 {
-                    enemy1[i].stopshooting = 1;
+                    enemy1[i].stop = 1;
                     if (!enemy1[i].isdead)
                     {
                         enemy1[i].velocity.x = 0;
@@ -397,14 +332,110 @@ struct Enemy1
             enemy1[i].shoot_timer = 0;
         }
     }
+    void Carrying_a_weapon(int i)//i==index of enemy
+    {
+        enemy1[i].check = 0;
+        enemy1[i].velocity.x = 0;
+        enemy1[i].texture.loadFromFile(pathh + "RS Equipping Sprite Sheet.png");
+        enemy1[i].sprite.setOrigin(322 / 7 / 2, 0);
+        //   animation(enemy1[i].sprite, 6.9, 322 / 7, 44, 0.002, 9);
+        enemy1[i].indicator[1] += 0.2;
+        if (enemy1[i].indicator[1] > 6.9)
+        {
+            enemy1[i].indicator[1] = 0;
+            enemy1[i].isCarrying_a_weapon = 1;
+        }
+        enemy1[i].sprite.setTextureRect(IntRect(int(enemy1[i].indicator[1]) * 322 / 7, 0, 322 / 7, 44));
+    }
+    void EnemyShootingAnimation(int i)
+    {
+
+        enemy1[i].shooting(i, enemy1);
+        enemy1[i].check = 1;
+        enemy1[i].velocity.x = 0;
+        enemy1[i].texture.loadFromFile(pathh + "RS Shooting Sprite Sheet.png");
+        EnemiAnimation(enemy1[i].sprite, 2.9, 183 / 3, 38, 0.008, enemy1[i].indicator[0]);
+        if (player.upperbodySprite.getPosition().x > enemy1[i].sprite.getPosition().x)
+        {
+            enemy1[i].sprite.setScale(-plScale, plScale);
+            enemy1[i].sprite.setOrigin(0, 0);
+            enemy1[i].last_key = RIGHT;
+        }
+        else
+        {
+            enemy1[i].sprite.setScale(plScale, plScale);
+            enemy1[i].sprite.setOrigin(enemy1[i].sprite.getLocalBounds().width, 0);
+            enemy1[i].last_key = LEFT;
+        }
+    }
+    void EnemyRunningToPl(int i)
+    {
+        enemy1[i].shoot_timer = 1;
+        enemy1[i].isCarrying_a_weapon = 0;
+        enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
+        EnemiAnimation(enemy1[i].sprite, 11.9, 312 / 12, 40, 0.017, enemy1[i].indicator[2]);
+        if (player.upperbodySprite.getPosition().x > enemy1[i].sprite.getPosition().x && player.health > 0)
+        {
+            enemy1[i].velocity.x = 2;
+            enemy1[i].sprite.setScale(-plScale, plScale);
+            enemy1[i].sprite.setOrigin(0, 0);
+            enemy1[i].last_key = RIGHT;
+        }
+        else if (player.upperbodySprite.getPosition().x < enemy1[i].sprite.getPosition().x && player.health > 0)
+        {
+            enemy1[i].velocity.x = -2;
+            enemy1[i].sprite.setScale(plScale, plScale);
+            enemy1[i].sprite.setOrigin(enemy1[i].sprite.getLocalBounds().width, 0);
+            enemy1[i].last_key = LEFT;
+        }
+        else
+        {
+            enemy1[i].velocity.x = 2;
+            enemy1[i].sprite.setScale(-plScale, plScale);
+            enemy1[i].sprite.setOrigin(0, 0);
+            enemy1[i].last_key = RIGHT;
+        }
+
+    }
+    void Aimless_Walking(int i)
+    {
+        enemy1[i].shoot_timer = 1;
+        enemy1[i].isCarrying_a_weapon = 0;
+        if (!enemy1[i].goBack)
+        {
+            enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
+            EnemiAnimation(enemy1[i].sprite, 11.9, 312.0 / 12.0, 40, 0.017, enemy1[i].indicator[5]);
+            enemy1[i].velocity.x = 2;
+            enemy1[i].sprite.setScale(-plScale, plScale);
+            enemy1[i].sprite.setOrigin(0, 0);
+            enemy1[i].last_key = RIGHT;
+            if (enemy1[i].rec.getPosition().x >= enemy1[i].position + 150)
+            {
+                enemy1[i].goBack = 1;
+            }
+        }
+        else if (goBack)
+        {
+            enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
+            EnemiAnimation(enemy1[i].sprite, 11.9, 312.0 / 12.0, 40, 0.017, enemy1[i].indicator[5]);
+            enemy1[i].velocity.x = -2;
+            enemy1[i].sprite.setScale(plScale, plScale);
+            enemy1[i].sprite.setOrigin(enemy1[i].sprite.getLocalBounds().width, 0);
+            enemy1[i].last_key = LEFT;
+            if (enemy1[i].rec.getPosition().x <= enemy1[i].position - 150)
+            {
+                enemy1[i].goBack = 0;
+            }
+
+        }
+
+    }
 }enemy1[10];
 
 
 //gravity
 float gravity = 0.7;
 bool canDoubleJump;
-
-
 
 //background Textures&Sprites
 Texture bgTexture[30];
@@ -423,7 +454,7 @@ Sprite  Exitlamp;
 Texture FireTrochestex;
 Sprite FireTroches;
 
-float animiindecator[30];
+float animiindecator[50];
 
 //lvl 1 FG
 Texture lvl1FGtex[30];
@@ -433,7 +464,6 @@ Sprite Lvl1FG[30];
 RectangleShape powerups(Vector2f(50, 50));
 // DECLRATIONS
 void TS_Setups();
-void shooting();
 void jumpingAnimation(float);
 void meeleAnimation();
 void ShootingAnimation();
@@ -447,8 +477,6 @@ void jump();
 void moveToRight(Sprite&);
 void moveToLeft(Sprite&);
 void move_with_animation(Sprite&, float, float, float, float, int);
-void moviebullet(Player&, Pistol&);
-void shootingCooldown(Player&);
 void Playersetup();
 void bgSetup();
 void windowclose();
@@ -469,7 +497,6 @@ int main()
     enemy1->setup(enemy1);
     bgSetup();
     TS_Setups();
-    pistol.setup(pistol);
     Playersetup();
     timer.restart();
     Menu();
@@ -607,10 +634,7 @@ void bgSetup()
     bgSprite[2].setPosition(14771, -940);
 
     //animation lv1-B-2(Exit lamp)
-    ExitlampTex.loadFromFile(pathh + "Level 1-B-2 Exit Lamp.png");
-    Exitlamp.setTexture(ExitlampTex);
-    Exitlamp.setTextureRect(IntRect(0, 0, 17328 / 6, 2087));
-    Exitlamp.setPosition(14771, -940);
+
 
     //FG Lv1-B-2
     lvl1FGtex[2].loadFromFile(pathh + "Level 1-B-2 FG.png");
@@ -660,10 +684,6 @@ void windowfunction()
     dt /= 750;
     clock_pl.restart();
 
-    //shooting
-    moviebullet(player, pistol);
-    shootingCooldown(player);
-
     if (Keyboard::isKeyPressed(Keyboard::Escape))
     {
         Clock timer;
@@ -693,17 +713,9 @@ void windowfunction()
     enemy1->movement(enemy1);
     enemy1->Gravity(enemy1);
     enemy1->Damaged(enemy1);
-    if (player.isPowerupfinished())
-    {
-        player.Velocity.x = 0;
-        pistol.damage = 1;
-    }
-    else if (powerups.getGlobalBounds().intersects(player.lowerbodySprite.getGlobalBounds()))
-    {
-        pistol.dmgPowerup(pistol);
-        player.speedPowerup();
-    }
     Damaged();
+
+    if(player.health > 0)
     plmovement(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
     player.playerHPSprite.setPosition(view.getCenter().x - 960, view.getCenter().y - 500);
     BGanimation();
@@ -734,19 +746,19 @@ void windowfunction()
         if (i == 1)continue;
         window.draw(Lvl1FG[i]);
     }
-    for (int x = 0; x < rects.size(); x++)
+    for (int x = 0; x < pistol.rects.size(); x++)
     {
         // Only move the rect here, don't set the origin.
 
-        if (rects[x].second == LEFT)
+        if (pistol.rects[x].second == LEFT)
         {
-            rects[x].first.move(-10, 0);
-            window.draw(rects[x].first);
+            pistol.rects[x].first.move(-10, 0);
+            window.draw(pistol.rects[x].first);
         }
-        else if (rects[x].second == RIGHT)
+        else if (pistol.rects[x].second == RIGHT)
         {
-            window.draw(rects[x].first);
-            rects[x].first.move(10, 0);
+            window.draw(pistol.rects[x].first);
+            pistol.rects[x].first.move(10, 0);
         }
     }
     for (int i = 0; i < 10; i++)
@@ -768,7 +780,6 @@ void windowfunction()
     }
     // window.draw(ground[0]);
     window.draw(player.playerHPSprite);
-    window.draw(pistol.coll);
     //window.draw(powerups);
     window.setView(view);
     transition_pos_check();
@@ -776,7 +787,7 @@ void windowfunction()
 void BGanimation()
 {
     animation(Exitlamp, 6, 17328 / 6, 2087, 0.01, 0);
-    animation(FireTroches, 8, 13120 / 8, 1192, 0.01, 1);
+    
 }
 void windowclose()
 {
@@ -893,31 +904,6 @@ void Playersetup()
     player.playerHPSprite.setTexture(player.playerHPTex);
     player.playerHPSprite.setTextureRect(IntRect(0, 0, 204, 30));
 }
-void shootingCooldown(Player& player)
-{
-    if (player.cooldown > 0)
-    {
-        player.cooldown -= 0.0000000001;
-    }
-    if (player.cooldown <= 0)
-    {
-        player.canshoot = 1;
-    }
-}
-void moviebullet(Player& player, Pistol& pistol)
-{
-    if (player.last_key == RIGHT || pistol.direction == RIGHT)
-    {
-        pistol.direction = RIGHT;
-        pistol.coll.move(Vector2f(pistol.speed, 0));
-    }
-    else
-    {
-        pistol.coll.move(Vector2f(-1 * pistol.speed, 0));
-    }
-
-
-}
 void transition()
 {
     Clock t1;
@@ -1027,7 +1013,7 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
         onlymove(player.upperbodySprite);
 
         jumpingAnimation(delay);
-        shoot_timer = 0;
+        pistol.shoot_timer = 0;
     }
     else
     {
@@ -1085,13 +1071,13 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             // if player shoots while running
             if (Keyboard::isKeyPressed(Keyboard::J))
             {
-                shooting();
+                pistol.shooting();
                 ShootingAnimation();//when pl (move&&shoot)
             }
             //if player move load running sprite sheet
             else
             {
-                shoot_timer = 0;
+                pistol.shoot_timer = 0;
                 player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
                 player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
                 animation(s, maxframe, x, y, delay, index);
@@ -1107,13 +1093,13 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             // if player shoots while running
             if (Keyboard::isKeyPressed(Keyboard::J))
             {
-                shooting();
+                pistol.shooting();
                 ShootingAnimation();//when pl (move&&shoot)
             }
             //if player move load running sprite sheet
             else
             {
-                shoot_timer = 0;
+                pistol.shoot_timer = 0;
                 player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
                 player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
                 animation(s, maxframe, x, y, delay, index);
@@ -1129,7 +1115,7 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             if (Keyboard::isKeyPressed(Keyboard::J))
             {
 
-                shooting();
+                pistol.shooting();
                 // shooting animation when pl standing
                 player.lowerbodyTex.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Lower Body.png");
                 animation(player.lowerbodySprite, 3.9, 128 / 4, 37, 0.04, 3);
@@ -1139,13 +1125,13 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             else  if (Keyboard::isKeyPressed(Keyboard::K))
             {
                 meeleAnimation();
-                shoot_timer = 0;
+                pistol.shoot_timer = 0;
             }
             //if player not move then load idle sprite sheet
             else
             {
                 IdleAnimation();
-                shoot_timer = 0;
+                pistol.shoot_timer = 0;
             }
 
             player.Velocity.x = 0;
@@ -1203,7 +1189,7 @@ void crouchingAnimation()
     player.one_sprite_needed = 1;
     if (Keyboard::isKeyPressed(Keyboard::J))
     {
-        shooting();
+        pistol.shooting();
         player.lowerbodyTex.loadFromFile(pathh + "Shooting - Crouching (Pistol) Sprite Sheet.png");
         player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y - 10);
         animation(player.lowerbodySprite, 9.9, 520 / 10, 29, shooting_delay, 14);
@@ -1262,17 +1248,6 @@ void EnemiAnimation(Sprite& s, float maxframe, float x, float y, float delay, fl
         indecator = 0;
     s.setTextureRect(IntRect(int(indecator) * x, 0, x, y));
 }
-void shooting()
-{
-    shoot_timer += 0.03;
-    if (shoot_timer > 1 || shoot_timer == 0.03) {
-        Vector2f pl = player.lowerbodySprite.getPosition();
-        RectangleShape rect(sf::Vector2f(40, 10));
-        rect.setOrigin(-pl.x, -(pl.y + 50));
-        rects.push_back({ rect ,player.last_key });
-        shoot_timer = 0;
-    }
-}
 void create(RectangleShape arr[], int index, int width, int hight, int xPosition, int yPostions)
 {
     arr[index].setSize(Vector2f(width, hight));
@@ -1292,35 +1267,39 @@ void Damaged()
                     enemy1[i].bullet[j].second = 0;
                 }
             }
-            if (player.health <= 0)
+        }
+        if (player.health <= 0)
+        {
+            if (!player.isdead)
             {
-                //don't remove this comment
-                /*
-                if (!player.isdead)
+                player.Velocity.x = 0;
+                if (player.gun == PISTOL)
                 {
-                    player.Velocity.x = 0;
-                    player.lowerbodyTex.loadFromFile(pathh + "RS Dying Sprite Sheet.png");
-                    enemy1[i].sprite.setOrigin(341 / 11 / 2, 0);
-                    enemy1[i].indicator[1] += 0.1;
-                    if (enemy1[i].indicator[1] > 10.9)
+                    player.one_sprite_needed = 1;
+                    player.lowerbodyTex.loadFromFile(pathh + "Dying Sprite Sheet.png");
+                    player.lowerbodySprite.setOrigin(480 / 10 / 2, 0);
+                    animiindecator[30] += 0.1;
+                    if (animiindecator[30] > 9.9)
                     {
-                        enemy1[i].indicator[1] = 0.2;
-                        enemy1[i].isdead = 1;
+                        animiindecator[30] = 0.2;
+                        player.isdead = 1;
                     }
-                    enemy1[i].sprite.setTextureRect(IntRect(int(enemy1[i].indicator[1]) * 341 / 11, 0, 341 / 11, 39));
-
+                    player.lowerbodySprite.setTextureRect(IntRect(int(animiindecator[30]) * 480 / 10, 0, 480 / 10, 44));
+                }
+                else if (player.gun == RIFLE)
+                {
 
                 }
-                else
-                {*/
-                player.live = 0;
-                //}
-            }
 
+            }
+            else
+            {
+                player.live = 0;
+            }
         }
+
     }
 }
-
 
 void TS_Setups()
 {
