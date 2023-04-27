@@ -25,7 +25,7 @@ Event event;
 //make the variable=""
 string pathh = "";
 const float idle = 0.001,
-shooting_delay = 0.007,
+pistolshooting_delay = 0.007, rifleshooting_delay = 0.005,
 plVelocity = 0.2,
 plScale = 3.25,
 melee_delay = 0.003;
@@ -423,8 +423,7 @@ struct Enemy1
             }
         }
         else
-        {
-           
+        {         
             enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
             EnemiAnimation(enemy1[i].sprite, 11.9, 312.0 / 12.0, 40, 0.017, enemy1[i].sprite_indicator[5]);
             enemy1[i].velocity.x = -2;
@@ -712,6 +711,15 @@ void windowfunction()
         }
     }
 
+   
+    if (Keyboard::isKeyPressed(Keyboard::Q))
+    {
+        player.gun = RIFLE;
+    }
+    else if (Keyboard::isKeyPressed(Keyboard::W))
+    {
+        player.gun = PISTOL;
+    }
 
     //map shortcut
     if (Keyboard::isKeyPressed(sf::Keyboard::T))
@@ -1027,13 +1035,26 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
     {
         //functoin -> movement & animation
         move_with_animation(s, maxframe, x, y, delay, index);
-        move_with_animation(player.upperbodySprite, maxframe, x, y, delay, index);
+        if(player.gun==PISTOL)
+            move_with_animation(player.upperbodySprite, maxframe, x, y, delay, index);
+        else if(player.gun==RIFLE)
+            move_with_animation(player.upperbodySprite, 11.9, 528/11, 29, delay, 32);
+
     }
 
     //move player
-    s.move(player.Velocity);
-    player.upperbodySprite.move(player.Velocity);
-    player.rec.setPosition(s.getPosition().x - 50, s.getPosition().y);
+    if (player.gun == PISTOL)
+    {
+        s.move(player.Velocity);
+        player.upperbodySprite.move(player.Velocity);
+        player.rec.setPosition(s.getPosition().x - 50, s.getPosition().y);
+    }
+    else if (player.gun == RIFLE)
+    {
+        s.move(player.Velocity.x*0.5,player.Velocity.y);
+        player.upperbodySprite.move(player.Velocity.x*0.5,player.Velocity.y);
+        player.rec.setPosition(s.getPosition().x - 50, s.getPosition().y);
+    }
 }
 
 void onlymove(Sprite& s)
@@ -1086,9 +1107,21 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             else
             {
                 pistol.shoot_timer = 0;
-                player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
-                player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
-                animation(s, maxframe, x, y, delay, index);
+                if (player.gun == PISTOL)
+                {
+                    player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
+                    player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
+                    animation(s, maxframe, x, y, delay, index);
+                }
+                else if (player.gun == RIFLE)
+                {
+                    player.upperbodyTex.loadFromFile(pathh + "Running (Rifle) Sprite Sheet.png");
+                    player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
+                    animation(player.upperbodySprite, 11.9, 528 / 12, 29, delay, 32);
+                    animation(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
+                }
+
+
             }
             player.last_key = 1;
 
@@ -1108,9 +1141,19 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             else
             {
                 pistol.shoot_timer = 0;
-                player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
-                player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
-                animation(s, maxframe, x, y, delay, index);
+                if (player.gun == PISTOL)
+                {
+                    player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
+                    player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
+                    animation(s, maxframe, x, y, delay, index);
+                }
+                else if (player.gun == RIFLE)
+                {
+                    player.upperbodyTex.loadFromFile(pathh + "Running (Rifle) Sprite Sheet.png");
+                    player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
+                    animation(player.upperbodySprite, 11.9, 528 / 12, 29, delay, 32);
+                    animation(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
+                }
             }
             player.last_key = 2;
 
@@ -1123,12 +1166,22 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             if (Keyboard::isKeyPressed(Keyboard::J))
             {
 
-                pistol.shooting();
                 // shooting animation when pl standing
+                if (player.gun == PISTOL)
+                {
+                    pistol.shooting();
+                    player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
+                    animation(player.upperbodySprite, 9.9, 520 / 10, 41, pistolshooting_delay, 10);
+                }
+                else if (player.gun == RIFLE)
+                {
+                    pistol.shooting();//
+                    player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Rifle) Sprite Sheet.png");
+                    animation(player.upperbodySprite, 3.9, 240 / 4, 27, rifleshooting_delay, 10);
+                }
+
                 player.lowerbodyTex.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Lower Body.png");
                 animation(player.lowerbodySprite, 3.9, 128 / 4, 37, 0.04, 3);
-                player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
-                animation(player.upperbodySprite, 9.9, 520 / 10, 41, shooting_delay, 10);
             }
             else  if (Keyboard::isKeyPressed(Keyboard::K))
             {
@@ -1178,18 +1231,37 @@ void jump()
 }
 void IdleAnimation()
 {
-    player.lowerbodyTex.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Lower Body.png");
-    animation(player.lowerbodySprite, 3.9, 128 / 4, 37, idle, 3);
-    player.is_shooting = 0;
-    player.upperbodyTex.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Upper Body.png");
-    animation(player.upperbodySprite, 3.9, 128 / 4, 37, idle, 3);
+    if (player.gun == PISTOL)
+    {
+        player.lowerbodyTex.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Lower Body.png");
+        animation(player.lowerbodySprite, 3.9, 128 / 4, 37, idle, 3);
+        player.is_shooting = 0;
+        player.upperbodyTex.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Upper Body.png");
+        animation(player.upperbodySprite, 3.9, 128 / 4, 37, idle, 3);
+    }
+    else if (player.gun == RIFLE)
+    {
+        player.lowerbodyTex.loadFromFile(pathh + "Idle (Rifle) Sprite Sheet Lower Body.png");
+        animation(player.lowerbodySprite, 3.9, 152 / 4, 37, idle, 3);
+        player.is_shooting = 0;
+        player.upperbodyTex.loadFromFile(pathh + "Idle (Rifle) Sprite Sheet Upper Body.png");
+        animation(player.upperbodySprite, 3.9, 152 / 4, 37, idle, 3);
+    }
 }
 void ShootingAnimation()
 {
     player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
     animation(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
-    player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
-    animation(player.upperbodySprite, 9.9, 520 / 10, 41, shooting_delay, 10);
+    if (player.gun == PISTOL)
+    {
+        player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
+        animation(player.upperbodySprite, 9.9, 520 / 10, 41, pistolshooting_delay, 10);
+    }
+    else if(player.gun == RIFLE)
+    {
+        player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Rifle) Sprite Sheet.png");
+        animation(player.upperbodySprite, 3.9 , 240 / 4, 27, rifleshooting_delay, 10);
+    }
 }
 void crouchingAnimation()
 {
@@ -1197,24 +1269,42 @@ void crouchingAnimation()
     player.one_sprite_needed = 1;
     if (Keyboard::isKeyPressed(Keyboard::J))
     {
-        pistol.shooting();
-        player.lowerbodyTex.loadFromFile(pathh + "Shooting - Crouching (Pistol) Sprite Sheet.png");
+        if (player.gun == PISTOL)
+        {
+            pistol.shooting();
+            player.lowerbodyTex.loadFromFile(pathh + "Shooting - Crouching (Pistol) Sprite Sheet.png");
+            animation(player.lowerbodySprite, 9.9, 520 / 10, 29, pistolshooting_delay, 14);
+        }
+        else if (player.gun == RIFLE )
+        {
+            pistol.shooting();
+            player.lowerbodyTex.loadFromFile(pathh + "Shooting - Crouching (Rifle) Sprite Sheet.png");
+            animation(player.lowerbodySprite, 3.9, 268 / 4, 28, pistolshooting_delay, 14);
+        }
         player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y - 10);
-        animation(player.lowerbodySprite, 9.9, 520 / 10, 29, shooting_delay, 14);
     }
     else if (Keyboard::isKeyPressed(Keyboard::K))
     {
         player.lowerbodyTex.loadFromFile(pathh + "Melee - Crouching (Pistol) Sprite Sheet.png");
         player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y - 30);
-        animation(player.lowerbodySprite, 6.9, 294 / 7, 35, shooting_delay, 15);
+        animation(player.lowerbodySprite, 6.9, 294 / 7, 35, pistolshooting_delay, 15);
     }
     else
     {
-        player.lowerbodyTex.loadFromFile(pathh + "Idle - Crouching (Pistol) Sprite Sheet.png");
-        player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y);
-        animation(player.lowerbodySprite, 3.9, 136 / 4, 24, idle, 4);
-    }
 
+        player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y);
+        if (player.gun == PISTOL)
+        {
+            player.lowerbodyTex.loadFromFile(pathh + "Idle - Crouching (Pistol) Sprite Sheet.png");
+            animation(player.lowerbodySprite, 3.9, 136 / 4, 24, idle, 4);
+        }
+        else if (player.gun == RIFLE)
+        {
+            player.lowerbodyTex.loadFromFile(pathh + "Idle - Crouching (Rifle) Sprite Sheet.png");
+            animation(player.lowerbodySprite, 3.9, 164 / 4, 24, idle, 4);
+        }
+
+    }
 }
 void meeleAnimation()
 {
@@ -1227,9 +1317,17 @@ void meeleAnimation()
 }
 void jumpingAnimation(float delay)
 {
-    player.upperbodyTex.loadFromFile(pathh + "Jumping (Pistol) Sprite Sheet Upper Body.png");
+    if (player.gun == PISTOL)
+    {
+        player.upperbodyTex.loadFromFile(pathh + "Jumping (Pistol) Sprite Sheet Upper Body.png");
+        animation(player.upperbodySprite, 10.9, 319.0 / 11, 49, delay, 5);
+    }
+    else if (player.gun == RIFLE)
+    {
+        player.upperbodyTex.loadFromFile(pathh + "Jumping (Rifle) Sprite Sheet.png");
+        animation(player.upperbodySprite, 5.9, 222 / 6, 27, delay, 5);
+    }
     player.lowerbodyTex.loadFromFile(pathh + "Jumping (Pistol) Sprite Sheet Lower Body.png");
-    animation(player.upperbodySprite, 10.9, 319.0 / 11, 49, delay, 5);
     animation(player.lowerbodySprite, 10.9, 319.0 / 11, 49, delay, 6);
 }
 bool collisonPl(RectangleShape arr[], int size)
