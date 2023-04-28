@@ -65,28 +65,28 @@ struct Player
     int last_key = 0;
     bool live = 1;
     bool isdead = 0;
-    
+
 };
 Player player;
 
 // shooting <pistol>
 struct Pistol
 {
-   float  damage = 0.8;
-   float shoot_timer = 0;
-   vector<pair<RectangleShape, int>>rects;
+    float  damage = 0.8;
+    float shoot_timer = 0;
+    vector<pair<RectangleShape, int>>rects;
 
-   void shooting()
-   {
-       pistol.shoot_timer += 0.03;
-       if(pistol.shoot_timer > 1 || pistol.shoot_timer == 0.03) {
-           Vector2f pl = player.lowerbodySprite.getPosition();
-           RectangleShape rect(sf::Vector2f(10, 10));
-           rect.setOrigin(-pl.x, -(pl.y + 50));
-           pistol.rects.push_back({ rect ,player.last_key });
-           pistol.shoot_timer = 0;
-       }
-   }
+    void shooting()
+    {
+        pistol.shoot_timer += 0.03;
+        if (pistol.shoot_timer > 1 || pistol.shoot_timer == 0.03) {
+            Vector2f pl = player.lowerbodySprite.getPosition();
+            RectangleShape rect(sf::Vector2f(10, 10));
+            rect.setOrigin(-pl.x, -(pl.y + 50));
+            pistol.rects.push_back({ rect ,player.last_key });
+            pistol.shoot_timer = 0;
+        }
+    }
 } pistol;
 
 // shooting <Rifle>
@@ -106,7 +106,7 @@ struct Rifle
             rifle.rects.push_back({ rect ,player.last_key });
             rifle.shoot_timer = 0;
         }
-      
+
     }
 } rifle;
 
@@ -215,7 +215,7 @@ struct Enemy1
     bool stopped = 0;
     float initial_position;
     bool reversed_direction = 0;
-    
+
     vector <pair <RectangleShape, int>> bullet;//enemy1 pistol
     bool is_alive = 1;
     void setup(Enemy1 enemy1[10])
@@ -229,8 +229,8 @@ struct Enemy1
         for (int i = 0; i < 10; i++)
         {
             enemy1[i].rec.setSize(Vector2f(100, 130));
-            enemy1[i].rec.setPosition(Vector2f(500 + 700 * i+200, 600));
-            enemy1[i].sprite.setPosition(Vector2f(500 + 700 * i+ 200, 600));
+            enemy1[i].rec.setPosition(Vector2f(500 + 700 * i + 200, 600));
+            enemy1[i].sprite.setPosition(Vector2f(500 + 700 * i + 200, 600));
             enemy1[i].initial_position = 700 + 700 * i;
             enemy1[i].sprite.setScale(plScale, plScale);
         }
@@ -239,7 +239,7 @@ struct Enemy1
     {
         for (int i = 0; i < 10; i++)
         {
-           // check if enemy is not dead
+            // check if enemy is not dead
             if (!enemy1[i].stopped)
             {
                 // Player in range of enemy 
@@ -317,7 +317,8 @@ struct Enemy1
                             pistol.rects[j].second = 0;
                         }
                     }
-                }else if (player.gun == RIFLE)
+                }
+                else if (player.gun == RIFLE)
                 {
                     for (int j = 0; j < rifle.rects.size(); j++)
                     {
@@ -428,7 +429,7 @@ struct Enemy1
             }
         }
         else
-        {         
+        {
             enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
             EnemiAnimation(enemy1[i].sprite, 11.9, 312.0 / 12.0, 40, 0.017, enemy1[i].sprite_indicator[5]);
             enemy1[i].velocity.x = -2;
@@ -495,9 +496,9 @@ float animiindecator[50];
 Texture lvl1FGtex[30];
 Sprite Lvl1FG[30];
 
-//lvl 1 A lamps animation
-Texture lvl1LampTex[4];
-Sprite lvl1lamp[4];
+//lvl 1 A lamps animation && lvl 1 B
+Texture lvl1LampTex[4], lvl1torchTex[4];
+Sprite lvl1lamp[4], lvl1torch[4];
 
 //powerups
 RectangleShape powerups(Vector2f(50, 50));
@@ -658,18 +659,25 @@ void bgSetup()
     lvl1FGtex[0].loadFromFile(pathh + "Level 1-A FG.png");
     Lvl1FG[0].setTexture(lvl1FGtex[0]);
     Lvl1FG[0].setPosition(-370, -53);
+
     //lvl 1 A lamps animation
-    /*
-    Lamp 1 345 * 657 w:1943 h : 149
-    Lamp 2 345*657 w:3085 h:149
-    Lamp 3 345*657 w:4278 h:149
-    Lamp 4 345*657 w:5470 h:149
-   */
+
     lvl1LampTex[0].loadFromFile(pathh + "Level 1-A Lamp 1.png");
     lvl1lamp[0].setTexture(lvl1LampTex[0]);
-    lvl1lamp[0].setTextureRect(IntRect(0, 0,345, 657));
-    lvl1lamp[0].setPosition(-370+1943, 149-53);
-
+    lvl1lamp[0].setTextureRect(IntRect(0, 0, 345, 657));
+    lvl1lamp[0].setPosition(-370 + 1943, 149 - 53);
+    lvl1LampTex[1].loadFromFile(pathh + "Level 1-A Lamp 2.png");
+    lvl1lamp[1].setTexture(lvl1LampTex[1]);
+    lvl1lamp[1].setTextureRect(IntRect(0, 0, 2760 / 8, 657));
+    lvl1lamp[1].setPosition(-370 + 3085, 149 - 53);
+    lvl1LampTex[2].loadFromFile(pathh + "Level 1-A Lamp 3.png");
+    lvl1lamp[2].setTexture(lvl1LampTex[2]);
+    lvl1lamp[2].setTextureRect(IntRect(0, 0, 2760 / 8, 657));
+    lvl1lamp[2].setPosition(-370 + 4278, 149 - 53);
+    lvl1LampTex[3].loadFromFile(pathh + "Level 1-A Lamp 4.png");
+    lvl1lamp[3].setTexture(lvl1LampTex[3]);
+    lvl1lamp[3].setTextureRect(IntRect(0, 0, 2760 / 8, 657));
+    lvl1lamp[3].setPosition(-370 + 5470, 149 - 53);
 
     // LEVEL 1 B->1 SET UP
     bgTexture[1].loadFromFile(pathh + "Level 1-B-1 BG.png");
@@ -682,12 +690,33 @@ void bgSetup()
     create(ground, 5, 325, 18, 16555, 173);
     create(ground, 6, 700, 10, 16850, 40);
 
-    // LEVEL 1 B->2 SET UP
+    // Lvl 1 - B Torches
+
+    lvl1torchTex[0].loadFromFile(pathh + "Level 1-B Torches 1.png");
+    lvl1torch[0].setTexture(lvl1torchTex[0]);
+    lvl1torch[0].setPosition(10000 + 345, -50 + 559);
+    lvl1torchTex[1].loadFromFile(pathh + "Level 1-B Torches 2.png");
+    lvl1torch[1].setTexture(lvl1torchTex[1]);
+    lvl1torch[1].setPosition(10000 + 1090, -50 + 559);
+    lvl1torchTex[2].loadFromFile(pathh + "Level 1-B Torches 3.png");
+    lvl1torch[2].setTexture(lvl1torchTex[2]);
+    lvl1torch[2].setPosition(10000 + 3028, -50 + 559);
+    lvl1torchTex[3].loadFromFile(pathh + "Level 1-B Torches 4.png");
+    lvl1torch[3].setTexture(lvl1torchTex[3]);
+    lvl1torch[3].setPosition(10000 + 3774, -50 + 559);
+
+
+
+    // LEVEL 1 B --> 2 SET UP
     bgTexture[2].loadFromFile(pathh + "Level 1-B-2 BG.png");
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
 
-    //animation lv1-B-2(Exit lamp)
+    // Exit-lamp 1 - B
+
+    ExitlampTex.loadFromFile(pathh + "Level 1-B Exit Lamps.png");
+    Exitlamp.setTexture(ExitlampTex);
+    Exitlamp.setPosition(14771 + 2176, -940 + 471);
 
 
     //FG Lv1-B-2
@@ -782,7 +811,12 @@ void windowfunction()
 
     //draw BG animations
     window.draw(FireTroches);
-    window.draw(lvl1lamp[0]);
+    for (int i = 0; i < 4; i++)
+    {
+        window.draw(lvl1lamp[i]);
+        window.draw(lvl1torch[i]);
+    }
+    window.draw(Exitlamp);
     //window.draw(player.rec);
     for (int i = 0; i < 10; i++) {
         if (enemy1[i].is_alive == 1) {
@@ -837,8 +871,15 @@ void windowfunction()
 }
 void BGanimation()
 {
-    animation(Exitlamp, 6, 17328 / 6, 2087, 0.01, 0);
     animation(lvl1lamp[0], 8, 345, 657, 0.01, 22);
+    animation(lvl1lamp[1], 8, 345, 657, 0.01, 23);
+    animation(lvl1lamp[2], 8, 345, 657, 0.01, 24);
+    animation(lvl1lamp[3], 8, 345, 657, 0.01, 25);
+    animation(lvl1torch[0], 8, 1304 / 8, 303, 0.01, 26);
+    animation(lvl1torch[1], 8, 1304 / 8, 303, 0.01, 27);
+    animation(lvl1torch[2], 8, 1304 / 8, 303, 0.01, 28);
+    animation(lvl1torch[3], 8, 1304 / 8, 303, 0.01, 29);
+    animation(Exitlamp, 6, 1092 / 6, 99, 0.005, 30);
 }
 void windowclose()
 {
@@ -1069,10 +1110,10 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
     {
         //functoin -> movement & animation
         move_with_animation(s, maxframe, x, y, delay, index);
-        if(player.gun==PISTOL)
+        if (player.gun == PISTOL)
             move_with_animation(player.upperbodySprite, maxframe, x, y, delay, index);
-        else if(player.gun==RIFLE)
-            move_with_animation(player.upperbodySprite, 11.9, 528/11, 29, delay, 32);
+        else if (player.gun == RIFLE)
+            move_with_animation(player.upperbodySprite, 11.9, 528 / 11, 29, delay, 32);
 
     }
 
@@ -1084,8 +1125,8 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
     }
     else if (player.gun == RIFLE)//with rifle the speed is slower than pistol
     {
-        s.move(player.Velocity.x*0.5,player.Velocity.y);
-        player.upperbodySprite.move(player.Velocity.x*0.5,player.Velocity.y);
+        s.move(player.Velocity.x * 0.5, player.Velocity.y);
+        player.upperbodySprite.move(player.Velocity.x * 0.5, player.Velocity.y);
     }
     player.rec.setPosition(s.getPosition().x - 50, s.getPosition().y);
 }
@@ -1298,10 +1339,10 @@ void ShootingAnimation()
         player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
         animation(player.upperbodySprite, 9.9, 520 / 10, 41, pistolshooting_delay, 10);
     }
-    else if(player.gun == RIFLE)
+    else if (player.gun == RIFLE)
     {
         player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Rifle) Sprite Sheet.png");
-        animation(player.upperbodySprite, 3.9 , 240 / 4, 27, rifleshooting_delay, 10);
+        animation(player.upperbodySprite, 3.9, 240 / 4, 27, rifleshooting_delay, 10);
     }
 }
 void crouchingAnimation()
@@ -1316,7 +1357,7 @@ void crouchingAnimation()
             player.lowerbodyTex.loadFromFile(pathh + "Shooting - Crouching (Pistol) Sprite Sheet.png");
             animation(player.lowerbodySprite, 9.9, 520 / 10, 29, pistolshooting_delay, 14);
         }
-        else if (player.gun == RIFLE )
+        else if (player.gun == RIFLE)
         {
             pistol.shooting();
             player.lowerbodyTex.loadFromFile(pathh + "Shooting - Crouching (Rifle) Sprite Sheet.png");
@@ -1490,13 +1531,13 @@ void TS_Setups()
     //Sets up the Title Screen & Main Menu Background, Music and Fire Sound Effect.
 
     TS_BGSpr.setPosition(0.f, 0.f);
-    TS_BGTex.loadFromFile(pathh+"TS BG.png");
+    TS_BGTex.loadFromFile(pathh + "TS BG.png");
     TS_BGSpr.setTexture(TS_BGTex);
-    TS_BGTheme.openFromFile(pathh+"Title Screen _ Main Menu Theme.wav");
+    TS_BGTheme.openFromFile(pathh + "Title Screen _ Main Menu Theme.wav");
     TS_BGTheme.play();
     TS_BGTheme.setVolume(50.f);
     TS_BGTheme.setLoop(true);
-    TS_BGFireFX.openFromFile(pathh+"Title Screen _ Main Menu Fire Sound.wav");
+    TS_BGFireFX.openFromFile(pathh + "Title Screen _ Main Menu Fire Sound.wav");
     TS_BGFireFX.play();
     TS_BGFireFX.setVolume(30.f);
     TS_BGFireFX.setLoop(true);
@@ -1504,39 +1545,41 @@ void TS_Setups()
 
     //Sets up the Title Screen & Main Menu Torches & Gate Animation.
     TS_TandGSpr.setPosition(659.f, 208.f);
-    TS_TandGTex.loadFromFile(pathh+"TS Torches _ Gate Sprite Sheet.png");
+    TS_TandGTex.loadFromFile(pathh + "TS Torches _ Gate Sprite Sheet.png");
     TS_TandGSpr.setTexture(TS_TandGTex);
 
 
 
     TS_LSpr.setPosition(722.f, 0.f);
-    TS_LTex.loadFromFile(pathh+"TS Lamp Sprite Sheet.png");
+    TS_LTex.loadFromFile(pathh + "TS Lamp Sprite Sheet.png");
     TS_LSpr.setTexture(TS_LTex);
 
 
     TS_VSpr.setPosition(0.f, 0.f);
-    TS_VTex.loadFromFile(pathh+"Vignette.png");
+    TS_VTex.loadFromFile(pathh + "Vignette.png");
     TS_VSpr.setTexture(TS_VTex);
 
 
     TS_LogoSpr.setPosition(269.f, 465.f);
-    TS_LogoTex.loadFromFile(pathh+"TS 1 Sprite Sheet.png");
+    TS_LogoTex.loadFromFile(pathh + "TS 1 Sprite Sheet.png");
     TS_LogoSpr.setTexture(TS_LogoTex);
 
     TS_PESpr.setPosition(612.f, 874.f);
-    TS_PETex.loadFromFile(pathh+"TS Press Enter Sprite Sheet.png");
+    TS_PETex.loadFromFile(pathh + "TS Press Enter Sprite Sheet.png");
     TS_PESpr.setTexture(TS_PETex);
 
 
     TS_buttonsSpr.setPosition(769.f, 650.f);
-    TS_buttonsTex.loadFromFile(pathh+"Main Menu Sprite Sheet.png");
+    TS_buttonsTex.loadFromFile(pathh + "Main Menu Sprite Sheet.png");
     TS_buttonsSpr.setTexture(TS_buttonsTex);
     TS_buttonsSpr.setTextureRect(IntRect(0, 0, 360, 315));
 
-    MenuClickB.loadFromFile(pathh+"Menu Click FX.wav");
+    MenuClickB.loadFromFile(pathh + "Menu Click FX.wav");
     MenuClick.setBuffer(MenuClickB);
 
-    MenuScrollB.loadFromFile(pathh+"Menu Scrolling FX.wav");
+    MenuScrollB.loadFromFile(pathh + "Menu Scrolling FX.wav");
     MenuScroll.setBuffer(MenuScrollB);
     MenuScroll.setVolume(100);
 }
+// HI
+ // "I <3";
