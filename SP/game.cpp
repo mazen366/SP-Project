@@ -496,9 +496,9 @@ float animiindecator[50];
 Texture lvl1FGtex[30];
 Sprite Lvl1FG[30];
 
-//lvl 1 A lamps animation && lvl 1 B
-Texture lvl1LampTex[4], lvl1torchTex[4];
-Sprite lvl1lamp[4], lvl1torch[4];
+//lvl 1 A lamps animation && lvl 1 B && lvl 1 C torches
+Texture lvl1LampTex[4], lvl1torchTex[4], lvl1_D_torchTex[2], Exitlamp1_D_Tex;
+Sprite lvl1lamp[4], lvl1torch[4], lvl1_D_torch[2], Exitlamp1_D;
 
 //powerups
 RectangleShape powerups(Vector2f(50, 50));
@@ -650,12 +650,15 @@ void Menu()
 void bgSetup()
 {
     // LEVEL 1 A SET UP
+
     bgTexture[0].loadFromFile(pathh + "Level 1-A BG.png");
     bgSprite[0].setTexture(bgTexture[0]);
     bgSprite[0].setPosition(-370, -53);
     create(ground, 0, 8830, 30, -370, 800);
     powerups.setPosition(500, 750);
+
     //lvl 1 ->A FG
+
     lvl1FGtex[0].loadFromFile(pathh + "Level 1-A FG.png");
     Lvl1FG[0].setTexture(lvl1FGtex[0]);
     Lvl1FG[0].setPosition(-370, -53);
@@ -680,6 +683,7 @@ void bgSetup()
     lvl1lamp[3].setPosition(-370 + 5470, 149 - 53);
 
     // LEVEL 1 B->1 SET UP
+
     bgTexture[1].loadFromFile(pathh + "Level 1-B-1 BG.png");
     bgSprite[1].setTexture(bgTexture[1]);
     bgSprite[1].setPosition(10000, -50);
@@ -705,9 +709,8 @@ void bgSetup()
     lvl1torch[3].setTexture(lvl1torchTex[3]);
     lvl1torch[3].setPosition(10000 + 3774, -50 + 559);
 
-
-
     // LEVEL 1 B --> 2 SET UP
+
     bgTexture[2].loadFromFile(pathh + "Level 1-B-2 BG.png");
     bgSprite[2].setTexture(bgTexture[2]);
     bgSprite[2].setPosition(14771, -940);
@@ -720,6 +723,7 @@ void bgSetup()
 
 
     //FG Lv1-B-2
+
     lvl1FGtex[2].loadFromFile(pathh + "Level 1-B-2 FG.png");
     Lvl1FG[2].setTexture(lvl1FGtex[2]);
     Lvl1FG[2].setPosition(14771, -940);
@@ -731,23 +735,27 @@ void bgSetup()
     create(wall, 4, 10, 140, 16840, 60);
 
     //LEVEL 1 C SET UP
+
     bgTexture[3].loadFromFile(pathh + "Level 1-C BG.png");
     bgSprite[3].setTexture(bgTexture[3]);
     bgSprite[3].setPosition(18000, 0);
 
-    //fire troches lv1 ->c
+    //fire troches lv1 --> C
+
     FireTrochestex.loadFromFile(pathh + "Level 1-C Fire Torches.png");
     FireTroches.setTexture(FireTrochestex);
     FireTroches.setTextureRect(IntRect(0, 0, 13120 / 8, 1192));
     FireTroches.setPosition(18000, 0);
 
-    //lvl 1 ->c FG
+    //lvl 1 --> C FG
+
     lvl1FGtex[3].loadFromFile(pathh + "Level 1-C FG.png");
     Lvl1FG[3].setTexture(lvl1FGtex[3]);
     Lvl1FG[3].setPosition(18000, 0);
     create(ground, 7, 1640, 20, 18000, 970);
 
     //LEVEL 1 D SET UP
+
     bgTexture[4].loadFromFile(pathh + "Level 1-D BG.png");
     bgSprite[4].setTexture(bgTexture[4]);
     bgSprite[4].setPosition(20000, 0);
@@ -756,7 +764,23 @@ void bgSetup()
     create(ground, 10, 750, 20, 23120, 900);
     create(ground, 11, 800, 20, 24150, 900);
     //first platform
+
     create(ground, 12, 500, 20, 20300, 700);
+
+    // Lvl 1 - D Fire Torches 
+
+    lvl1_D_torchTex[0].loadFromFile(pathh + "Level 1-D Torch 1_2.png");
+    lvl1_D_torch[0].setTexture(lvl1_D_torchTex[0]);
+    lvl1_D_torch[0].setPosition(20000 + 1020, 563);
+    lvl1_D_torchTex[1].loadFromFile(pathh + "Level 1-D Torch 3_4_5.png");
+    lvl1_D_torch[1].setTexture(lvl1_D_torchTex[1]);
+    lvl1_D_torch[1].setPosition(22073, 391);
+
+    // Lvl 1 - D Exit Lamp
+
+    Exitlamp1_D_Tex.loadFromFile(pathh + "Level 1-D Exit Lamps.png");
+    Exitlamp1_D.setTexture(Exitlamp1_D_Tex);
+    Exitlamp1_D.setPosition(24212, 568);
 
 }
 void windowfunction()
@@ -810,13 +834,17 @@ void windowfunction()
         window.draw(bgSprite[i]);
 
     //draw BG animations
-    window.draw(FireTroches);
     for (int i = 0; i < 4; i++)
     {
         window.draw(lvl1lamp[i]);
         window.draw(lvl1torch[i]);
     }
     window.draw(Exitlamp);
+    window.draw(FireTroches);
+    window.draw(lvl1_D_torch[0]);
+    window.draw(lvl1_D_torch[1]);
+    window.draw(Exitlamp1_D);
+
     //window.draw(player.rec);
     for (int i = 0; i < 10; i++) {
         if (enemy1[i].is_alive == 1) {
@@ -879,7 +907,12 @@ void BGanimation()
     animation(lvl1torch[1], 8, 1304 / 8, 303, 0.01, 27);
     animation(lvl1torch[2], 8, 1304 / 8, 303, 0.01, 28);
     animation(lvl1torch[3], 8, 1304 / 8, 303, 0.01, 29);
-    animation(Exitlamp, 6, 1092 / 6, 99, 0.005, 30);
+    animation(Exitlamp, 6, 1092 / 6, 99, 0.002, 30);
+    animation(FireTroches, 8, 13120 / 8, 1192, 0.01, 31);
+    animation(lvl1_D_torch[0], 8, 3096 / 8, 168, 0.01, 32);
+    animation(lvl1_D_torch[1], 8, 653, 401, 0.01, 33);
+    animation(Exitlamp1_D, 6, 1092 / 6, 98, 0.002, 34);
+
 }
 void windowclose()
 {
@@ -1581,5 +1614,3 @@ void TS_Setups()
     MenuScroll.setBuffer(MenuScrollB);
     MenuScroll.setVolume(100);
 }
-// HI
- // "I <3";
