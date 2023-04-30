@@ -541,7 +541,33 @@ struct Enemy1
     }
 }enemy1[30];
 
+struct Enemy2
+{
+    Texture RWTex;
+    Sprite RWSpr;
+    int intital_position = 12500;
 
+    void setup()
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            enemy2[i].RWTex.loadFromFile("RW Idle Sprite Sheet.png");
+            enemy2[i].RWSpr.setTexture(enemy1[i].texture);
+            enemy2[i].RWSpr.setScale(plScale, plScale);
+            enemy2[i].RWSpr.setTextureRect(IntRect(0, 0, 36, 48));
+            enemy2[i].RWSpr.setPosition(intital_position + i * 200, 765);
+        }
+    }
+    void movement();
+    void fighting();
+    void death();
+    void draw()
+    {
+        for (int i = 0; i < 5; i++)
+            window.draw(enemy2[i].RWSpr);
+    }
+
+}enemy2[5];
 //gravity
 float gravity = 0.7;
 bool canDoubleJump;
@@ -576,6 +602,7 @@ Sprite lvl1lamp[4], lvl1torch[4], lvl1_D_torch[2], Exitlamp1_D;
 //powerups
 RectangleShape powerups(Vector2f(50, 50));
 // DECLRATIONS
+void mouse_pos();
 void TS_Setups();
 void jumpingAnimation(float);
 void meeleAnimation();
@@ -609,8 +636,9 @@ void drawpistol(RenderWindow& window);
 void drawrifle(RenderWindow& window);
 int main()
 {
-    window.setFramerateLimit(60);
+    //window.setFramerateLimit(60);
     enemy1->setup(enemy1);
+    enemy2->setup();
     bgSetup();
     TS_Setups();
     Playersetup();
@@ -892,7 +920,7 @@ void windowfunction()
     dt = clock_pl.getElapsedTime().asMicroseconds();
     dt /= 750;
     clock_pl.restart();
-
+    mouse_pos();
     if (Keyboard::isKeyPressed(Keyboard::Escape))
     {
         Clock timer;
@@ -992,6 +1020,7 @@ void windowfunction()
     window.draw(player.playerHPSprite);
     //window.draw(powerups);
     window.setView(view);
+    enemy2->draw();
     transition_pos_check();
 }
 void BGanimation()
@@ -1733,4 +1762,13 @@ void TS_Setups()
     MenuScrollB.loadFromFile(pathh + "Menu Scrolling FX.wav");
     MenuScroll.setBuffer(MenuScrollB);
     MenuScroll.setVolume(100);
+}
+void mouse_pos()
+{
+    if (Mouse::isButtonPressed(Mouse::Left))
+    {
+        Vector2i mousePos = Mouse::getPosition(window);
+        cout << mousePos.x << ' ' << mousePos.y << '\n';
+
+    }
 }
