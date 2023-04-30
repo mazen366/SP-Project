@@ -63,7 +63,8 @@ struct Player
     bool is_shooting = 0;
     bool one_sprite_needed = 0;
     int last_key = 0;
-    bool live = 1;
+    bool live = 1, is_getting_damaged = 0;
+    Clock damage_timer;
     bool isdead = 0;
 
 };
@@ -186,8 +187,8 @@ struct Menu
 {
     int selected = 1;
     Start start_screen;
-    bool game_started = false, start_selected = false, 
-         options_selected = false, is_paused = false, ts_escaped = false;
+    bool game_started = false, start_selected = false,
+        options_selected = false, is_paused = false, ts_escaped = false;
 
     void move_up()
     {
@@ -256,11 +257,13 @@ struct Enemy1
     Sprite sprite;
     RectangleShape rec;
     Vector2f velocity = { 0,0 };
+
     int damage = 1;
     int health = 10;
     float sprite_indicator[10];
     bool isCarrying_a_weapon = 0;
-    bool death_animation_done = 0;
+    bool death_animation_done = 0, is_getting_damaged = 0;
+    Clock damage_timer;
     bool check = 1; //to fix RS Equipping Sprite dimensions 
     int last_key = RIGHT;
     float shoot_timer = 0;
@@ -281,8 +284,8 @@ struct Enemy1
         for (int i = 0; i < 30; i++)
         {
             enemy1[i].rec.setSize(Vector2f(100, 130));
-            enemy1[i].rec.setPosition(Vector2f(1000 + 200 * i , 600));
-            enemy1[i].sprite.setPosition(Vector2f(1000 + 200 * i , 600));
+            enemy1[i].rec.setPosition(Vector2f(1000 + 200 * i, 600));
+            enemy1[i].sprite.setPosition(Vector2f(1000 + 200 * i, 600));
             enemy1[i].initial_position = 1000 + 200 * i;
             enemy1[i].sprite.setScale(plScale, plScale);
         }
@@ -360,25 +363,41 @@ struct Enemy1
         {
             if (enemy1[i].is_alive)
             {
-                
-                    for (int j = 0; j < pistol.rects.size(); j++)
+
+                for (int j = 0; j < pistol.rects.size(); j++)
+                {
+                    if (enemy1[i].sprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second != 0)
                     {
-                        if (enemy1[i].sprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second != 0)
-                        {
-                            enemy1[i].velocity.x = 0;
-                            enemy1[i].health -= pistol.damage;
-                            pistol.rects[j].second = 0;
-                        }
+                        enemy1[i].velocity.x = 0;
+                        enemy1[i].health -= pistol.damage;
+                        enemy1[i].is_getting_damaged = 1;
+                        pistol.rects[j].second = 0;
                     }
-                    for (int j = 0; j < rifle.rects.size(); j++)
+                }
+                for (int j = 0; j < rifle.rects.size(); j++)
+                {
+                    if (enemy1[i].sprite.getGlobalBounds().intersects(rifle.rects[j].first.getGlobalBounds()) && rifle.rects[j].second != 0)
                     {
-                        if (enemy1[i].sprite.getGlobalBounds().intersects(rifle.rects[j].first.getGlobalBounds()) && rifle.rects[j].second != 0)
-                        {
-                            enemy1[i].velocity.x = 0;
-                            enemy1[i].health -= rifle.damage;
-                            rifle.rects[j].second = 0;
-                        }
+                        enemy1[i].velocity.x = 0;
+                        enemy1[i].health -= rifle.damage;
+                        enemy1[i].is_getting_damaged = 1;
+                        rifle.rects[j].second = 0;
                     }
+                }
+                if (enemy1[i].is_getting_damaged == 1)  // this adds red color to enemies when damaged 
+                {
+                    if (enemy1[i].damage_timer.getElapsedTime().asMilliseconds() <= 300) {
+                        enemy1[i].sprite.setColor(Color::Red);
+                    }
+                    else {
+                        enemy1[i].is_getting_damaged = 0;
+                    }
+                }
+                else
+                {
+                    enemy1[i].sprite.setColor(Color::White);
+                    enemy1[i].damage_timer.restart();
+                }
                 if (enemy1[i].health <= 0)
                 {
                     enemy1[i].death_animation(i);
@@ -659,7 +678,7 @@ void Menu()
             }
             else
             {
-                if(!menu.start_selected)
+                if (!menu.start_selected)
                     menu.draw();
                 if (Keyboard::isKeyPressed(Keyboard::Enter) || menu.ts_escaped)
                 {
@@ -667,13 +686,13 @@ void Menu()
                     if (!menu.ts_escaped)
                     {
                         timer2.restart();
-                        MenuClick.play();   
+                        MenuClick.play();
                         menu.ts_escaped = true;
 
                     }
                     else
                     {
-                        
+
                         if ((menu.selected == START && Keyboard::isKeyPressed(Keyboard::Enter)) && timer2.getElapsedTime().asMilliseconds() > 200 || menu.start_selected)
                         {
                             timer2.restart();
@@ -683,8 +702,8 @@ void Menu()
                                 MenuClick.play();
                                 menu.start_selected = true;
                                 timer.restart();
-                                 
-                            }                           
+
+                            }
                             if (menu.start_screen.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter) && timer.getElapsedTime().asMilliseconds() > 200)
                             {
                                 menu.game_started = true;
@@ -937,7 +956,7 @@ void windowfunction()
     }
     window.draw(ground[12]);
 
-    
+
     if (player.live)
     {
         window.draw(player.lowerbodySprite);
@@ -950,8 +969,8 @@ void windowfunction()
         if (i == 1)continue;
         window.draw(Lvl1FG[i]);
     }
-        drawpistol(window);//draw pistol bullets
-        drawrifle(window); //draw rifle bullets
+    drawpistol(window);//draw pistol bullets
+    drawrifle(window); //draw rifle bullets
     //draw enemy1 bullets 
     for (int i = 0; i < 20; i++)
     {
@@ -1344,7 +1363,7 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
                 {
                     player.upperbodyTex.loadFromFile(pathh + "Running (Rifle) Sprite Sheet.png");
                     player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
-                    animation(player.upperbodySprite, 11.9, 528 / 12, 29,0.0001, 32);
+                    animation(player.upperbodySprite, 11.9, 528 / 12, 29, 0.0001, 32);
                     animation(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
                 }
             }
@@ -1562,10 +1581,28 @@ void playerDamageFromEnemy1()
                 if ((player.lowerbodySprite.getGlobalBounds().intersects(enemy1[i].bullet[j].first.getGlobalBounds()) || player.upperbodySprite.getGlobalBounds().intersects(enemy1[i].bullet[j].first.getGlobalBounds())) && enemy1[i].bullet[j].second != 0)
                 {
                     player.health -= enemy1[i].damage;
+                    player.is_getting_damaged = 1;
                     enemy1[i].bullet[j].second = 0;
                 }
             }
         }
+        if (player.is_getting_damaged == 1)  // this adds red color to player when damaged 
+        {
+            if (player.damage_timer.getElapsedTime().asMilliseconds() <= 300) {
+                player.upperbodySprite.setColor(Color::Red);
+                player.lowerbodySprite.setColor(Color::Red);
+            }
+            else {
+                player.is_getting_damaged = 0;
+            }
+        }
+        else
+        {
+            player.upperbodySprite.setColor(Color::White);
+            player.lowerbodySprite.setColor(Color::White);
+            player.damage_timer.restart();
+        }
+
         if (player.health <= 0)
         {
             playerDeathAnimation();
