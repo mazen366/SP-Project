@@ -109,6 +109,7 @@ struct Rifle
         }
 
     }
+
 } rifle;
 
 
@@ -552,7 +553,7 @@ struct Enemy2
         for (int i = 0; i < 5; i++)
         {
             enemy2[i].RWTex.loadFromFile("RW Idle Sprite Sheet.png");
-            enemy2[i].RWSpr.setTexture(enemy1[i].texture);
+            enemy2[i].RWSpr.setTexture(enemy2[i].RWTex);
             enemy2[i].RWSpr.setScale(plScale, plScale);
             enemy2[i].RWSpr.setTextureRect(IntRect(0, 0, 36, 48));
             enemy2[i].RWSpr.setPosition(intital_position + i * 200, 765);
@@ -566,8 +567,8 @@ struct Enemy2
         for (int i = 0; i < 5; i++)
             window.draw(enemy2[i].RWSpr);
     }
-
 }enemy2[5];
+
 //gravity
 float gravity = 0.7;
 bool canDoubleJump;
@@ -634,9 +635,10 @@ void playerDamageFromEnemy1();
 void playerDeathAnimation();
 void drawpistol(RenderWindow& window);
 void drawrifle(RenderWindow& window);
+
 int main()
 {
-    //window.setFramerateLimit(60);
+    window.setFramerateLimit(60);
     enemy1->setup(enemy1);
     enemy2->setup();
     bgSetup();
@@ -914,8 +916,7 @@ void bgSetup()
 
 }
 void windowfunction()
-{
-
+{ 
     //delta time
     dt = clock_pl.getElapsedTime().asMicroseconds();
     dt /= 750;
@@ -956,7 +957,7 @@ void windowfunction()
 
     if (player.health > 0)
         plmovement(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
-    player.playerHPSprite.setPosition(view.getCenter().x - 960, view.getCenter().y - 500);
+    
     BGanimation();
     windowclose();
     window.clear();
@@ -1019,8 +1020,10 @@ void windowfunction()
     // window.draw(ground[0]);
     window.draw(player.playerHPSprite);
     //window.draw(powerups);
-    window.setView(view);
     enemy2->draw();
+    
+    window.setView(view);
+    player.playerHPSprite.setPosition(view.getCenter().x - 960, view.getCenter().y - 500);
     transition_pos_check();
 }
 void BGanimation()
@@ -1029,15 +1032,15 @@ void BGanimation()
     animation(lvl1lamp[1], 8, 345, 657, 0.01, 23);
     animation(lvl1lamp[2], 8, 345, 657, 0.01, 24);
     animation(lvl1lamp[3], 8, 345, 657, 0.01, 25);
-    animation(lvl1torch[0], 8, 1304 / 8, 303, 0.01, 26);
-    animation(lvl1torch[1], 8, 1304 / 8, 303, 0.01, 27);
-    animation(lvl1torch[2], 8, 1304 / 8, 303, 0.01, 28);
-    animation(lvl1torch[3], 8, 1304 / 8, 303, 0.01, 29);
-    animation(Exitlamp, 6, 1092 / 6, 99, 0.002, 30);
-    animation(FireTroches, 8, 13120 / 8, 1192, 0.01, 31);
-    animation(lvl1_D_torch[0], 8, 3096 / 8, 168, 0.01, 32);
+    animation(lvl1torch[0], 8, 1304.0 / 8, 303, 0.01, 26);
+    animation(lvl1torch[1], 8, 1304.0 / 8, 303, 0.01, 27);
+    animation(lvl1torch[2], 8, 1304.0 / 8, 303, 0.01, 28);
+    animation(lvl1torch[3], 8, 1304.0 / 8, 303, 0.01, 29);
+    animation(Exitlamp, 6, 1092.0 / 6, 99, 0.002, 30);
+    animation(FireTroches, 8, 13120.0 / 8, 1192, 0.01, 31);
+    animation(lvl1_D_torch[0], 8, 3096.0 / 8, 168, 0.01, 32);
     animation(lvl1_D_torch[1], 8, 653, 401, 0.01, 33);
-    animation(Exitlamp1_D, 6, 1092 / 6, 98, 0.002, 34);
+    animation(Exitlamp1_D, 6, 1092 / 6.0, 98, 0.002, 34);
 
 }
 void windowclose()
@@ -1769,6 +1772,5 @@ void mouse_pos()
     {
         Vector2i mousePos = Mouse::getPosition(window);
         cout << mousePos.x << ' ' << mousePos.y << '\n';
-
     }
 }
