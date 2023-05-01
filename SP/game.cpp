@@ -111,7 +111,22 @@ struct Rifle
     }
 
 } rifle;
+ 
+//liser
+struct Liser
+{
+    float damage = 0.001;
+    vector<pair<RectangleShape, int>>rects;
 
+    void shooting()
+    { 
+        Vector2f pl = player.lowerbodySprite.getPosition();
+        RectangleShape rect(sf::Vector2f(100, 5));
+        rect.setOrigin(-pl.x, -(pl.y + 50));
+        rect.setFillColor(Color::Red);
+        liser.rects.push_back({ rect ,player.last_key });
+    }
+}liser;
 
 //pause manu
 struct Pause
@@ -322,8 +337,11 @@ struct Enemy1
                 { // Player not in range 
                     if (i % 2 == 0)
                         Aimless_Walking(i);
-                    else
+                    else if (i % 3 == 0)
+                    {
                         Idle_animation(i);
+                        enemy1[i].velocity.x = 0;
+                    }
                 }
             }
         }
@@ -383,6 +401,16 @@ struct Enemy1
                         enemy1[i].health -= rifle.damage;
                         enemy1[i].is_getting_damaged = 1;
                         rifle.rects[j].second = 0;
+                    }
+                }
+                for (int j = 0; j < liser.rects.size(); j++)
+                {
+                    if (enemy1[i].sprite.getGlobalBounds().intersects(liser.rects[j].first.getGlobalBounds()) && liser.rects[j].second != 0)
+                    {
+                        enemy1[i].velocity.x = 0;
+                        enemy1[i].health -= liser.damage;
+                        enemy1[i].is_getting_damaged = 1;
+                        liser.rects[j].second = 0;
                     }
                 }
                 if (enemy1[i].is_getting_damaged == 1)  // this adds red color to enemies when damaged 
@@ -635,7 +663,7 @@ void playerDamageFromEnemy1();
 void playerDeathAnimation();
 void drawpistol(RenderWindow& window);
 void drawrifle(RenderWindow& window);
-
+void drawliser();
 int main()
 {
     window.setFramerateLimit(60);
@@ -992,14 +1020,15 @@ void windowfunction()
         if (!player.one_sprite_needed)
             window.draw(player.upperbodySprite);
     }
-
+    drawpistol(window);//draw pistol bullets
+    drawrifle(window); //draw rifle bullets
+    drawliser();
     for (int i = 0; i < 4; i++)
     {
         if (i == 1)continue;
         window.draw(Lvl1FG[i]);
     }
-    drawpistol(window);//draw pistol bullets
-    drawrifle(window); //draw rifle bullets
+
     //draw enemy1 bullets 
     for (int i = 0; i < 20; i++)
     {
@@ -1336,7 +1365,7 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             if (Keyboard::isKeyPressed(Keyboard::J))
             {
                 if (player.gun == PISTOL)
-                    pistol.shooting();
+                    liser.shooting();// pistol.shooting();
                 else if (player.gun == RIFLE)
                     rifle.shooting();
 
@@ -1374,7 +1403,7 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             if (Keyboard::isKeyPressed(Keyboard::J))
             {
                 if (player.gun == PISTOL)
-                    pistol.shooting();
+                    liser.shooting();//  pistol.shooting();
                 else if (player.gun == RIFLE)
                     rifle.shooting();
 
@@ -1413,7 +1442,8 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
                 // shooting animation when pl standing
                 if (player.gun == PISTOL)
                 {
-                    pistol.shooting();
+                    liser.shooting();
+                   // pistol.shooting();
                     player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
                     animation(player.upperbodySprite, 9.9, 520 / 10, 41, pistolshooting_delay, 10);
                 }
@@ -1515,7 +1545,7 @@ void crouchingAnimation()
     {
         if (player.gun == PISTOL)
         {
-            pistol.shooting();
+            liser.shooting();
             player.lowerbodyTex.loadFromFile(pathh + "Shooting - Crouching (Pistol) Sprite Sheet.png");
             animation(player.lowerbodySprite, 9.9, 520 / 10, 29, pistolshooting_delay, 14);
         }
@@ -1703,6 +1733,23 @@ void drawrifle(RenderWindow& window)
         {
             window.draw(rifle.rects[x].first);
             rifle.rects[x].first.move(14, 0);
+        }
+    }
+}
+
+void drawliser()
+{
+    for (int x = 0; x < liser.rects.size(); x++)
+    {
+        if (liser.rects[x].second == LEFT)
+        {
+            liser.rects[x].first.move(-100, 0);
+            window.draw(liser.rects[x].first);
+        }
+        else if (liser.rects[x].second == RIGHT)
+        {
+            window.draw(liser.rects[x].first);
+            liser.rects[x].first.move(100, 0);
         }
     }
 }
