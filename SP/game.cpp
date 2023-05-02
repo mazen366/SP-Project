@@ -22,28 +22,63 @@ using namespace sf;
 RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Default);
 Event event;
 
-//make the variable=""
-string pathh = resourcePath();
+//make the variable=
+string pathh = "";
 const float idle = 0.001,
 pistolshooting_delay = 0.007, rifleshooting_delay = 0.005,
 plVelocity = 0.2,
 plScale = 3.25,
 melee_delay = 0.003;
-Texture TS_BGTex, TS_TandGTex, TS_LTex, TS_VTex, TS_LogoTex, TS_PETex, TS_buttonsTex, TS_SSTex;
-Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr;
+Texture TS_BGTex, TS_TandGTex, TS_LTex, TS_VTex, TS_LogoTex, TS_PETex, TS_buttonsTex, TS_SSTex, TS_OlTex, OptionsTex, MusicControlTex, PMTex;
+Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr;
 Music TS_BGTheme;
 Music TS_BGFireFX;
 SoundBuffer MenuClickB, MenuScrollB;
 Sound MenuClick, MenuScroll;
-Clock timer, timer2;
-
+Clock timer, timer2, timer4, escTimer;
+View view(Vector2f(0, 0), Vector2f(1920, 1080));
 float TS_TandGCnt = 0;
 float TS_LCnt = 0;
 float TS_LogoCnt = 0;
 float TS_PECnt = 0;
 float AlphaPE = 255;
-int TS_ButtonsCnt = 0, TSS_ButtonsCnt = 0;
+int TS_ButtonsCnt = 0, TSS_ButtonsCnt = 0, OptionsSprCnt = 0;
 
+// DECLRATIONS
+void window_draw();
+void mouse_pos();
+void TS_Setups();
+void jumpingAnimation(float);
+void meeleAnimation();
+void ShootingAnimation();
+void crouchingAnimation();
+void IdleAnimation();
+void Menu();
+void BGanimation();
+void plmovement(Sprite&, float, float, float, float, int);
+void onlymove(Sprite&);
+void jump();
+void moveToRight(Sprite&);
+void moveToLeft(Sprite&);
+void move_with_animation(Sprite&, float, float, float, float, int);
+void Playersetup();
+void bgSetup();
+void windowclose();
+void windowfunction();
+void cameraView();
+void transition();
+void transition_reverse();
+void transition_pos_check();
+bool canMoveRight(Sprite, int);
+bool canMoveleft(Sprite, int);
+bool collisonPl(RectangleShape[], int);
+void create(RectangleShape[], int, int, int, int, int);//make ground
+void animation(Sprite& s, float maxframe, float x, float y, float delay, int index);
+void playerDamageFromEnemy1();
+void playerDeathAnimation();
+void drawpistol(RenderWindow& window);
+void drawrifle(RenderWindow& window);
+void drawliser();
 //player
 struct Player
 {
@@ -128,6 +163,65 @@ struct Liser
     }
 }liser;
 
+struct MusicSoundControl 
+{
+    int selected = 1, soundlevel = 100;
+    bool isOpen = false;
+
+    void move_right()
+    {
+        selected = (selected + 1 <= 7 ? selected + 1 : 7);
+        soundlevel = (100 - (selected - 1) * 15 < 11 ? 0 : 100 - (selected - 1) * 15);
+        TS_BGTheme.setVolume(soundlevel);
+    }
+
+    void move_left()
+    {
+        selected = (selected - 1 == 0 ? 1 : selected - 1);
+        soundlevel = (100 - (selected - 1) * 15 < 11 ? 0 : 100 - (selected - 1) * 15);
+        TS_BGTheme.setVolume(soundlevel);
+    }
+    void draw(string section = "")
+    {
+        window.clear();
+
+        if (section == "main")
+        {
+            TS_TandGCnt += 0.139;
+            if (TS_TandGCnt > 8)
+                TS_TandGCnt -= 8;
+            TS_TandGSpr.setTextureRect(IntRect((int)TS_TandGCnt * 600, 0, 600, 600));
+
+            TS_LCnt += 0.139;
+            if (TS_LCnt > 10)
+                TS_LCnt -= 10;
+            TS_LSpr.setTextureRect(IntRect((int)TS_LCnt * 473, 0, 473, 261));
+            OptionsSpr.setTextureRect(IntRect(OptionsSprCnt * 843, 0, 843, 441));
+            MusicControlSpr.setTextureRect(IntRect((selected - 1) * 755, 0, 755, 240));
+            window.draw(TS_BGSpr);
+            window.draw(TS_TandGSpr);
+            window.draw(TS_LSpr);
+            window.draw(TS_OlSpr);
+            window.draw(MusicControlSpr);
+            window.display();
+        }
+
+        else
+        {
+            TS_OlSpr.setPosition(view.getCenter().x - 1000, view.getCenter().y - 600);
+            MusicControlSpr.setPosition(view.getCenter().x - 400, view.getCenter().y - 150);
+            MusicControlSpr.setTextureRect(IntRect((selected - 1) * 755, 0, 755, 240));
+            window.clear();
+            window_draw();
+            window.draw(TS_OlSpr);
+            window.draw(MusicControlSpr);
+            window.display();
+
+        }
+   
+    }
+        
+};
 //pause manu
 struct Pause
 {
@@ -145,6 +239,16 @@ struct Pause
     void move_down()
     {
         selected = (selected == 3 ? 1 : selected + 1);
+    }
+    void draw()
+    {
+        TS_OlSpr.setPosition(view.getCenter().x - 1000, view.getCenter().y - 600);
+        PMSpr.setPosition(view.getCenter().x - 195, view.getCenter().y - 60);
+        PMSpr.setTextureRect(IntRect((selected - 1) * 588, 0, 588, 352));
+        window.draw(TS_OlSpr);
+        window.draw(PMSpr);
+        window.display();
+
     }
 }pause_menu;
 
@@ -198,13 +302,75 @@ struct Start
         window.display();
     }
 };
+
+struct OptionsScreen
+{
+    int selected = 1;
+    bool isOpen = false;
+    MusicSoundControl music_slider;
+    void move_up()
+    {
+        selected = (selected == 1 ? 2 : 1);
+        OptionsSprCnt = selected - 1;
+    }
+
+    void move_down()
+    {
+        selected = (selected == 1 ? 2 : 1);
+        OptionsSprCnt = selected - 1;
+    }
+
+    void exit()
+    {
+        isOpen = false;
+    }
+
+    void draw(string section = "")
+    {
+        if(section == "menu")
+        {
+            window.clear();
+            TS_TandGCnt += 0.139;
+            if (TS_TandGCnt > 8)
+                TS_TandGCnt -= 8;
+            TS_TandGSpr.setTextureRect(IntRect((int)TS_TandGCnt * 600, 0, 600, 600));
+
+            TS_LCnt += 0.139;
+            if (TS_LCnt > 10)
+                TS_LCnt -= 10;
+            TS_LSpr.setTextureRect(IntRect((int)TS_LCnt * 473, 0, 473, 261));
+            OptionsSpr.setTextureRect(IntRect(OptionsSprCnt * 843, 0, 843, 441));
+            OptionsSpr.setPosition(539.f, 400.f);
+
+            window.draw(TS_BGSpr);
+            window.draw(TS_TandGSpr);
+            window.draw(TS_LSpr);
+            window.draw(TS_OlSpr);
+            window.draw(OptionsSpr);
+            window.display();
+        }
+        else
+        {
+            OptionsSpr.setPosition(view.getCenter().x - 420, view.getCenter().y - 100);
+            OptionsSpr.setTextureRect(IntRect(OptionsSprCnt * 843, 0, 843, 441));
+            window.clear();
+            window_draw();
+            window.draw(TS_OlSpr);
+            window.draw(OptionsSpr);
+            window.display();
+        }
+    }
+};
+
 //menu
 struct Menu
 {
     int selected = 1;
     Start start_screen;
+    OptionsScreen options_screen;
+
     bool game_started = false, start_selected = false,
-        options_selected = false, is_paused = false, ts_escaped = false;
+         is_paused = false, ts_escaped = false;
 
     void move_up()
     {
@@ -218,7 +384,7 @@ struct Menu
         TS_ButtonsCnt = selected - 1;
         MenuScroll.play();
     }
-    void draw()
+    void main_screen_draw()
     {
         window.clear();
         TS_TandGCnt += 0.139;
@@ -603,15 +769,16 @@ struct Enemy3
     Sprite tankSprite;
     int tankInitialPos=400;
     //127 × 48 pixels
-    void setup(Enemy3 tank)
+    void setup(Enemy3 &tank)
     {
         tank.tanktex.loadFromFile(pathh+"Tank Moving Forward Sprite Sheet.png");
         tank.tankSprite.setTexture(tank.tanktex);
-//        tank.tankSprite.setTextureRect(IntRect(0,0,63,48));
-        tank.tankSprite.setPosition(player.lowerbodySprite.getPosition());
+        tank.tankSprite.setTextureRect(IntRect(0,0,64,48));
         tank.tankSprite.setScale(10, 10);
+        tank.tankSprite.setPosition(1000, 600);
+        
     }
-    void draw(Enemy3 tank)
+    void draw(Enemy3 &tank)
     {
         window.draw(tank.tankSprite);
     }
@@ -631,7 +798,7 @@ Sprite bgSprite[30];
 int bgCounter = 0, leftEnd, rightEnd;//indicator for current map, start of map, end of map
 bool  isMoved = false, ismoved2 = 0, ismoved3 = 0;//flags for clearing the previous map
 Clock blackscreenTimer;
-View view(Vector2f(0, 0), Vector2f(1920, 1080));
+
 
 //lvl 1-b-2 animation Exit lamp
 Texture  ExitlampTex;
@@ -653,40 +820,7 @@ Sprite lvl1lamp[4], lvl1torch[4], lvl1_D_torch[2], Exitlamp1_D;
 
 //powerups
 RectangleShape powerups(Vector2f(50, 50));
-// DECLRATIONS
-void mouse_pos();
-void TS_Setups();
-void jumpingAnimation(float);
-void meeleAnimation();
-void ShootingAnimation();
-void crouchingAnimation();
-void IdleAnimation();
-void Menu();
-void BGanimation();
-void plmovement(Sprite&, float, float, float, float, int);
-void onlymove(Sprite&);
-void jump();
-void moveToRight(Sprite&);
-void moveToLeft(Sprite&);
-void move_with_animation(Sprite&, float, float, float, float, int);
-void Playersetup();
-void bgSetup();
-void windowclose();
-void windowfunction();
-void cameraView();
-void transition();
-void transition_reverse();
-void transition_pos_check();
-bool canMoveRight(Sprite, int);
-bool canMoveleft(Sprite, int);
-bool collisonPl(RectangleShape[], int);
-void create(RectangleShape[], int, int, int, int, int);//make ground
-void animation(Sprite& s, float maxframe, float x, float y, float delay, int index);
-void playerDamageFromEnemy1();
-void playerDeathAnimation();
-void drawpistol(RenderWindow& window);
-void drawrifle(RenderWindow& window);
-void drawliser();
+
 int main()
 {
     window.setFramerateLimit(60);
@@ -706,48 +840,81 @@ void Menu()
 {
     while (window.isOpen())
     {
+        mouse_pos();
         windowclose();
         if (pause_menu.is_paused)
         {
-            if (Keyboard::isKeyPressed(Keyboard::Escape))
+            if(!menu.options_screen.isOpen)
             {
-                Clock timer;
-                while (true)
-                {
-                    if (timer.getElapsedTime().asMilliseconds() > 300)
-                    {
-                        pause_menu.is_paused = false;
-                        break;
-                    }
-                }
+                window_draw();
+                pause_menu.draw();
+            }
+            if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200 && !menu.options_screen.isOpen)
+            {
+                pause_menu.is_paused = false;
+                escTimer.restart();
             }
             else if (pause_menu.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter))
                 pause_menu.exit();
+            else if (pause_menu.selected == 2 && Keyboard::isKeyPressed(Keyboard::Enter) && timer2.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.isOpen)
+            {
+                timer2.restart();
+                if(!menu.options_screen.isOpen)
+                {
+                    timer4.restart();
+                    menu.options_screen.isOpen = true;
+                }
+                if(!menu.options_screen.music_slider.isOpen)
+                    menu.options_screen.draw();
+                if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
+                {
+                    menu.options_screen.isOpen = false;
+                    escTimer.restart();
+                }
+                if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
+                {
+                    timer.restart();
+                    menu.options_screen.move_up();
+                }
+                if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
+                {
+                    timer.restart();
+                    menu.options_screen.move_down();
+                }
+                if (Keyboard::isKeyPressed(Keyboard::Enter) && menu.options_screen.selected == 1 && timer4.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.music_slider.isOpen)
+                {
+                    timer4.restart();
+                    menu.options_screen.music_slider.draw();
+                    menu.options_screen.music_slider.isOpen = true;
+                    if (Keyboard::isKeyPressed(Keyboard::Right) && timer.getElapsedTime().asMilliseconds() > 200)
+                    {
+                        timer.restart();
+                        menu.options_screen.music_slider.move_left();
+                    }
+                    if (Keyboard::isKeyPressed(Keyboard::Left) && timer.getElapsedTime().asMilliseconds() > 200)
+                    {
+                        timer.restart();
+                        menu.options_screen.music_slider.move_right();
+                    }
+                    if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
+                    {
+                        escTimer.restart();
+                        menu.options_screen.music_slider.isOpen = false;
+                    }
+                }
+
+            }
             else if (pause_menu.selected == 3 && Keyboard::isKeyPressed(Keyboard::Enter))
                 window.close();
-            else if (Keyboard::isKeyPressed(Keyboard::Up))
+            else if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
             {
-                Clock timer1;
-                while (true)
-                {
-                    if (timer1.getElapsedTime().asMilliseconds() > 300)
-                    {
-                        pause_menu.move_up();
-                        break;
-                    }
-                }
+                timer.restart();
+                pause_menu.move_up();
             }
-            else if (Keyboard::isKeyPressed(Keyboard::Down))
+            else if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
             {
-                Clock timer1;
-                while (true)
-                {
-                    if (timer1.getElapsedTime().asMilliseconds() > 300)
-                    {
-                        pause_menu.move_down();
-                        break;
-                    }
-                }
+                pause_menu.move_down();
+                timer.restart();
             }
         }
         else {
@@ -760,8 +927,8 @@ void Menu()
             }
             else
             {
-                if (!menu.start_selected)
-                    menu.draw();
+                if (!menu.start_selected && !menu.options_screen.isOpen)
+                    menu.main_screen_draw();
                 if (Keyboard::isKeyPressed(Keyboard::Enter) || menu.ts_escaped)
                 {
 
@@ -809,6 +976,57 @@ void Menu()
                                 timer.restart();
                             }
 
+                        }
+                        else if (menu.selected == OPTIONS && Keyboard::isKeyPressed(Keyboard::Enter) && timer2.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.isOpen)
+                        {
+                            timer2.restart();
+                            if(!menu.options_screen.music_slider.isOpen)
+                                menu.options_screen.draw("menu");
+                            if(!menu.options_screen.isOpen)
+                            {
+                                menu.options_screen.isOpen = true;
+                                timer4.restart();
+                            }
+                            if (Keyboard::isKeyPressed(Keyboard::Enter) && timer4.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.music_slider.isOpen)
+                            {
+                                timer4.restart();
+                                menu.options_screen.music_slider.draw("main");
+                                menu.options_screen.music_slider.isOpen = true;
+
+                                if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
+                                {
+                                    escTimer.restart();
+                                    menu.options_screen.music_slider.isOpen = false;
+                                }
+
+                                if (Keyboard::isKeyPressed(Keyboard::Right) && timer.getElapsedTime().asMilliseconds() > 200)
+                                {
+                                    timer.restart();
+                                    menu.options_screen.music_slider.move_left();
+                                }
+                                if (Keyboard::isKeyPressed(Keyboard::Left) && timer.getElapsedTime().asMilliseconds() > 200)
+                                {
+                                    timer.restart();
+                                    menu.options_screen.music_slider.move_right();
+                                }
+
+
+                            }
+                            if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
+                            {
+                                timer.restart();
+                                menu.options_screen.move_down();
+                            }
+                            if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
+                            {
+                                timer.restart();
+                                menu.options_screen.move_up();
+                            }
+                            if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
+                            {
+                                escTimer.restart();
+                                menu.options_screen.exit();  
+                            }
                         }
                         else if (menu.selected == EXIT && Keyboard::isKeyPressed(Keyboard::Enter))
                             window.close();
@@ -973,18 +1191,10 @@ void windowfunction()
     dt = clock_pl.getElapsedTime().asMicroseconds();
     dt /= 750;
     clock_pl.restart();
-    mouse_pos();
-    if (Keyboard::isKeyPressed(Keyboard::Escape))
+    if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
     {
-        Clock timer;
-        while (true)
-        {
-            if (timer.getElapsedTime().asMilliseconds() > 300)
-            {
-                pause_menu.is_paused = true;
-                break;
-            }
-        }
+        pause_menu.is_paused = true;
+        escTimer.restart();
     }
 
 
@@ -1013,67 +1223,7 @@ void windowfunction()
     BGanimation();
     windowclose();
     window.clear();
-    for (int i = 0; i < 5; i++)
-        window.draw(bgSprite[i]);
-
-    //draw BG animations
-    for (int i = 0; i < 4; i++)
-    {
-        window.draw(lvl1lamp[i]);
-        window.draw(lvl1torch[i]);
-    }
-    window.draw(Exitlamp);
-    window.draw(FireTroches);
-    window.draw(lvl1_D_torch[0]);
-    window.draw(lvl1_D_torch[1]);
-    window.draw(Exitlamp1_D);
-
-    //window.draw(player.rec);
-    for (int i = 0; i < 20; i++) {
-        if (enemy1[i].is_alive == 1) {
-            //window.draw(enemy1[i].rec);
-            window.draw(enemy1[i].sprite);
-        }
-    }
-    tank.draw(tank);
-    window.draw(ground[12]);
-    if (player.live)
-    {
-        window.draw(player.lowerbodySprite);
-        if (!player.one_sprite_needed)
-            window.draw(player.upperbodySprite);
-    }
-    drawpistol(window);//draw pistol bullets
-    drawrifle(window); //draw rifle bullets
-    drawliser();
-    for (int i = 0; i < 4; i++)
-    {
-        if (i == 1)continue;
-        window.draw(Lvl1FG[i]);
-    }
-
-    //draw enemy1 bullets
-    for (int i = 0; i < 20; i++)
-    {
-        for (int x = 0; x < enemy1[i].bullet.size(); x++)
-        {
-            if (enemy1[i].bullet[x].second == LEFT)
-            {
-                enemy1[i].bullet[x].first.move(-10, 0);
-                window.draw(enemy1[i].bullet[x].first);
-            }
-            else if (enemy1[i].bullet[x].second == RIGHT)
-            {
-                window.draw(enemy1[i].bullet[x].first);
-                enemy1[i].bullet[x].first.move(10, 0);
-            }
-        }
-    }
-    // window.draw(ground[0]);
-    window.draw(player.playerHPSprite);
-    //window.draw(powerups);
-    enemy2->draw(enemy2);
-    tank.draw(tank);
+    window_draw();
     window.setView(view);
     player.playerHPSprite.setPosition(view.getCenter().x - 960, view.getCenter().y - 500);
     transition_pos_check();
@@ -1501,6 +1651,71 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
 
 
 }
+
+void window_draw()
+{
+    for (int i = 0; i < 5; i++)
+        window.draw(bgSprite[i]);
+
+    //draw BG animations
+    for (int i = 0; i < 4; i++)
+    {
+        window.draw(lvl1lamp[i]);
+        window.draw(lvl1torch[i]);
+    }
+    window.draw(Exitlamp);
+    window.draw(FireTroches);
+    window.draw(lvl1_D_torch[0]);
+    window.draw(lvl1_D_torch[1]);
+    window.draw(Exitlamp1_D);
+
+    //window.draw(player.rec);
+    for (int i = 0; i < 20; i++) {
+        if (enemy1[i].is_alive == 1) {
+            //window.draw(enemy1[i].rec);
+            window.draw(enemy1[i].sprite);
+        }
+    }
+
+    window.draw(ground[12]);
+    if (player.live)
+    {
+        window.draw(player.lowerbodySprite);
+        if (!player.one_sprite_needed)
+            window.draw(player.upperbodySprite);
+    }
+    drawpistol(window);//draw pistol bullets
+    drawrifle(window); //draw rifle bullets
+    drawliser();
+    for (int i = 0; i < 4; i++)
+    {
+        if (i == 1)continue;
+        window.draw(Lvl1FG[i]);
+    }
+
+    //draw enemy1 bullets
+    for (int i = 0; i < 20; i++)
+    {
+        for (int x = 0; x < enemy1[i].bullet.size(); x++)
+        {
+            if (enemy1[i].bullet[x].second == LEFT)
+            {
+                enemy1[i].bullet[x].first.move(-10, 0);
+                window.draw(enemy1[i].bullet[x].first);
+            }
+            else if (enemy1[i].bullet[x].second == RIGHT)
+            {
+                window.draw(enemy1[i].bullet[x].first);
+                enemy1[i].bullet[x].first.move(10, 0);
+            }
+        }
+    }
+    // window.draw(ground[0]);
+    window.draw(player.playerHPSprite);
+    //window.draw(powerups);
+    //enemy2->draw(enemy2);
+    //tank.draw(tank);
+}
 void moveToRight(Sprite& s)
 {
     s.setScale(plScale, plScale);
@@ -1785,11 +2000,11 @@ void TS_Setups()
     TS_BGSpr.setTexture(TS_BGTex);
     TS_BGTheme.openFromFile(pathh + "Title Screen _ Main Menu Theme.wav");
     TS_BGTheme.play();
-    TS_BGTheme.setVolume(0.f);
+    TS_BGTheme.setVolume(100.f);
     TS_BGTheme.setLoop(true);
     TS_BGFireFX.openFromFile(pathh + "Title Screen _ Main Menu Fire Sound.wav");
     TS_BGFireFX.play();
-    TS_BGFireFX.setVolume(0.f);//30;
+    TS_BGFireFX.setVolume(30.f);//30;
     TS_BGFireFX.setLoop(true);
 
 
@@ -1829,12 +2044,33 @@ void TS_Setups()
     TS_SSSpr.setTexture(TS_SSTex);
     TS_SSSpr.setTextureRect(IntRect(0, 0, 400, 315));
 
+    TS_OlSpr.setPosition(0.f, 0.f);
+    TS_OlTex.loadFromFile("Dark Overlay.png");
+    TS_OlSpr.setTexture(TS_OlTex);
+    TS_OlSpr.setScale(3, 3);
+
+    PMSpr.setPosition(666, 364);
+    PMTex.loadFromFile("Pause Screen Sprite Sheet.png");
+    PMSpr.setTexture(PMTex);
+    PMSpr.setScale(0.7, 0.7);
+    PMSpr.setTextureRect(IntRect(0, 0, 588, 352));
+
+    OptionsSpr.setPosition(539.f, 400.f);
+    OptionsTex.loadFromFile("Sound Sprite Sheet.png");
+    OptionsSpr.setTexture(OptionsTex);
+    OptionsSpr.setTextureRect(IntRect(0, 0, 843, 441));
+
+    MusicControlSpr.setPosition(580, 289);
+    MusicControlTex.loadFromFile("Sound Slider Sprite Sheet.png");
+    MusicControlSpr.setTexture(MusicControlTex);
+    MusicControlSpr.setTextureRect(IntRect(0, 0, 755, 240));
+
     MenuClickB.loadFromFile(pathh + "Menu Click FX.wav");
     MenuClick.setBuffer(MenuClickB);
 
     MenuScrollB.loadFromFile(pathh + "Menu Scrolling FX.wav");
     MenuScroll.setBuffer(MenuScrollB);
-    MenuScroll.setVolume(0);//100;
+    MenuScroll.setVolume(100);//100;
 }
 void mouse_pos()
 {
@@ -1843,4 +2079,4 @@ void mouse_pos()
         Vector2i mousePos = Mouse::getPosition(window);
         cout << mousePos.x << ' ' << mousePos.y << '\n';
     }
-}
+}///
