@@ -23,7 +23,7 @@ RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Default);
 Event event;
 
 //make the variable=
-string pathh = "";
+string pathh ="";
 const float idle = 0.001,
 pistolshooting_delay = 0.007, rifleshooting_delay = 0.005,
 plVelocity = 0.2,
@@ -146,7 +146,7 @@ struct Pistol
             pistol.shoot_timer = 0;
         }
     }
-    void drawpistol(RenderWindow& window)
+    void drawpistol(RenderWindow& window,Pistol &pistol)
     {
         for (int x = 0; x < pistol.rects.size(); x++)
         {
@@ -191,7 +191,7 @@ struct Rifle
         }
 
     }
-    void drawrifle(RenderWindow& window,Rifle& rifle)
+    void drawrifle(Rifle& rifle)
     {
         // Only move the rect here
         for (int x = 0; x < rifle.rects.size(); x++)
@@ -227,7 +227,7 @@ struct Liser
         liser.rects.push_back({ rect ,player.last_key });
     }
 
-    void drawliser()
+    void drawliser(Liser&liser)
     {
         for (int x = 0; x < liser.rects.size(); x++)
         {
@@ -251,14 +251,14 @@ struct Blood_Spatter
     Sprite sprite;
     float indicator;//sprite indicator
     bool animationdone;
-    void setup()
+    void setup(Blood_Spatter &blood)
     {
-        blood.tex.loadFromFile("Blood Spatter.png");
+        blood.tex.loadFromFile(pathh+"Blood Spatter.png");
         blood.sprite.setTexture(blood.tex);
         blood.sprite.setTextureRect(IntRect(0, 0, 500, 500));
         blood.sprite.setScale(0.5, 0.5);
     }
-    void update()
+    void update(Blood_Spatter &blood)
     {
         blood.indicator += 0.229;
         if (blood.indicator > 2.9)
@@ -269,16 +269,16 @@ struct Blood_Spatter
         }
         blood.sprite.setTextureRect(IntRect(int(blood.indicator) * 500, 0, 500, 500));
     }
-    void move()
+    void move(Blood_Spatter &blood)
     {
         Vector2f pl = player.lowerbodySprite.getPosition();
         blood.sprite.setPosition(pl.x - 120, pl.y - 50);
     }
-    void call()
+    void call(Blood_Spatter &blood)
     {
-        if (player.is_getting_damaged == 1&& player.damage_timer.getElapsedTime().asMilliseconds() > 300)  // this adds blood spatter to player when damaged 
+        if (player.is_getting_damaged == 1&& player.damage_timer.getElapsedTime().asMilliseconds() > 300)  // this adds blood spatter to player when damaged
         {
-                blood.update();
+                blood.update(blood);
                 window.draw(blood.sprite);
                 player.upperbodySprite.setColor(Color::Red);
                 player.lowerbodySprite.setColor(Color::Red);
@@ -291,7 +291,7 @@ struct Blood_Spatter
     }
 }blood;
 
-struct MusicSoundControl 
+struct MusicSoundControl
 {
     int selected = 1, soundlevel = 100;
     bool isOpen = false;
@@ -940,21 +940,70 @@ struct Enemy3
     Texture tanktex;
     Sprite tankSprite;
     int tankInitialPos=400;
+    float tankAnimationInd[4];
+    bool isdead=false;
+    int dmg=100;
+    int health=1000;
+    
     //127 × 48 pixels
     void setup(Enemy3 &tank)
     {
-        tank.tanktex.loadFromFile(pathh+"Tank Moving Forward Sprite Sheet.png");
+        tank.tanktex.loadFromFile(pathh+"Tank Idle Sprite Sheet.png");
         tank.tankSprite.setTexture(tank.tanktex);
         tank.tankSprite.setTextureRect(IntRect(0,0,64,48));
-        tank.tankSprite.setScale(10, 10);
-        tank.tankSprite.setPosition(1000, 600);
+        tank.tankSprite.setOrigin(32, 48);
+        tank.tankSprite.setScale(4, 4);
+        tank.tankSprite.setPosition(11500, 910);
         
     }
     void draw(Enemy3 &tank)
     {
         window.draw(tank.tankSprite);
     }
+    void tankIdleAnimation(Enemy3 &tank)
+    {//127 × 48
+        tank.tanktex.loadFromFile(pathh + "Tank Idle Sprite Sheet.png");
+        EnemiAnimation(tank.tankSprite, 2, 127/2, 48, 0.01, tank.tankAnimationInd[0]);
+    }
+    void tankMovingAnimation(Enemy3 &tank)
+    {//512 × 48
+        tank.tanktex.loadFromFile(pathh+"Tank Moving Forward Sprite Sheet.png");
+        EnemiAnimation(tank.tankSprite, 8, 512/8, 48, 0.001, tank.tankAnimationInd[1]);
+    }
+    void tankShootingAnimation(Enemy3 &tank)
+    {//260 × 48
+        tank.tanktex.loadFromFile(pathh+"Tank Shooting Sprite Sheet.png");
+        EnemiAnimation(tank.tankSprite, 2, 260/4, 48, 0.0003, tank.tankAnimationInd[2]);
+    }
+    void tankDeathAnimation(Enemy3 &tank)
+    {//2133 × 200
+        tank.tanktex.loadFromFile(pathh+"Tank Destroyed Sprite Sheet");
+        EnemiAnimation(tank.tankSprite, 27, 2133/27, 200, 0.005, tank.tankAnimationInd[3]);
+    }
     
+    void tankState(Enemy3 &tank)
+    {
+        int distance=tank.tankSprite.getPosition().x-player.upperbodySprite.getPosition().x;
+        if(abs(distance)>1000)
+            tankIdleAnimation(tank);
+        else if(abs(distance)<400)
+            tankShootingAnimation(tank);
+        else
+        {
+            tankMovingAnimation(tank);
+           
+            if(distance>0)
+            {
+                tank.tankSprite.setScale(4, 4);
+                tank.tankSprite.move(-3, 0);
+            }
+            else
+            {
+                tank.tankSprite.setScale(-4, 4);
+                tank.tankSprite.move(3, 0);
+            }
+        }
+    }
     
     
 }tank;
@@ -995,7 +1044,7 @@ RectangleShape powerups(Vector2f(50, 50));
 
 int main()
 {
-    blood.setup();
+    blood.setup(blood);
     window.setFramerateLimit(60);
     RS->setup(RS);
     enemy2->setup(enemy2);
@@ -1198,7 +1247,7 @@ void Menu()
                             if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
                             {
                                 escTimer.restart();
-                                menu.options_screen.exit();  
+                                menu.options_screen.exit();
                             }
                         }
                         else if (menu.selected == EXIT && Keyboard::isKeyPressed(Keyboard::Enter))
@@ -1379,7 +1428,7 @@ void windowfunction()
     {
         player.gun = PISTOL;
     }
-    blood.move();
+    blood.move(blood);
     //map shortcut
     if (Keyboard::isKeyPressed(sf::Keyboard::T))
         player.upperbodySprite.setPosition(20000, 800);
@@ -1392,6 +1441,9 @@ void windowfunction()
 
     if (player.health > 0)
         plmovement(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
+    
+    tank.tankState(tank);
+    
     
     BGanimation();
     windowclose();
@@ -1837,10 +1889,10 @@ void window_draw()
         if (!player.one_sprite_needed)
             window.draw(player.upperbodySprite);
     }
-    blood.call();
-    pistol.drawpistol(window);//draw pistol bullets
-    rifle.drawrifle(window,rifle); //draw rifle bullets
-    liser.drawliser();
+    blood.call(blood);
+    pistol.drawpistol(window,pistol);//draw pistol bullets
+    rifle.drawrifle(rifle); //draw rifle bullets
+    liser.drawliser(liser);
     for (int i = 0; i < 4; i++)
     {
         if (i == 1)continue;
@@ -1853,7 +1905,7 @@ void window_draw()
     window.draw(player.playerHPSprite);
     //window.draw(powerups);
     //enemy2->draw(enemy2);
-    //tank.draw(tank);
+    tank.draw(tank);
 }
 void moveToRight(Sprite& s)
 {
@@ -2033,6 +2085,7 @@ void playerDamageFromEnemy1()
 }
 void playerDeathAnimation()
 {
+  
     if (!player.isdead)
     {
         player.Velocity.x = 0;
@@ -2114,23 +2167,23 @@ void TS_Setups()
     TS_SSSpr.setTextureRect(IntRect(0, 0, 400, 315));
 
     TS_OlSpr.setPosition(0.f, 0.f);
-    TS_OlTex.loadFromFile("Dark Overlay.png");
+    TS_OlTex.loadFromFile(pathh+"Dark Overlay.png");
     TS_OlSpr.setTexture(TS_OlTex);
     TS_OlSpr.setScale(3, 3);
 
     PMSpr.setPosition(666, 364);
-    PMTex.loadFromFile("Pause Screen Sprite Sheet.png");
+    PMTex.loadFromFile(pathh+"Pause Screen Sprite Sheet.png");
     PMSpr.setTexture(PMTex);
     PMSpr.setScale(0.7, 0.7);
     PMSpr.setTextureRect(IntRect(0, 0, 588, 352));
 
     OptionsSpr.setPosition(539.f, 400.f);
-    OptionsTex.loadFromFile("Sound Sprite Sheet.png");
+    OptionsTex.loadFromFile(pathh+"Sound Sprite Sheet.png");
     OptionsSpr.setTexture(OptionsTex);
     OptionsSpr.setTextureRect(IntRect(0, 0, 843, 441));
 
     MusicControlSpr.setPosition(580, 289);
-    MusicControlTex.loadFromFile("Sound Slider Sprite Sheet.png");
+    MusicControlTex.loadFromFile(pathh+"Sound Slider Sprite Sheet.png");
     MusicControlSpr.setTexture(MusicControlTex);
     MusicControlSpr.setTextureRect(IntRect(0, 0, 755, 240));
 
@@ -2149,3 +2202,4 @@ void mouse_pos()
         cout << mousePos.x << ' ' << mousePos.y << '\n';
     }
 }
+///
