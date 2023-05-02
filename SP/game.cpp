@@ -76,9 +76,6 @@ void create(RectangleShape[], int, int, int, int, int);//make ground
 void animation(Sprite& s, float maxframe, float x, float y, float delay, int index);
 void playerDamageFromEnemy1();
 void playerDeathAnimation();
-void drawpistol(RenderWindow& window);
-void drawrifle(RenderWindow& window);
-void drawliser();
 //player
 struct Player
 {
@@ -112,7 +109,7 @@ struct Pistol
     float shoot_timer = 0;
     vector<pair<RectangleShape, int>>rects;
 
-    void shooting(Pistol pistol)
+    void shooting(Pistol& pistol)
     {
         pistol.shoot_timer += 0.03;
         if (pistol.shoot_timer > 1 || pistol.shoot_timer == 0.03) {
@@ -121,6 +118,24 @@ struct Pistol
             rect.setOrigin(-pl.x, -(pl.y + 50));
             pistol.rects.push_back({ rect ,player.last_key });
             pistol.shoot_timer = 0;
+        }
+    }
+    void drawpistol(RenderWindow& window)
+    {
+        for (int x = 0; x < pistol.rects.size(); x++)
+        {
+            // Only move the rect here
+
+            if (pistol.rects[x].second == LEFT)
+            {
+                pistol.rects[x].first.move(-10, 0);
+                window.draw(pistol.rects[x].first);
+            }
+            else if (pistol.rects[x].second == RIGHT)
+            {
+                window.draw(pistol.rects[x].first);
+                pistol.rects[x].first.move(10, 0);
+            }
         }
     }
 } pistol;
@@ -132,7 +147,7 @@ struct Rifle
     float shoot_timer = 0;
     vector<pair<RectangleShape, int>>rects;
 
-    void shooting(Rifle rifle)
+    void shooting(Rifle& rifle)
     {
         rifle.shoot_timer += 0.08;
         if (rifle.shoot_timer > 1 || rifle.shoot_timer == 0.03) {
@@ -144,7 +159,23 @@ struct Rifle
         }
 
     }
-
+    void drawrifle(RenderWindow& window)
+    {
+        // Only move the rect here
+        for (int x = 0; x < rifle.rects.size(); x++)
+        {
+            if (rifle.rects[x].second == LEFT)
+            {
+                rifle.rects[x].first.move(-14, 0);
+                window.draw(rifle.rects[x].first);
+            }
+            else if (rifle.rects[x].second == RIGHT)
+            {
+                window.draw(rifle.rects[x].first);
+                rifle.rects[x].first.move(14, 0);
+            }
+        }
+    }
 } rifle;
  
 //liser
@@ -153,7 +184,7 @@ struct Liser
     float damage = 0.001;
     vector<pair<RectangleShape, int>>rects;
 
-    void shooting(Liser liser)
+    void shooting(Liser& liser)
     {
         Vector2f pl = player.lowerbodySprite.getPosition();
         RectangleShape rect(sf::Vector2f(100, 5));
@@ -161,7 +192,59 @@ struct Liser
         rect.setFillColor(Color::Red);
         liser.rects.push_back({ rect ,player.last_key });
     }
+
+    void drawliser()
+    {
+        for (int x = 0; x < liser.rects.size(); x++)
+        {
+            if (liser.rects[x].second == LEFT)
+            {
+                liser.rects[x].first.move(-100, 0);
+                window.draw(liser.rects[x].first);
+            }
+            else if (liser.rects[x].second == RIGHT)
+            {
+                window.draw(liser.rects[x].first);
+                liser.rects[x].first.move(100, 0);
+            }
+        }
+    }
 }liser;
+
+struct Blood_Spatter
+{
+    Texture tex;
+    Sprite sprite;
+    float indicator;//sprite indicator
+    bool animationdone;
+    void setup()
+    {
+        blood.tex.loadFromFile("Blood Spatter.png");
+        blood.sprite.setTexture(blood.tex);
+        blood.sprite.setTextureRect(IntRect(0, 0, 500, 500));
+        blood.sprite.setScale(0.5, 0.5);
+    }
+    void update()
+    {
+        blood.indicator += 0.25;
+        if (blood.indicator > 2.9)
+        {
+            blood.indicator = 0;
+            blood.animationdone = 1;
+        }
+        blood.sprite.setTextureRect(IntRect(int(blood.indicator) * 500, 0, 500, 500));
+    }
+    void draw()
+    {
+        if (player.is_getting_damaged)
+            window.draw(blood.sprite);
+    }
+    void move()
+    {
+        Vector2f pl = player.lowerbodySprite.getPosition();
+        blood.sprite.setPosition(pl.x - 120, pl.y - 50);
+    }
+}blood;
 
 struct MusicSoundControl 
 {
@@ -734,7 +817,26 @@ struct Enemy1
         enemy1[i].texture.loadFromFile(pathh+"RS Idle 2 Sprite Sheet.png");
         EnemiAnimation(enemy1[i].sprite, 7.9, 232 / 8, 37, 0.005, enemy1[i].sprite_indicator[4]);
     }
-}enemy1[30];
+    void drawbullets()
+    {
+        for (int i = 0; i < 20; i++)
+        {
+            for (int x = 0; x < RS[i].bullet.size(); x++)
+            {
+                if (RS[i].bullet[x].second == LEFT)
+                {
+                    RS[i].bullet[x].first.move(-10, 0);
+                    window.draw(RS[i].bullet[x].first);
+                }
+                else if (RS[i].bullet[x].second == RIGHT)
+                {
+                    window.draw(RS[i].bullet[x].first);
+                    RS[i].bullet[x].first.move(10, 0);
+                }
+            }
+        }
+    }
+}RS[30];//Rebel Soldier
 
 struct Enemy2
 {
@@ -823,8 +925,9 @@ RectangleShape powerups(Vector2f(50, 50));
 
 int main()
 {
+    blood.setup();
     window.setFramerateLimit(60);
-    enemy1->setup(enemy1);
+    RS->setup(RS);
     enemy2->setup(enemy2);
     tank.setup(tank);
     bgSetup();
@@ -1206,15 +1309,15 @@ void windowfunction()
     {
         player.gun = PISTOL;
     }
-
+    blood.move();
     //map shortcut
     if (Keyboard::isKeyPressed(sf::Keyboard::T))
         player.upperbodySprite.setPosition(20000, 800);
 
     cameraView();
-    enemy1->movement(enemy1);
-    enemy1->Gravity(enemy1);
-    enemy1->Damaged(enemy1);
+    RS->movement(RS);
+    RS->Gravity(RS);
+    RS->Damaged(RS);
     playerDamageFromEnemy1();
 
     if (player.health > 0)
@@ -1671,9 +1774,9 @@ void window_draw()
 
     //window.draw(player.rec);
     for (int i = 0; i < 20; i++) {
-        if (enemy1[i].is_alive == 1) {
+        if (RS[i].is_alive == 1) {
             //window.draw(enemy1[i].rec);
-            window.draw(enemy1[i].sprite);
+            window.draw(RS[i].sprite);
         }
     }
 
@@ -1684,9 +1787,11 @@ void window_draw()
         if (!player.one_sprite_needed)
             window.draw(player.upperbodySprite);
     }
-    drawpistol(window);//draw pistol bullets
-    drawrifle(window); //draw rifle bullets
-    drawliser();
+    if (player.damage_timer.getElapsedTime().asMilliseconds() <= 600 && player.damage_timer.getElapsedTime().asMilliseconds() >= 100)
+         blood.draw();
+    pistol.drawpistol(window);//draw pistol bullets
+    rifle.drawrifle(window); //draw rifle bullets
+    liser.drawliser();
     for (int i = 0; i < 4; i++)
     {
         if (i == 1)continue;
@@ -1694,22 +1799,7 @@ void window_draw()
     }
 
     //draw enemy1 bullets
-    for (int i = 0; i < 20; i++)
-    {
-        for (int x = 0; x < enemy1[i].bullet.size(); x++)
-        {
-            if (enemy1[i].bullet[x].second == LEFT)
-            {
-                enemy1[i].bullet[x].first.move(-10, 0);
-                window.draw(enemy1[i].bullet[x].first);
-            }
-            else if (enemy1[i].bullet[x].second == RIGHT)
-            {
-                window.draw(enemy1[i].bullet[x].first);
-                enemy1[i].bullet[x].first.move(10, 0);
-            }
-        }
-    }
+    RS->drawbullets();
     // window.draw(ground[0]);
     window.draw(player.playerHPSprite);
     //window.draw(powerups);
@@ -1876,30 +1966,29 @@ void playerDamageFromEnemy1()
     {
         for (int i = 0; i < 30; i++)
         {
-            for (int j = 0; j < enemy1[i].bullet.size(); j++)
+            for (int j = 0; j < RS[i].bullet.size(); j++)
             {
-                if ((player.lowerbodySprite.getGlobalBounds().intersects(enemy1[i].bullet[j].first.getGlobalBounds()) || player.upperbodySprite.getGlobalBounds().intersects(enemy1[i].bullet[j].first.getGlobalBounds())) && enemy1[i].bullet[j].second != 0)
+                if ((player.lowerbodySprite.getGlobalBounds().intersects(RS[i].bullet[j].first.getGlobalBounds()) || player.upperbodySprite.getGlobalBounds().intersects(RS[i].bullet[j].first.getGlobalBounds())) && RS[i].bullet[j].second != 0)
                 {
-                    player.health -= enemy1[i].damage;
+                    player.health -= RS[i].damage;
                     player.is_getting_damaged = 1;
-                    enemy1[i].bullet[j].second = 0;
+                    RS[i].bullet[j].second = 0;
                 }
             }
         }
-        if (player.is_getting_damaged == 1)  // this adds red color to player when damaged
+        if (player.is_getting_damaged == 1)  // this adds blood spatter to player when damaged 
         {
-            if (player.damage_timer.getElapsedTime().asMilliseconds() <= 300) {
-                player.upperbodySprite.setColor(Color::Red);
-                player.lowerbodySprite.setColor(Color::Red);
+            if (player.damage_timer.getElapsedTime().asMilliseconds() <= 600)
+            {
+                blood.update();
             }
-            else {
+            else
+            {
                 player.is_getting_damaged = 0;
             }
         }
         else
         {
-            player.upperbodySprite.setColor(Color::White);
-            player.lowerbodySprite.setColor(Color::White);
             player.damage_timer.restart();
         }
 
@@ -1937,58 +2026,6 @@ void playerDeathAnimation()
     else
     {
         player.live = 0;
-    }
-}
-void drawpistol(RenderWindow& window)
-{
-    for (int x = 0; x < pistol.rects.size(); x++)
-    {
-        // Only move the rect here
-
-        if (pistol.rects[x].second == LEFT)
-        {
-            pistol.rects[x].first.move(-10, 0);
-            window.draw(pistol.rects[x].first);
-        }
-        else if (pistol.rects[x].second == RIGHT)
-        {
-            window.draw(pistol.rects[x].first);
-            pistol.rects[x].first.move(10, 0);
-        }
-    }
-}
-void drawrifle(RenderWindow& window)
-{
-    // Only move the rect here
-    for (int x = 0; x < rifle.rects.size(); x++)
-    {
-        if (rifle.rects[x].second == LEFT)
-        {
-            rifle.rects[x].first.move(-14, 0);
-            window.draw(rifle.rects[x].first);
-        }
-        else if (rifle.rects[x].second == RIGHT)
-        {
-            window.draw(rifle.rects[x].first);
-            rifle.rects[x].first.move(14, 0);
-        }
-    }
-}
-
-void drawliser()
-{
-    for (int x = 0; x < liser.rects.size(); x++)
-    {
-        if (liser.rects[x].second == LEFT)
-        {
-            liser.rects[x].first.move(-100, 0);
-            window.draw(liser.rects[x].first);
-        }
-        else if (liser.rects[x].second == RIGHT)
-        {
-            window.draw(liser.rects[x].first);
-            liser.rects[x].first.move(100, 0);
-        }
     }
 }
 void TS_Setups()
@@ -2079,4 +2116,4 @@ void mouse_pos()
         Vector2i mousePos = Mouse::getPosition(window);
         cout << mousePos.x << ' ' << mousePos.y << '\n';
     }
-}///
+}
