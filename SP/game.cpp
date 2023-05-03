@@ -23,7 +23,7 @@ RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Default);
 Event event;
 
 //make the variable=
-string pathh ="";
+string pathh = "";
 const float idle = 0.001,
 pistolshooting_delay = 0.007, rifleshooting_delay = 0.005,
 plVelocity = 0.2,
@@ -82,12 +82,9 @@ struct Player
     float plcounter = 0;
     Texture upperbodyTex, lowerbodyTex;
     Sprite upperbodySprite, lowerbodySprite;
-    float upperlowerdistance;
     RectangleShape rec;//make rectangle to better collision
     Vector2f Velocity = { 0,0 };
-    Texture playerHPTex;
-    Sprite playerHPSprite;
-    float health = 100.0;
+    int health = 100;
     int gun = PISTOL;
     bool canshoot = 0;
     bool crouch = 0;
@@ -114,10 +111,6 @@ struct Player
         //rectangle
         player.rec.setPosition(player.upperbodySprite.getPosition().x - 50, player.upperbodySprite.getPosition().y);
         player.rec.setSize(Vector2f(75, 130));
-        //HP
-        player.playerHPTex.loadFromFile(pathh + "Gradient_Health_Bar.png");
-        player.playerHPSprite.setTexture(player.playerHPTex);
-        player.playerHPSprite.setTextureRect(IntRect(0, 0, 204, 30));
     }
 };
 Player player;
@@ -127,9 +120,9 @@ struct Pistol
 {
     float  damage = 0.7;
     float shoot_timer = 0;
-    vector<pair<RectangleShape,pair<int,double>>>rects;// bullets //checker //position.x
+    vector<pair<RectangleShape, pair<int, double>>>rects;// bullets //checker //position.x
     int range = 900;
-    void update_bUllets_distance(Pistol& pistol,int i)
+    void update_bUllets_distance(Pistol& pistol, int i)
     {
         pistol.rects[i].second.second += 10;
         if (pistol.rects[i].second.second > pistol.range)
@@ -142,11 +135,11 @@ struct Pistol
             Vector2f pl = player.lowerbodySprite.getPosition();
             RectangleShape rect(sf::Vector2f(10, 10));
             rect.setOrigin(-pl.x, -(pl.y + 50));
-            pistol.rects.push_back({ rect ,{player.last_key,0}});
+            pistol.rects.push_back({ rect ,{player.last_key,0} });
             pistol.shoot_timer = 0;
         }
     }
-    void drawpistol(RenderWindow& window,Pistol &pistol)
+    void drawpistol(RenderWindow& window, Pistol& pistol)
     {
         for (int x = 0; x < pistol.rects.size(); x++)
         {
@@ -171,7 +164,7 @@ struct Rifle
 {
     float  damage = 0.2;
     float shoot_timer = 0;
-    vector<pair<RectangleShape,pair< int,double>>>rects;
+    vector<pair<RectangleShape, pair< int, double>>>rects;
     int range = 700;
     void update_bUllets_distance(Rifle& rifle, int i)
     {
@@ -209,9 +202,9 @@ struct Rifle
             update_bUllets_distance(rifle, x);
         }
     }
-    
+
 } rifle;
- 
+
 //liser
 struct Liser
 {
@@ -227,7 +220,7 @@ struct Liser
         liser.rects.push_back({ rect ,player.last_key });
     }
 
-    void drawliser(Liser&liser)
+    void drawliser(Liser& liser)
     {
         for (int x = 0; x < liser.rects.size(); x++)
         {
@@ -251,14 +244,14 @@ struct Blood_Spatter
     Sprite sprite;
     float indicator;//sprite indicator
     bool animationdone;
-    void setup(Blood_Spatter &blood)
+    void setup(Blood_Spatter& blood)
     {
-        blood.tex.loadFromFile(pathh+"Blood Spatter.png");
+        blood.tex.loadFromFile(pathh + "Blood Spatter.png");
         blood.sprite.setTexture(blood.tex);
         blood.sprite.setTextureRect(IntRect(0, 0, 500, 500));
         blood.sprite.setScale(0.5, 0.5);
     }
-    void update(Blood_Spatter &blood)
+    void update(Blood_Spatter& blood)
     {
         blood.indicator += 0.229;
         if (blood.indicator > 2.9)
@@ -269,19 +262,19 @@ struct Blood_Spatter
         }
         blood.sprite.setTextureRect(IntRect(int(blood.indicator) * 500, 0, 500, 500));
     }
-    void move(Blood_Spatter &blood)
+    void move(Blood_Spatter& blood)
     {
         Vector2f pl = player.lowerbodySprite.getPosition();
         blood.sprite.setPosition(pl.x - 120, pl.y - 50);
     }
-    void call(Blood_Spatter &blood)
+    void call(Blood_Spatter& blood)
     {
-        if (player.is_getting_damaged == 1&& player.damage_timer.getElapsedTime().asMilliseconds() > 300)  // this adds blood spatter to player when damaged
+        if (player.is_getting_damaged == 1 && player.damage_timer.getElapsedTime().asMilliseconds() > 300)  // this adds blood spatter to player when damaged
         {
-                blood.update(blood);
-                window.draw(blood.sprite);
-                player.upperbodySprite.setColor(Color::Red);
-                player.lowerbodySprite.setColor(Color::Red);
+            blood.update(blood);
+            window.draw(blood.sprite);
+            player.upperbodySprite.setColor(Color::Red);
+            player.lowerbodySprite.setColor(Color::Red);
         }
         else
         {
@@ -346,9 +339,9 @@ struct MusicSoundControl
             window.display();
 
         }
-   
+
     }
-        
+
 };
 //pause manu
 struct Pause
@@ -455,7 +448,7 @@ struct OptionsScreen
 
     void draw(string section = "")
     {
-        if(section == "menu")
+        if (section == "menu")
         {
             window.clear();
             TS_TandGCnt += 0.139;
@@ -498,7 +491,7 @@ struct Menu
     OptionsScreen options_screen;
 
     bool game_started = false, start_selected = false,
-         is_paused = false, ts_escaped = false;
+        is_paused = false, ts_escaped = false;
 
     void move_up()
     {
@@ -550,6 +543,140 @@ struct Menu
 
     }
 } menu;
+
+//HUD
+struct HUD {
+    // health bar
+    Texture HP_bar_tex;
+    Sprite HP_bar_sprite;
+    int hp_index = 0;
+    //Mug shot
+    Texture Mug_shot_tex;
+    Sprite Mug_shot_sprite;
+    //Lives
+    Texture lives_tex;
+    Sprite lives_sprite;
+    // lives number
+    Texture lives_number_tex;
+    Sprite lives_number_1_sprite, lives_number_2_sprite;
+    int lives_num1_index = 9, lives_num2_index = 6;
+    //Ammo
+    // Ammo numbers for rifle
+    Texture ammo_num_tex;
+    Sprite ammo_num_sprite[3];
+    int ammo_num_index[3]{ 9,9,9 };
+    // infinity for pistol
+    Texture infinity_tex;
+    Sprite infinity_sprite;
+    // weapons holder
+    Texture weapons_holder_tex;
+    Sprite weapons_holder_sprite;
+    //Time
+    Texture time_num_tex;
+    Sprite time_num1_sprite, time_num2_sprite;
+    int time_num1_index = 9, time_num2_index = 9;
+    Clock hud_time;
+    //score
+    Texture score_num_tex;
+    Sprite score_num_sprite[6];
+    int score_num_index[6]{ 9,9,9,9,9,9 };
+
+    void setup(HUD& hud) {
+        hud.HP_bar_tex.loadFromFile("Health Bar.png");
+        hud.HP_bar_sprite.setTexture(hud.HP_bar_tex);
+        hud.HP_bar_sprite.setScale(3.455, 3.455);
+        hud.HP_bar_sprite.setTextureRect(IntRect(hp_index * (390 / 6), 0, 390 / 6, 11));
+
+        hud.Mug_shot_tex.loadFromFile("Mugshot.png");
+        hud.Mug_shot_sprite.setTexture(hud.Mug_shot_tex);
+        hud.Mug_shot_sprite.setScale(3.5, 3.5);
+
+        hud.lives_tex.loadFromFile("Lives.png");
+        hud.lives_sprite.setTexture(hud.lives_tex);
+
+        hud.infinity_tex.loadFromFile("Infinity.png");
+        hud.infinity_sprite.setTexture(hud.infinity_tex);
+
+        hud.weapons_holder_tex.loadFromFile("Weapons Holder.png");
+        hud.weapons_holder_sprite.setTexture(hud.weapons_holder_tex);
+        hud.weapons_holder_sprite.setScale(2.7, 2.7);
+
+        hud.lives_number_tex.loadFromFile("Numbers Lives.png");
+        hud.lives_number_1_sprite.setTexture(hud.lives_number_tex);
+        hud.lives_number_1_sprite.setTextureRect(IntRect(lives_num1_index * (290 / 10), 0, 290 / 10, 29));
+        hud.lives_number_2_sprite.setTexture(hud.lives_number_tex);
+        hud.lives_number_2_sprite.setTextureRect(IntRect(lives_num2_index * (290 / 10), 0, 290 / 10, 29));
+
+        hud.time_num_tex.loadFromFile("Numbers.png");
+        hud.time_num1_sprite.setTexture(hud.time_num_tex);
+        hud.time_num1_sprite.setTextureRect(IntRect(time_num1_index * (550 / 10), 0, 550 / 10, 55));
+        hud.time_num2_sprite.setTexture(hud.time_num_tex);
+        hud.time_num2_sprite.setTextureRect(IntRect(time_num2_index * (550 / 10), 0, 550 / 10, 55));
+
+        hud.score_num_tex.loadFromFile("Numbers Score.png");
+        for (int i = 0; i < 6; i++)
+        {
+            hud.score_num_sprite[i].setTexture(hud.score_num_tex);
+            hud.score_num_sprite[i].setTextureRect(IntRect(score_num_index[i] * (360 / 10), 0, 360 / 10, 36));
+        }
+
+        hud.ammo_num_tex.loadFromFile("Numbers Ammo.png");
+        for (int i = 0; i < 3; i++)
+        {
+            hud.ammo_num_sprite[i].setTexture(hud.ammo_num_tex);
+            hud.ammo_num_sprite[i].setTextureRect(IntRect(ammo_num_index[i] * (390 / 10), 0, 390 / 10, 39));
+        }
+
+    }
+    void positions(HUD& hud) {
+        hud.HP_bar_sprite.setPosition(view.getCenter().x - 850, view.getCenter().y - 474);
+
+        hud.Mug_shot_sprite.setPosition(view.getCenter().x - 940, view.getCenter().y - 520);
+
+        hud.lives_sprite.setPosition(view.getCenter().x + 783, view.getCenter().y - 520);
+
+        hud.infinity_sprite.setPosition(view.getCenter().x - 771, view.getCenter().y + 453);
+
+        hud.weapons_holder_sprite.setPosition(view.getCenter().x - 940, view.getCenter().y + 439);
+
+        hud.lives_number_1_sprite.setPosition(view.getCenter().x + 882, view.getCenter().y - 510);
+        hud.lives_number_2_sprite.setPosition(view.getCenter().x + 911, view.getCenter().y - 510);
+
+        hud.time_num1_sprite.setPosition(view.getCenter().x - 57, view.getCenter().y - 520);
+        hud.time_num2_sprite.setPosition(view.getCenter().x + 2, view.getCenter().y - 520);
+
+        for (int i = 0; i < 6; i++)
+        {
+            hud.score_num_sprite[i].setPosition(view.getCenter().x - 850 + i * 38, view.getCenter().y - 520);
+        }
+
+        for (int i = 0; i < 3; i++)
+        {
+            hud.ammo_num_sprite[i].setPosition(view.getCenter().x - 771 + i * 41, view.getCenter().y + 460);
+        }
+
+    }
+    void draw(HUD hud) {
+        hud.HP_bar_sprite.setTextureRect(IntRect(hp_index * (390 / 6), 0, 390 / 6, 11));
+        window.draw(hud.HP_bar_sprite);
+
+        window.draw(hud.Mug_shot_sprite);
+        window.draw(hud.lives_sprite);
+        window.draw(hud.weapons_holder_sprite);
+        window.draw(hud.lives_number_1_sprite);
+        window.draw(hud.lives_number_2_sprite);
+        window.draw(hud.time_num1_sprite);
+        window.draw(hud.time_num2_sprite);
+        for (int i = 0; i < 6; i++)
+            window.draw(hud.score_num_sprite[i]);
+        if (player.gun == RIFLE)
+            for (int i = 0; i < 3; i++)
+                window.draw(hud.ammo_num_sprite[i]);
+
+        else if (player.gun == PISTOL)
+            window.draw(hud.infinity_sprite);
+    }
+}hud;
 //ground & wall
 RectangleShape ground[30], wall[30];
 
@@ -615,16 +742,16 @@ struct Enemy1
                     {
                         if (!enemy1[i].isCarrying_a_weapon)
                         {
-                            Carrying_a_weapon(i,enemy1);
+                            Carrying_a_weapon(i, enemy1);
                         }
                         else
                         {
-                            EnemyShootingAnimation(i,enemy1);
+                            EnemyShootingAnimation(i, enemy1);
                         }
                     }
                     else
                     {
-                        EnemyRunningToPl(i,enemy1);
+                        EnemyRunningToPl(i, enemy1);
                     }
                 }
                 else
@@ -728,7 +855,7 @@ struct Enemy1
                 }
                 if (enemy1[i].health <= 0)
                 {
-                    enemy1[i].death_animation(i,enemy1);
+                    enemy1[i].death_animation(i, enemy1);
                 }
             }
         }
@@ -744,7 +871,7 @@ struct Enemy1
             enemy1[i].shoot_timer = 0;
         }
     }
-    void Carrying_a_weapon(int i,Enemy1 enemy1[30])//i==index of enemy
+    void Carrying_a_weapon(int i, Enemy1 enemy1[30])//i==index of enemy
     {
         enemy1[i].check = 0;
         enemy1[i].velocity.x = 0;
@@ -759,7 +886,7 @@ struct Enemy1
         }
         enemy1[i].sprite.setTextureRect(IntRect(int(enemy1[i].sprite_indicator[1]) * 322 / 7, 0, 322 / 7, 44));
     }
-    void EnemyShootingAnimation(int i,Enemy1 enemy1[30])
+    void EnemyShootingAnimation(int i, Enemy1 enemy1[30])
     {
         enemy1[i].shooting(i, enemy1);
         enemy1[i].check = 1;
@@ -779,7 +906,7 @@ struct Enemy1
             enemy1[i].last_key = LEFT;
         }
     }
-    void EnemyRunningToPl(int i,Enemy1 enemy1[30])
+    void EnemyRunningToPl(int i, Enemy1 enemy1[30])
     {
         enemy1[i].shoot_timer = 1;
         enemy1[i].isCarrying_a_weapon = 0;
@@ -811,9 +938,9 @@ struct Enemy1
         }
         else
         {
-            if(i%2==0)
+            if (i % 2 == 0)
                 enemy1[i].velocity.x = 3;
-            else if (i%3==0)
+            else if (i % 3 == 0)
                 enemy1[i].velocity.x = 4.5;
             else
                 enemy1[i].velocity.x = 3;
@@ -823,7 +950,7 @@ struct Enemy1
         }
 
     }
-    void Aimless_Walking(int i,Enemy1 enemy1[30])
+    void Aimless_Walking(int i, Enemy1 enemy1[30])
     {
         enemy1[i].isCarrying_a_weapon = 0;
         if (!enemy1[i].reversed_direction)
@@ -854,7 +981,7 @@ struct Enemy1
         }
 
     }
-    void death_animation(int i,Enemy1 enemy1[30])
+    void death_animation(int i, Enemy1 enemy1[30])
     {
         enemy1[i].stopped = 1;
         if (!enemy1[i].death_animation_done)
@@ -877,9 +1004,9 @@ struct Enemy1
             enemy1[i].is_alive = 0;
         }
     }
-    void Idle_animation_2(int i,Enemy1 enemy1[30])
+    void Idle_animation_2(int i, Enemy1 enemy1[30])
     {
-        enemy1[i].texture.loadFromFile(pathh+"RS Idle 2 Sprite Sheet.png");
+        enemy1[i].texture.loadFromFile(pathh + "RS Idle 2 Sprite Sheet.png");
         EnemiAnimation(enemy1[i].sprite, 7.9, 232 / 8, 37, 0.005, enemy1[i].sprite_indicator[4]);
     }
     void Idle_animation_1(int i, Enemy1 enemy1[30])
@@ -918,7 +1045,7 @@ struct Enemy2
     {
         for (int i = 0; i < 5; i++)
         {
-            enemy2[i].RWTex.loadFromFile(pathh+"RW Idle Sprite Sheet.png");
+            enemy2[i].RWTex.loadFromFile(pathh + "RW Idle Sprite Sheet.png");
             enemy2[i].RWSpr.setTexture(enemy2[i].RWTex);
             enemy2[i].RWSpr.setScale(plScale, plScale);
             enemy2[i].RWSpr.setTextureRect(IntRect(0, 0, 36, 48));
@@ -939,60 +1066,60 @@ struct Enemy3
 {
     Texture tanktex;
     Sprite tankSprite;
-    int tankInitialPos=400;
+    int tankInitialPos = 400;
     float tankAnimationInd[4];
-    bool isdead=false;
-    int dmg=100;
-    int health=1000;
-    
+    bool isdead = false;
+    int dmg = 100;
+    int health = 1000;
+
     //127 × 48 pixels
-    void setup(Enemy3 &tank)
+    void setup(Enemy3& tank)
     {
-        tank.tanktex.loadFromFile(pathh+"Tank Idle Sprite Sheet.png");
+        tank.tanktex.loadFromFile(pathh + "Tank Idle Sprite Sheet.png");
         tank.tankSprite.setTexture(tank.tanktex);
-        tank.tankSprite.setTextureRect(IntRect(0,0,64,48));
+        tank.tankSprite.setTextureRect(IntRect(0, 0, 64, 48));
         tank.tankSprite.setOrigin(32, 48);
         tank.tankSprite.setScale(4, 4);
         tank.tankSprite.setPosition(11500, 910);
-        
+
     }
-    void draw(Enemy3 &tank)
+    void draw(Enemy3& tank)
     {
         window.draw(tank.tankSprite);
     }
-    void tankIdleAnimation(Enemy3 &tank)
+    void tankIdleAnimation(Enemy3& tank)
     {//127 × 48
         tank.tanktex.loadFromFile(pathh + "Tank Idle Sprite Sheet.png");
-        EnemiAnimation(tank.tankSprite, 2, 127/2, 48, 0.01, tank.tankAnimationInd[0]);
+        EnemiAnimation(tank.tankSprite, 2, 127 / 2, 48, 0.01, tank.tankAnimationInd[0]);
     }
-    void tankMovingAnimation(Enemy3 &tank)
+    void tankMovingAnimation(Enemy3& tank)
     {//512 × 48
-        tank.tanktex.loadFromFile(pathh+"Tank Moving Forward Sprite Sheet.png");
-        EnemiAnimation(tank.tankSprite, 8, 512/8, 48, 0.001, tank.tankAnimationInd[1]);
+        tank.tanktex.loadFromFile(pathh + "Tank Moving Forward Sprite Sheet.png");
+        EnemiAnimation(tank.tankSprite, 8, 512 / 8, 48, 0.001, tank.tankAnimationInd[1]);
     }
-    void tankShootingAnimation(Enemy3 &tank)
+    void tankShootingAnimation(Enemy3& tank)
     {//260 × 48
-        tank.tanktex.loadFromFile(pathh+"Tank Shooting Sprite Sheet.png");
-        EnemiAnimation(tank.tankSprite, 2, 260/4, 48, 0.0003, tank.tankAnimationInd[2]);
+        tank.tanktex.loadFromFile(pathh + "Tank Shooting Sprite Sheet.png");
+        EnemiAnimation(tank.tankSprite, 2, 260 / 4, 48, 0.0003, tank.tankAnimationInd[2]);
     }
-    void tankDeathAnimation(Enemy3 &tank)
+    void tankDeathAnimation(Enemy3& tank)
     {//2133 × 200
-        tank.tanktex.loadFromFile(pathh+"Tank Destroyed Sprite Sheet");
-        EnemiAnimation(tank.tankSprite, 27, 2133/27, 200, 0.005, tank.tankAnimationInd[3]);
+        tank.tanktex.loadFromFile(pathh + "Tank Destroyed Sprite Sheet");
+        EnemiAnimation(tank.tankSprite, 27, 2133 / 27, 200, 0.005, tank.tankAnimationInd[3]);
     }
-    
-    void tankState(Enemy3 &tank)
+
+    void tankState(Enemy3& tank)
     {
-        int distance=tank.tankSprite.getPosition().x-player.upperbodySprite.getPosition().x;
-        if(abs(distance)>1000)
+        int distance = tank.tankSprite.getPosition().x - player.upperbodySprite.getPosition().x;
+        if (abs(distance) > 1000)
             tankIdleAnimation(tank);
-        else if(abs(distance)<400)
+        else if (abs(distance) < 400)
             tankShootingAnimation(tank);
         else
         {
             tankMovingAnimation(tank);
-           
-            if(distance>0)
+
+            if (distance > 0)
             {
                 tank.tankSprite.setScale(4, 4);
                 tank.tankSprite.move(-3, 0);
@@ -1004,8 +1131,8 @@ struct Enemy3
             }
         }
     }
-    
-    
+
+
 }tank;
 
 //gravity
@@ -1049,6 +1176,7 @@ int main()
     RS->setup(RS);
     enemy2->setup(enemy2);
     tank.setup(tank);
+    hud.setup(hud);
     bgSetup();
     TS_Setups();
     player.Playersetup(player);
@@ -1066,7 +1194,7 @@ void Menu()
         windowclose();
         if (pause_menu.is_paused)
         {
-            if(!menu.options_screen.isOpen)
+            if (!menu.options_screen.isOpen)
             {
                 window_draw();
                 pause_menu.draw();
@@ -1081,12 +1209,12 @@ void Menu()
             else if (pause_menu.selected == 2 && Keyboard::isKeyPressed(Keyboard::Enter) && timer2.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.isOpen)
             {
                 timer2.restart();
-                if(!menu.options_screen.isOpen)
+                if (!menu.options_screen.isOpen)
                 {
                     timer4.restart();
                     menu.options_screen.isOpen = true;
                 }
-                if(!menu.options_screen.music_slider.isOpen)
+                if (!menu.options_screen.music_slider.isOpen)
                     menu.options_screen.draw();
                 if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
                 {
@@ -1202,9 +1330,9 @@ void Menu()
                         else if (menu.selected == OPTIONS && Keyboard::isKeyPressed(Keyboard::Enter) && timer2.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.isOpen)
                         {
                             timer2.restart();
-                            if(!menu.options_screen.music_slider.isOpen)
+                            if (!menu.options_screen.music_slider.isOpen)
                                 menu.options_screen.draw("menu");
-                            if(!menu.options_screen.isOpen)
+                            if (!menu.options_screen.isOpen)
                             {
                                 menu.options_screen.isOpen = true;
                                 timer4.restart();
@@ -1441,16 +1569,16 @@ void windowfunction()
 
     if (player.health > 0)
         plmovement(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
-    
+
     tank.tankState(tank);
-    
-    
+
+
     BGanimation();
     windowclose();
     window.clear();
     window_draw();
     window.setView(view);
-    player.playerHPSprite.setPosition(view.getCenter().x - 960, view.getCenter().y - 500);
+    hud.positions(hud);
     transition_pos_check();
 }
 void BGanimation()
@@ -1780,8 +1908,8 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             if (Keyboard::isKeyPressed(Keyboard::J))
             {
                 if (player.gun == PISTOL)
-                 //   liser.shooting(liser);
-                 pistol.shooting(pistol);
+                    //   liser.shooting(liser);
+                    pistol.shooting(pistol);
                 else if (player.gun == RIFLE)
                     rifle.shooting(rifle);
 
@@ -1820,7 +1948,7 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
                 // shooting animation when pl standing
                 if (player.gun == PISTOL)
                 {
-                  //  liser.shooting(liser);
+                    //  liser.shooting(liser);
                     pistol.shooting(pistol);
                     player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
                     animation(player.upperbodySprite, 9.9, 520 / 10, 41, pistolshooting_delay, 10);
@@ -1890,7 +2018,7 @@ void window_draw()
             window.draw(player.upperbodySprite);
     }
     blood.call(blood);
-    pistol.drawpistol(window,pistol);//draw pistol bullets
+    pistol.drawpistol(window, pistol);//draw pistol bullets
     rifle.drawrifle(rifle); //draw rifle bullets
     liser.drawliser(liser);
     for (int i = 0; i < 4; i++)
@@ -1902,7 +2030,7 @@ void window_draw()
     //draw enemy1 bullets
     RS->drawbullets(RS);
     // window.draw(ground[0]);
-    window.draw(player.playerHPSprite);
+    hud.draw(hud);
     //window.draw(powerups);
     //enemy2->draw(enemy2);
     tank.draw(tank);
@@ -2072,6 +2200,10 @@ void playerDamageFromEnemy1()
                 if ((player.lowerbodySprite.getGlobalBounds().intersects(RS[i].bullet[j].first.getGlobalBounds()) || player.upperbodySprite.getGlobalBounds().intersects(RS[i].bullet[j].first.getGlobalBounds())) && RS[i].bullet[j].second != 0)
                 {
                     player.health -= RS[i].damage;
+
+                    if (player.health % 20 == 0)
+                        hud.hp_index++;
+
                     player.is_getting_damaged = 1;
                     RS[i].bullet[j].second = 0;
                 }
@@ -2085,7 +2217,7 @@ void playerDamageFromEnemy1()
 }
 void playerDeathAnimation()
 {
-  
+
     if (!player.isdead)
     {
         player.Velocity.x = 0;
@@ -2162,28 +2294,28 @@ void TS_Setups()
     TS_buttonsSpr.setTextureRect(IntRect(0, 0, 360, 315));
 
     TS_SSSpr.setPosition(769.f, 650.f);
-    TS_SSTex.loadFromFile(pathh+ "Main Menu 2 Sprite Sheet.png");
+    TS_SSTex.loadFromFile(pathh + "Main Menu 2 Sprite Sheet.png");
     TS_SSSpr.setTexture(TS_SSTex);
     TS_SSSpr.setTextureRect(IntRect(0, 0, 400, 315));
 
     TS_OlSpr.setPosition(0.f, 0.f);
-    TS_OlTex.loadFromFile(pathh+"Dark Overlay.png");
+    TS_OlTex.loadFromFile(pathh + "Dark Overlay.png");
     TS_OlSpr.setTexture(TS_OlTex);
     TS_OlSpr.setScale(3, 3);
 
     PMSpr.setPosition(666, 364);
-    PMTex.loadFromFile(pathh+"Pause Screen Sprite Sheet.png");
+    PMTex.loadFromFile(pathh + "Pause Screen Sprite Sheet.png");
     PMSpr.setTexture(PMTex);
     PMSpr.setScale(0.7, 0.7);
     PMSpr.setTextureRect(IntRect(0, 0, 588, 352));
 
     OptionsSpr.setPosition(539.f, 400.f);
-    OptionsTex.loadFromFile(pathh+"Sound Sprite Sheet.png");
+    OptionsTex.loadFromFile(pathh + "Sound Sprite Sheet.png");
     OptionsSpr.setTexture(OptionsTex);
     OptionsSpr.setTextureRect(IntRect(0, 0, 843, 441));
 
     MusicControlSpr.setPosition(580, 289);
-    MusicControlTex.loadFromFile(pathh+"Sound Slider Sprite Sheet.png");
+    MusicControlTex.loadFromFile(pathh + "Sound Slider Sprite Sheet.png");
     MusicControlSpr.setTexture(MusicControlTex);
     MusicControlSpr.setTextureRect(IntRect(0, 0, 755, 240));
 

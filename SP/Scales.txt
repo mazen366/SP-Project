@@ -1,0 +1,18 @@
+Mugshot w:20 h:20 3.5
+Health Bar w:110 h:66 3.455
+Score1 w:110 h:20
+Score2 w:148 h:20
+Score3 w:186 h:20
+Score4 w:224 h:20
+Score5 w:262 h:20
+Score6 w:300 h:20
+Time1 w:903 h:20
+Time2 w:962 h:20
+Lives w:1743 h:20
+Lives1 w:1842 h:30
+Lives2 w:1871 h:30
+Weapons Holder w:20 h:979 2.7
+Infinity w:189 h:993
+Ammo1 w:189 h:1000
+Ammo2 w:230 h:1000
+Ammo3 w:271 h:1000
