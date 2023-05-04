@@ -790,16 +790,11 @@ struct Enemy1
     }
     void Gravity(Enemy1 enemy1[30])
     {
-        for (int j = 0; j < 20; j++)
+        for (int j = 0; j < 30; j++)
         {
-            if (enemy1[j].rec.getGlobalBounds().intersects(ground[0].getGlobalBounds()))
-            {
-                enemy1[j].velocity.y = 0;
-            }
-            else
-            {
-                enemy1[j].velocity.y += 0.7 * 0.9;
-            }
+
+           float x = enemy1[j].rec.getPosition().x;
+            enemy1[j].rec.setPosition( x,670 );
         }
     }
     void Damaged(Enemy1 enemy1[30])
@@ -878,7 +873,7 @@ struct Enemy1
         enemy1[i].texture.loadFromFile(pathh + "RS Equipping Sprite Sheet.png");
         enemy1[i].sprite.setOrigin(322 / 7 / 2, 0);
         //   animation(enemy1[i].sprite, 6.9, 322 / 7, 44, 0.002, 9);
-        enemy1[i].sprite_indicator[1] += 0.2;
+        enemy1[i].sprite_indicator[1] += 0.28;
         if (enemy1[i].sprite_indicator[1] > 6.9)
         {
             enemy1[i].sprite_indicator[1] = 0;
@@ -1033,6 +1028,16 @@ struct Enemy1
             }
         }
     }
+    void draw(Enemy1 RS[30])
+    {
+        for (int i = 0; i < 30; i++) {
+            if (RS[i].is_alive == 1) {
+                //window.draw(enemy1[i].rec);
+                window.draw(RS[i].sprite);
+            }
+        }
+        RS->drawbullets(RS);
+    }
 }RS[30];//Rebel Soldier
 
 struct Enemy2
@@ -1062,8 +1067,41 @@ struct Enemy2
     }
 }enemy2[5];
 
-struct Enemy3
+struct Tank
 {
+    // Tank shooting
+    struct Tank_shooting
+    {
+        float  damage = 30;
+        vector<pair<RectangleShape, int>>rects;// bullets //checker 
+        Clock shooting_timer;
+        void shooting(Tank_shooting& tank_shooting, Tank& tank)
+        {
+            Vector2f tankpos = tank.tankSprite.getPosition();
+            RectangleShape rect(sf::Vector2f(40, 10));
+            rect.setOrigin(-tankpos.x, -(tankpos.y-150));
+            tank_shooting.rects.push_back({ rect ,tank.last_key });
+        }
+        void draw_tank_bullets(Tank_shooting& tank_shooting)
+        {
+            for (int x = 0; x < tank_shooting.rects.size(); x++)
+            {
+                // Only move the rect here
+                if (tank_shooting.rects[x].second == LEFT)
+                {
+                    tank_shooting.rects[x].first.move(-15, 0);
+                    window.draw(tank_shooting.rects[x].first);
+                }
+                else if (tank_shooting.rects[x].second == RIGHT)
+                {
+                    window.draw(tank_shooting.rects[x].first);
+                    tank_shooting.rects[x].first.move(15, 0);
+                }
+            }
+        }
+    }shooting;
+
+
     Texture tanktex;
     Sprite tankSprite;
     int tankInitialPos = 400;
@@ -1071,50 +1109,66 @@ struct Enemy3
     bool isdead = false;
     int dmg = 100;
     int health = 1000;
-
+    int last_key = RIGHT;
     //127 × 48 pixels
-    void setup(Enemy3& tank)
+    void setup(Tank& tank)
     {
         tank.tanktex.loadFromFile(pathh + "Tank Idle Sprite Sheet.png");
         tank.tankSprite.setTexture(tank.tanktex);
         tank.tankSprite.setTextureRect(IntRect(0, 0, 64, 48));
         tank.tankSprite.setOrigin(32, 48);
         tank.tankSprite.setScale(4, 4);
-        tank.tankSprite.setPosition(11500, 910);
-
+        tank.tankSprite.setPosition(11500, 950);
     }
-    void draw(Enemy3& tank)
+    void draw(Tank& tank)
     {
         window.draw(tank.tankSprite);
+        tank.shooting.draw_tank_bullets(tank.shooting);
     }
-    void tankIdleAnimation(Enemy3& tank)
+    void tankIdleAnimation(Tank& tank)
     {//127 × 48
         tank.tanktex.loadFromFile(pathh + "Tank Idle Sprite Sheet.png");
-        EnemiAnimation(tank.tankSprite, 2, 127 / 2, 48, 0.01, tank.tankAnimationInd[0]);
+        EnemiAnimation(tank.tankSprite, 2, 127 / 2, 48, 0.004, tank.tankAnimationInd[0]);
     }
-    void tankMovingAnimation(Enemy3& tank)
+    void tankMovingAnimation(Tank& tank)
     {//512 × 48
         tank.tanktex.loadFromFile(pathh + "Tank Moving Forward Sprite Sheet.png");
-        EnemiAnimation(tank.tankSprite, 8, 512 / 8, 48, 0.001, tank.tankAnimationInd[1]);
+        EnemiAnimation(tank.tankSprite, 8, 512 / 8, 48, 0.01, tank.tankAnimationInd[1]);
     }
-    void tankShootingAnimation(Enemy3& tank)
+    void tankShootingAnimation(Tank& tank)
     {//260 × 48
         tank.tanktex.loadFromFile(pathh + "Tank Shooting Sprite Sheet.png");
-        EnemiAnimation(tank.tankSprite, 2, 260 / 4, 48, 0.0003, tank.tankAnimationInd[2]);
+        tank.tankAnimationInd[2] += 0.004 * dt;
+        if (tank.tankAnimationInd[2] > 3.9)
+        {
+            tank.tankAnimationInd[2] = 0;
+            tank.shooting.shooting(tank.shooting, tank);
+            tank.shooting.shooting_timer.restart();
+        }
+        tank.tankSprite.setTextureRect(IntRect(int(tank.tankAnimationInd[2]) * 260 / 4, 0, 260 / 4, 48));
+
     }
-    void tankDeathAnimation(Enemy3& tank)
+    void tankDeathAnimation(Tank& tank)
     {//2133 × 200
         tank.tanktex.loadFromFile(pathh + "Tank Destroyed Sprite Sheet");
         EnemiAnimation(tank.tankSprite, 27, 2133 / 27, 200, 0.005, tank.tankAnimationInd[3]);
     }
 
-    void tankState(Enemy3& tank)
+    void tankState(Tank& tank)
     {
         int distance = tank.tankSprite.getPosition().x - player.upperbodySprite.getPosition().x;
         if (abs(distance) > 1000)
+        {
             tankIdleAnimation(tank);
-        else if (abs(distance) < 400)
-            tankShootingAnimation(tank);
+        }
+        else if (abs(distance) < 600)
+        {
+
+            if (tank.shooting.shooting_timer.getElapsedTime().asMilliseconds() > 1000)
+            {
+                tankShootingAnimation(tank);
+            }
+        }
         else
         {
             tankMovingAnimation(tank);
@@ -1123,11 +1177,13 @@ struct Enemy3
             {
                 tank.tankSprite.setScale(4, 4);
                 tank.tankSprite.move(-3, 0);
+                tank.last_key = LEFT;
             }
             else
             {
                 tank.tankSprite.setScale(-4, 4);
                 tank.tankSprite.move(3, 0);
+                tank.last_key = RIGHT;
             }
         }
     }
@@ -2003,13 +2059,8 @@ void window_draw()
     window.draw(Exitlamp1_D);
 
     //window.draw(player.rec);
-    for (int i = 0; i < 20; i++) {
-        if (RS[i].is_alive == 1) {
-            //window.draw(enemy1[i].rec);
-            window.draw(RS[i].sprite);
-        }
-    }
-
+    RS->draw(RS);
+        
     window.draw(ground[12]);
     if (player.live)
     {
@@ -2026,9 +2077,6 @@ void window_draw()
         if (i == 1)continue;
         window.draw(Lvl1FG[i]);
     }
-
-    //draw enemy1 bullets
-    RS->drawbullets(RS);
     // window.draw(ground[0]);
     hud.draw(hud);
     //window.draw(powerups);
