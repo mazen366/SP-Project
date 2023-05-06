@@ -130,11 +130,11 @@ struct Player
     void melee_animation()
     {
         player.upperbodySprite.setOrigin(48 / 2.0, 15);
-        player.upperbodySprite.setTexture(PTexMU);     
+        player.upperbodySprite.setTexture(PTexMU);
         EnemiAnimation(player.upperbodySprite, 5, 48, 53, 0.02 / 3, player.pl_upper_melee_ctr);
-        
+
         player.lowerbodySprite.setOrigin(48 / 2.0, 15);
-        player.lowerbodySprite.setTexture(PTexML);       
+        player.lowerbodySprite.setTexture(PTexML);
         EnemiAnimation(player.lowerbodySprite, 5, 48, 53, 0.02 / 3, player.pl_lower_melee_ctr);
     }
     void knife_hitting()
@@ -1224,8 +1224,8 @@ struct Enemy2
                 }
                 if (enemy2[i].is_getting_damaged == 1)  // this adds red color to enemies when damaged
                 {
-                    if (enemy2[i].damage_timer.getElapsedTime().asMilliseconds() <= 300) 
-{
+                    if (enemy2[i].damage_timer.getElapsedTime().asMilliseconds() <= 300)
+                    {
                         enemy2[i].RWSpr.setColor(Color::Red);
                     }
                     else {
@@ -1431,36 +1431,36 @@ struct Tank
     }
     void tankState(Tank& tank)
     {
-            int distance = tank.tankSprite.getPosition().x - player.upperbodySprite.getPosition().x;
-            if (abs(distance) > 1000)
-            {
-                tankIdleAnimation(tank);
-            }
-            else if (abs(distance) < 600)
-            {
+        int distance = tank.tankSprite.getPosition().x - player.upperbodySprite.getPosition().x;
+        if (abs(distance) > 1000)
+        {
+            tankIdleAnimation(tank);
+        }
+        else if (abs(distance) < 600)
+        {
 
-                if (tank.shooting.shooting_timer.getElapsedTime().asMilliseconds() > 1000)
-                {
-                    tankShootingAnimation(tank);
-                }
+            if (tank.shooting.shooting_timer.getElapsedTime().asMilliseconds() > 1000)
+            {
+                tankShootingAnimation(tank);
+            }
+        }
+        else
+        {
+            tankMovingAnimation(tank);
+
+            if (distance > 0)
+            {
+                tank.tankSprite.setScale(4, 4);
+                tank.tankSprite.move(-3, 0);
+                tank.last_key = LEFT;
             }
             else
             {
-                tankMovingAnimation(tank);
-
-                if (distance > 0)
-                {
-                    tank.tankSprite.setScale(4, 4);
-                    tank.tankSprite.move(-3, 0);
-                    tank.last_key = LEFT;
-                }
-                else
-                {
-                    tank.tankSprite.setScale(-4, 4);
-                    tank.tankSprite.move(3, 0);
-                    tank.last_key = RIGHT;
-                }
+                tank.tankSprite.setScale(-4, 4);
+                tank.tankSprite.move(3, 0);
+                tank.last_key = RIGHT;
             }
+        }
     }
     void Damaged(Tank& tank)
     {
@@ -1538,33 +1538,33 @@ struct Enemy3
     int damage = 1;
     bool check = 1;
     vector <pair <RectangleShape, int>> bullet; //enemy3 pistol  
-	void shooting(int i, vector<Enemy3>& enemy1)
-	{
-		enemy1[i].shoot_timer += 0.08;
-		if (enemy1[i].shoot_timer > 1 || enemy1[i].shoot_timer == 0.05) {
-			Vector2f pl = enemy1[i].sprite.getPosition();
-			RectangleShape rect(sf::Vector2f(20, 10));
-			rect.setOrigin(-pl.x, -(pl.y + 50));
-			enemy1[i].bullet.push_back({ rect ,enemy1[i].last_key });
-			enemy1[i].shoot_timer = 0;
-		}
-	}
-	void drawbullets(int i,vector<Enemy3>& RS)
-	{
-       for (int x = 0; x < RS[i].bullet.size(); x++)
-	  {
-				if (RS[i].bullet[x].second == LEFT)
-				{
-					RS[i].bullet[x].first.move(-10, 0);
-					window.draw(RS[i].bullet[x].first);
-				}
-				else if (RS[i].bullet[x].second == RIGHT)
-				{
-					window.draw(RS[i].bullet[x].first);
-					RS[i].bullet[x].first.move(10, 0);
-				}
-    	}
-	}
+    void shooting(int i, vector<Enemy3>& enemy1)
+    {
+        enemy1[i].shoot_timer += 0.08;
+        if (enemy1[i].shoot_timer > 1 || enemy1[i].shoot_timer == 0.05) {
+            Vector2f pl = enemy1[i].sprite.getPosition();
+            RectangleShape rect(sf::Vector2f(20, 10));
+            rect.setOrigin(-pl.x, -(pl.y + 50));
+            enemy1[i].bullet.push_back({ rect ,enemy1[i].last_key });
+            enemy1[i].shoot_timer = 0;
+        }
+    }
+    void drawbullets(int i, vector<Enemy3>& RS)
+    {
+        for (int x = 0; x < RS[i].bullet.size(); x++)
+        {
+            if (RS[i].bullet[x].second == LEFT)
+            {
+                RS[i].bullet[x].first.move(-10, 0);
+                window.draw(RS[i].bullet[x].first);
+            }
+            else if (RS[i].bullet[x].second == RIGHT)
+            {
+                window.draw(RS[i].bullet[x].first);
+                RS[i].bullet[x].first.move(10, 0);
+            }
+        }
+    }
 }new_enemy;
 vector<Enemy3>enemy3;
 void new_enemy_setup()
@@ -1586,95 +1586,95 @@ void call()
             enemy3.push_back(new_enemy);
             push_timer.restart();
         }
-         for (int i = 0; i < enemy3.size(); i++)
+        for (int i = 0; i < enemy3.size(); i++)
         {
-			 if (abs(player.upperbodySprite.getPosition().x - enemy3[i].sprite.getPosition().x) + 10 * i <= ENEMY_PLAYER_SHOOTING_RANGE && player.health > 0)
-			 {
-				 if (!enemy3[i].isCarrying_a_weapon)
-				 {
-					// Carrying_a_weapon
+            if (abs(player.upperbodySprite.getPosition().x - enemy3[i].sprite.getPosition().x) + 10 * i <= ENEMY_PLAYER_SHOOTING_RANGE && player.health > 0)
+            {
+                if (!enemy3[i].isCarrying_a_weapon)
+                {
+                    // Carrying_a_weapon
 
-					 enemy3[i].check = 0;
-					 enemy3[i].velocity.x = 0;
-					 enemy3[i].sprite.setTexture(RS[0].Equippingtex);
-					 enemy3[i].sprite.setOrigin(322 / 7 / 2, 0);
-					 //   animation(enemy1[i].sprite, 6.9, 322 / 7, 44, 0.002, 9);
-					 enemy3[i].sprite_indicator[1] += 0.28;
-					 if (enemy3[i].sprite_indicator[1] > 6.9)
-					 {
-						 enemy3[i].sprite_indicator[1] = 0;
-						 enemy3[i].isCarrying_a_weapon = 1;
-					 }
-					 enemy3[i].sprite.setTextureRect(IntRect(int(enemy3[i].sprite_indicator[1]) * 322 / 7, 0, 322 / 7, 44));
-				 }
-				 else
-				 {
-					 //EnemyShootingAnimation
+                    enemy3[i].check = 0;
+                    enemy3[i].velocity.x = 0;
+                    enemy3[i].sprite.setTexture(RS[0].Equippingtex);
+                    enemy3[i].sprite.setOrigin(322 / 7 / 2, 0);
+                    //   animation(enemy1[i].sprite, 6.9, 322 / 7, 44, 0.002, 9);
+                    enemy3[i].sprite_indicator[1] += 0.28;
+                    if (enemy3[i].sprite_indicator[1] > 6.9)
+                    {
+                        enemy3[i].sprite_indicator[1] = 0;
+                        enemy3[i].isCarrying_a_weapon = 1;
+                    }
+                    enemy3[i].sprite.setTextureRect(IntRect(int(enemy3[i].sprite_indicator[1]) * 322 / 7, 0, 322 / 7, 44));
+                }
+                else
+                {
+                    //EnemyShootingAnimation
 
-				     enemy3[i].shooting(i, enemy3);
-					 enemy3[i].check = 1;
-					 enemy3[i].velocity.x = 0;
-					 enemy3[i].sprite.setTexture(RS[i].shootingtex);
-					 EnemiAnimation(enemy3[i].sprite, 2.9, 183 / 3, 38, 0.008, enemy3[i].sprite_indicator[0]);
-					 if (player.upperbodySprite.getPosition().x > enemy3[i].sprite.getPosition().x)
-					 {
-						 enemy3[i].sprite.setScale(-plScale, plScale);
-						 enemy3[i].sprite.setOrigin(0, 0);
-						 enemy3[i].last_key = RIGHT;
-					 }
-					 else
-					 {
-						 enemy3[i].sprite.setScale(plScale, plScale);
-						 enemy3[i].sprite.setOrigin(enemy3[i].sprite.getLocalBounds().width, 0);
-						 enemy3[i].last_key = LEFT;
-					 }
-				 }
-			 }
-			 else
-			 {
-				// EnemyRunningToPl
-				 enemy3[i].shoot_timer = 1;
-				 enemy3[i].isCarrying_a_weapon = 0;
-				 enemy3[i].sprite.setTexture(RS[0].runningtex);
-				 EnemiAnimation(enemy3[i].sprite, 11.9, 312 / 12, 40, 0.017, enemy3[i].sprite_indicator[2]);
-				 if (player.upperbodySprite.getPosition().x > enemy3[i].sprite.getPosition().x && player.health > 0)
-				 {
-					 if (i % 2 == 0)
-						 enemy3[i].velocity.x = 3;
-					 else if (i % 3 == 0)
-						 enemy3[i].velocity.x = 4.5;
-					 else
-						 enemy3[i].velocity.x = 3;
-					 enemy3[i].sprite.setScale(-plScale, plScale);
-					 enemy3[i].sprite.setOrigin(0, 0);
-					 enemy3[i].last_key = RIGHT;
-				 }
-				 else if (player.upperbodySprite.getPosition().x < enemy3[i].sprite.getPosition().x && player.health > 0)
-				 {
-					 if (i % 2 == 0)
-						 enemy3[i].velocity.x = -3;
-					 else if (i % 3 == 0)
-						 enemy3[i].velocity.x = -4.5;
-					 else
-						 enemy3[i].velocity.x = -3;
-					 enemy3[i].sprite.setScale(plScale, plScale);
-					 enemy3[i].sprite.setOrigin(enemy3[i].sprite.getLocalBounds().width, 0);
-					 enemy3[i].last_key = LEFT;
-				 }
-				 else
-				 {
-					 if (i % 2 == 0)
-						 enemy3[i].velocity.x = 3;
-					 else if (i % 3 == 0)
-						 enemy3[i].velocity.x = 4.5;
-					 else
-						 enemy3[i].velocity.x = 3;
-					 enemy3[i].sprite.setScale(-plScale, plScale);
-					 enemy3[i].sprite.setOrigin(0, 0);
-					 enemy3[i].last_key = RIGHT;
-				 }
+                    enemy3[i].shooting(i, enemy3);
+                    enemy3[i].check = 1;
+                    enemy3[i].velocity.x = 0;
+                    enemy3[i].sprite.setTexture(RS[i].shootingtex);
+                    EnemiAnimation(enemy3[i].sprite, 2.9, 183 / 3, 38, 0.008, enemy3[i].sprite_indicator[0]);
+                    if (player.upperbodySprite.getPosition().x > enemy3[i].sprite.getPosition().x)
+                    {
+                        enemy3[i].sprite.setScale(-plScale, plScale);
+                        enemy3[i].sprite.setOrigin(0, 0);
+                        enemy3[i].last_key = RIGHT;
+                    }
+                    else
+                    {
+                        enemy3[i].sprite.setScale(plScale, plScale);
+                        enemy3[i].sprite.setOrigin(enemy3[i].sprite.getLocalBounds().width, 0);
+                        enemy3[i].last_key = LEFT;
+                    }
+                }
+            }
+            else
+            {
+                // EnemyRunningToPl
+                enemy3[i].shoot_timer = 1;
+                enemy3[i].isCarrying_a_weapon = 0;
+                enemy3[i].sprite.setTexture(RS[0].runningtex);
+                EnemiAnimation(enemy3[i].sprite, 11.9, 312 / 12, 40, 0.017, enemy3[i].sprite_indicator[2]);
+                if (player.upperbodySprite.getPosition().x > enemy3[i].sprite.getPosition().x && player.health > 0)
+                {
+                    if (i % 2 == 0)
+                        enemy3[i].velocity.x = 3;
+                    else if (i % 3 == 0)
+                        enemy3[i].velocity.x = 4.5;
+                    else
+                        enemy3[i].velocity.x = 3;
+                    enemy3[i].sprite.setScale(-plScale, plScale);
+                    enemy3[i].sprite.setOrigin(0, 0);
+                    enemy3[i].last_key = RIGHT;
+                }
+                else if (player.upperbodySprite.getPosition().x < enemy3[i].sprite.getPosition().x && player.health > 0)
+                {
+                    if (i % 2 == 0)
+                        enemy3[i].velocity.x = -3;
+                    else if (i % 3 == 0)
+                        enemy3[i].velocity.x = -4.5;
+                    else
+                        enemy3[i].velocity.x = -3;
+                    enemy3[i].sprite.setScale(plScale, plScale);
+                    enemy3[i].sprite.setOrigin(enemy3[i].sprite.getLocalBounds().width, 0);
+                    enemy3[i].last_key = LEFT;
+                }
+                else
+                {
+                    if (i % 2 == 0)
+                        enemy3[i].velocity.x = 3;
+                    else if (i % 3 == 0)
+                        enemy3[i].velocity.x = 4.5;
+                    else
+                        enemy3[i].velocity.x = 3;
+                    enemy3[i].sprite.setScale(-plScale, plScale);
+                    enemy3[i].sprite.setOrigin(0, 0);
+                    enemy3[i].last_key = RIGHT;
+                }
 
-			 }
+            }
         }
 
         for (int i = 0; i < enemy3.size(); i++)
@@ -2525,7 +2525,7 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
                 if (player.gun == PISTOL)
                 {
                     //  liser.shooting(liser);
-                    pistol.shooting(pistol);                   
+                    pistol.shooting(pistol);
                     player.upperbodySprite.setTexture(PTexSSPU);
                     animation(player.upperbodySprite, 9.9, 520 / 10, 41, pistolshooting_delay, 10);
                 }
@@ -2584,9 +2584,9 @@ void window_draw()
         if (enemy3[i].is_alive)
         {
             window.draw(enemy3[i].sprite);
-            for(int j=0;j<enemy3[i].bullet.size();j++)
+            for (int j = 0; j < enemy3[i].bullet.size(); j++)
             {
-                enemy3[i].drawbullets(i,enemy3);
+                enemy3[i].drawbullets(i, enemy3);
             }
         }
     }
@@ -2653,7 +2653,7 @@ void IdleAnimation()
         player.lowerbodySprite.setTexture(PTexIRL);
         animation(player.lowerbodySprite, 3.9, 152 / 4, 37, idle, 3);
         player.is_shooting = 0;
-        player.upperbodySprite.setTexture(PTexIRU);      
+        player.upperbodySprite.setTexture(PTexIRU);
         animation(player.upperbodySprite, 3.9, 152 / 4, 37, idle, 3);
     }
 }
