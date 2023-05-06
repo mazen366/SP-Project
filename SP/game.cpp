@@ -29,9 +29,10 @@ pistolshooting_delay = 0.007, rifleshooting_delay = 0.005,
 plVelocity = 0.2,
 plScale = 3.25,
 melee_delay = 0.003;
-Texture TS_BGTex, TS_TandGTex, TS_LTex, TS_VTex, TS_LogoTex, TS_PETex, 
-TS_buttonsTex, TS_SSTex, TS_OlTex, OptionsTex, MusicControlTex, PMTex, 
-RWTexRun, RWTexAttack, RWTexDeath;
+Texture TS_BGTex, TS_TandGTex, TS_LTex, TS_VTex, TS_LogoTex, TS_PETex,
+TS_buttonsTex, TS_SSTex, TS_OlTex, OptionsTex, MusicControlTex, PMTex,
+RWTexRun, RWTexAttack, RWTexDeath, PTexSCPL, PTexIPL, PTexSCRL, PTexICPL, PTexICRL, PTexJRU, PTexJPL, PTexDL,
+PTexMU, PTexML, PTexRPU, PTexRPL, PTexRRU, PTexRRL, PTexSSPU, PTexSSRU, PTexIPSL, PTexIPSU, PTexIRL, PTexIRU, PTexJPU;
 Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr;
 Music TS_BGTheme;
 Music TS_BGFireFX;
@@ -55,13 +56,12 @@ Clock blackscreenTimer;
 int full_time_played = 0;
 
 // DECLRATIONS
-
+void EnemiAnimation(Sprite& s, float maxframe, float x, float y, float delay, float& indecator);
 void texture_setup();
 void window_draw();
 void mouse_pos();
 void TS_Setups();
 void jumpingAnimation(float);
-void meeleAnimation();
 void ShootingAnimation();
 void crouchingAnimation();
 void IdleAnimation();
@@ -91,9 +91,10 @@ void playerDeathAnimation();
 struct Player
 {
     //?
-    float plcounter = 0;
+    float plcounter = 0, pl_upper_melee_ctr = 0, pl_lower_melee_ctr = 0;
     Texture upperbodyTex, lowerbodyTex;
     Sprite upperbodySprite, lowerbodySprite;
+
     RectangleShape rec;//make rectangle to better collision
     Vector2f Velocity = { 0,0 };
     float health = 100;
@@ -107,7 +108,8 @@ struct Player
     bool live = 1, is_getting_damaged = 0;
     Clock damage_timer;
     bool isdead = 0;
-    void Playersetup(Player& player)
+    bool holding_knife = 0;
+    void Playersetup()
     {
         //sprite upperbody
         player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
@@ -125,11 +127,21 @@ struct Player
         player.rec.setPosition(player.upperbodySprite.getPosition().x - 50, player.upperbodySprite.getPosition().y);
         player.rec.setSize(Vector2f(75, 130));
     }
-    void score_increase(){
-        //if (hud.score_increase_timer<)
+    void melee_animation()
+    {
+        player.upperbodySprite.setOrigin(48 / 2.0, 15);
+        player.upperbodySprite.setTexture(PTexMU);     
+        EnemiAnimation(player.upperbodySprite, 5, 48, 53, 0.02 / 3, player.pl_upper_melee_ctr);
+        
+        player.lowerbodySprite.setOrigin(48 / 2.0, 15);
+        player.lowerbodySprite.setTexture(PTexML);       
+        EnemiAnimation(player.lowerbodySprite, 5, 48, 53, 0.02 / 3, player.pl_lower_melee_ctr);
     }
-};
-Player player;
+    void knife_hitting()
+    {
+
+    }
+}player;
 
 // shooting <pistol>
 struct Pistol
@@ -181,7 +193,7 @@ struct Rifle
     float  damage = 0.2;
     float shoot_timer = 0;
     vector<pair<RectangleShape, pair< int, double>>>rects;
-    int range = 700,ammo=200;
+    int range = 700, ammo = 200;
     void update_bUllets_distance(Rifle& rifle, int i)
     {
         rifle.rects[i].second.second += 14;
@@ -199,7 +211,6 @@ struct Rifle
             rifle.shoot_timer = 0;
             rifle.ammo--;
         }
-
     }
     void drawrifle(Rifle& rifle)
     {
@@ -605,7 +616,7 @@ struct HUD {
     Texture score_num_tex;
     Sprite score_num_sprite[6];
     int score_num_index[6]{ 9,9,9,9,9,9 };
-	Clock score_increase_timer;
+    Clock score_increase_timer;
     void setup(HUD& hud) {
         hud.HP_bar_tex.loadFromFile("Health Bar.png");
         hud.HP_bar_sprite.setTexture(hud.HP_bar_tex);
@@ -656,7 +667,7 @@ struct HUD {
     void positions(HUD& hud) {
         hud.HP_bar_sprite.setScale(3.455 * view.getSize().x / 1920.0, 3.455 * view.getSize().y / 1080.0);
         hud.HP_bar_sprite.setPosition(view.getCenter().x - (850 * view.getSize().x / 1920.0), view.getCenter().y - (474 * view.getSize().y / 1080.0));
-        
+
         hud.Mug_shot_sprite.setScale(3.5 * view.getSize().x / 1920.0, 3.5 * view.getSize().y / 1080.0);
         hud.Mug_shot_sprite.setPosition(view.getCenter().x - (940 * view.getSize().x / 1920.0), view.getCenter().y - (520 * view.getSize().y / 1080.0));
 
@@ -679,7 +690,7 @@ struct HUD {
         hud.time_num1_sprite.setPosition(view.getCenter().x - (57 * view.getSize().x / 1920.0), view.getCenter().y - (520 * view.getSize().y / 1080.0));
 
         hud.time_num2_sprite.setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
-        hud.time_num2_sprite.setPosition(view.getCenter().x + (2 * view.getSize().x / 1920.0), view.getCenter().y - (520 * view.getSize().y /1080.0));
+        hud.time_num2_sprite.setPosition(view.getCenter().x + (2 * view.getSize().x / 1920.0), view.getCenter().y - (520 * view.getSize().y / 1080.0));
 
         for (int i = 0; i < 6; i++)
         {
@@ -707,14 +718,14 @@ struct HUD {
         window.draw(hud.time_num1_sprite);
         hud.time_num2_sprite.setTextureRect(IntRect(time_num2_index * (550 / 10), 0, 550 / 10, 55));
         window.draw(hud.time_num2_sprite);
-		for (int i = 0; i < 6; i++)
-			hud.score_num_sprite[i].setTextureRect(IntRect(score_num_index[i] * (360 / 10), 0, 360 / 10, 36));
+        for (int i = 0; i < 6; i++)
+            hud.score_num_sprite[i].setTextureRect(IntRect(score_num_index[i] * (360 / 10), 0, 360 / 10, 36));
         for (int i = 0; i < 6; i++)
             window.draw(hud.score_num_sprite[i]);
-		for (int i = 0; i < 3; i++)
-		{
-			hud.ammo_num_sprite[i].setTextureRect(IntRect(ammo_num_index[i] * (390 / 10), 0, 390 / 10, 39));
-		}
+        for (int i = 0; i < 3; i++)
+        {
+            hud.ammo_num_sprite[i].setTextureRect(IntRect(ammo_num_index[i] * (390 / 10), 0, 390 / 10, 39));
+        }
         if (player.gun == RIFLE)
             for (int i = 0; i < 3; i++)
                 window.draw(hud.ammo_num_sprite[i]);
@@ -722,8 +733,8 @@ struct HUD {
         else if (player.gun == PISTOL)
             window.draw(hud.infinity_sprite);
     }
-    void HUD_mechanics_call(){
-		hud.positions(hud);
+    void HUD_mechanics_call() {
+        hud.positions(hud);
         hud.time_calculation();
         hud.ammo_display();
         hud.score_display();
@@ -740,25 +751,25 @@ struct HUD {
             hud_time.restart();
         }
     }
-    void ammo_display(){
+    void ammo_display() {
         ammo_num_index[2] = 9 - (rifle.ammo % 10);//123
-        ammo_num_index[1] = 9-((rifle.ammo/10)-(rifle.ammo/100)*10);
+        ammo_num_index[1] = 9 - ((rifle.ammo / 10) - (rifle.ammo / 100) * 10);
         ammo_num_index[0] = 9 - (rifle.ammo / 100);
 
     }
-    void score_display(){
+    void score_display() {
         //123456
         score_num_index[5] = 9 - (player.score % 10);// 6
-        score_num_index[4] =  9-((player.score/10)-(player.score/100)*10);//5
-        score_num_index[3] =  9-((player.score/100)-(player.score/1000)*10);//4
-		score_num_index[2] = 9 - ((player.score / 1000) - (player.score / 10000) * 10);//3
-		score_num_index[1] = 9 - ((player.score / 10000) - (player.score / 100000) * 10);//2
-        score_num_index[0] =  9-(player.score/100000);//1
+        score_num_index[4] = 9 - ((player.score / 10) - (player.score / 100) * 10);//5
+        score_num_index[3] = 9 - ((player.score / 100) - (player.score / 1000) * 10);//4
+        score_num_index[2] = 9 - ((player.score / 1000) - (player.score / 10000) * 10);//3
+        score_num_index[1] = 9 - ((player.score / 10000) - (player.score / 100000) * 10);//2
+        score_num_index[0] = 9 - (player.score / 100000);//1
     }
-    void hp_display(){
-        if (player.health>=20)
-        hp_index = 5 - ((int)player.health / 20);
-        else if (player.health<=0)
+    void hp_display() {
+        if (player.health >= 20)
+            hp_index = 5 - ((int)player.health / 20);
+        else if (player.health <= 0)
             hp_index = 5;
     }
 }hud;
@@ -772,10 +783,10 @@ float dt = 0;
 int ntimer[10] = { };
 
 //enemy map 1
-void EnemiAnimation(Sprite& s, float maxframe, float x, float y, float delay, float& indecator);
+
 struct Enemy1
 {
-    Texture texture;
+    Texture shootingtex, Dyingtex, Equippingtex, idle1tex, idle2tex, runningtex;
     Sprite sprite;
     RectangleShape rec;
     Vector2f velocity = { 0,0 };
@@ -799,8 +810,13 @@ struct Enemy1
     {
         for (int i = 0; i < 30; i++)
         {
-            enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
-            enemy1[i].sprite.setTexture(enemy1[i].texture);
+            enemy1[i].runningtex.loadFromFile(pathh + "RS Running Sprite Sheet.png");
+            enemy1[i].idle1tex.loadFromFile(pathh + "RS Idle 1 Sprite Sheet.png");
+            enemy1[i].idle2tex.loadFromFile(pathh + "RS Idle 2 Sprite Sheet.png");
+            enemy1[i].Equippingtex.loadFromFile(pathh + "RS Equipping Sprite Sheet.png");
+            enemy1[i].Dyingtex.loadFromFile(pathh + "RS Dying Sprite Sheet.png");
+            enemy1[i].shootingtex.loadFromFile(pathh + "RS Shooting Sprite Sheet.png");
+            enemy1[i].sprite.setTexture(enemy1[i].runningtex);
             enemy1[i].sprite.setTextureRect(IntRect(0, 0, 312 / 12, 40));
         }
         for (int i = 0; i < 30; i++)
@@ -936,8 +952,12 @@ struct Enemy1
                 if (enemy1[i].health <= 0)
                 {
                     enemy1[i].death_animation(i, enemy1);
-                    
                 }
+            }
+            if (player.holding_knife && player.rec.getGlobalBounds().intersects(enemy1[i].sprite.getGlobalBounds()))
+            {
+                enemy1[i].health -= 0.3 / 5;
+                enemy1[i].is_getting_damaged = true;
             }
         }
     }
@@ -956,7 +976,7 @@ struct Enemy1
     {
         enemy1[i].check = 0;
         enemy1[i].velocity.x = 0;
-        enemy1[i].texture.loadFromFile(pathh + "RS Equipping Sprite Sheet.png");
+        enemy1[i].sprite.setTexture(enemy1[i].Equippingtex);
         enemy1[i].sprite.setOrigin(322 / 7 / 2, 0);
         //   animation(enemy1[i].sprite, 6.9, 322 / 7, 44, 0.002, 9);
         enemy1[i].sprite_indicator[1] += 0.28;
@@ -972,7 +992,7 @@ struct Enemy1
         enemy1[i].shooting(i, enemy1);
         enemy1[i].check = 1;
         enemy1[i].velocity.x = 0;
-        enemy1[i].texture.loadFromFile(pathh + "RS Shooting Sprite Sheet.png");
+        enemy1[i].sprite.setTexture(enemy1[i].shootingtex);
         EnemiAnimation(enemy1[i].sprite, 2.9, 183 / 3, 38, 0.008, enemy1[i].sprite_indicator[0]);
         if (player.upperbodySprite.getPosition().x > enemy1[i].sprite.getPosition().x)
         {
@@ -991,7 +1011,7 @@ struct Enemy1
     {
         enemy1[i].shoot_timer = 1;
         enemy1[i].isCarrying_a_weapon = 0;
-        enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
+        enemy1[i].sprite.setTexture(enemy1[i].runningtex);
         EnemiAnimation(enemy1[i].sprite, 11.9, 312 / 12, 40, 0.017, enemy1[i].sprite_indicator[2]);
         if (player.upperbodySprite.getPosition().x > enemy1[i].sprite.getPosition().x && player.health > 0)
         {
@@ -1036,7 +1056,7 @@ struct Enemy1
         enemy1[i].isCarrying_a_weapon = 0;
         if (!enemy1[i].reversed_direction)
         {
-            enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
+            enemy1[i].sprite.setTexture(enemy1[i].runningtex);
             EnemiAnimation(enemy1[i].sprite, 11.9, 312.0 / 12.0, 40, 0.017, enemy1[i].sprite_indicator[5]);
             enemy1[i].velocity.x = 2;
             enemy1[i].sprite.setScale(-plScale, plScale);
@@ -1049,7 +1069,7 @@ struct Enemy1
         }
         else
         {
-            enemy1[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
+            enemy1[i].sprite.setTexture(enemy1[i].runningtex);
             EnemiAnimation(enemy1[i].sprite, 11.9, 312.0 / 12.0, 40, 0.017, enemy1[i].sprite_indicator[5]);
             enemy1[i].velocity.x = -2;
             enemy1[i].sprite.setScale(plScale, plScale);
@@ -1068,18 +1088,16 @@ struct Enemy1
         if (!enemy1[i].death_animation_done)
         {
             enemy1[i].velocity.x = 0;
-            enemy1[i].texture.loadFromFile(pathh + "RS Dying Sprite Sheet.png");
+            enemy1[i].sprite.setTexture(enemy1[i].Dyingtex);
             enemy1[i].sprite.setOrigin(341 / 11 / 2, 0);
             enemy1[i].sprite_indicator[1] += 0.2;
             if (enemy1[i].sprite_indicator[1] > 10.9)
             {
+                player.score += 125;
                 enemy1[i].sprite_indicator[1] = 0.2;
                 enemy1[i].death_animation_done = 1;
-				player.score += 100;
             }
             enemy1[i].sprite.setTextureRect(IntRect(int(enemy1[i].sprite_indicator[1]) * 341 / 11, 0, 341 / 11, 39));
-
-
         }
         else
         {
@@ -1088,12 +1106,12 @@ struct Enemy1
     }
     void Idle_animation_2(int i, Enemy1 enemy1[30])
     {
-        enemy1[i].texture.loadFromFile(pathh + "RS Idle 2 Sprite Sheet.png");
+        enemy1[i].sprite.setTexture(enemy1[i].idle2tex);
         EnemiAnimation(enemy1[i].sprite, 7.9, 232 / 8, 37, 0.005, enemy1[i].sprite_indicator[4]);
     }
     void Idle_animation_1(int i, Enemy1 enemy1[30])
     {
-        enemy1[i].texture.loadFromFile(pathh + "RS Idle 1 Sprite Sheet.png");
+        enemy1[i].sprite.setTexture(enemy1[i].idle1tex);
         EnemiAnimation(enemy1[i].sprite, 5.9, 174 / 6, 38, 0.005, enemy1[i].sprite_indicator[5]);
     }
     void drawbullets(Enemy1 RS[30])
@@ -1127,10 +1145,12 @@ struct Enemy1
     }
 }RS[30];//Rebel Soldier
 
+
 struct Enemy2
 {
     Sprite RWSpr;
-    int RwInitialPos = 12500, health = 10, damage = 0.2;
+    int RwInitialPos = 12500;
+    float health = 10, damage = 0.02;
     float run_indicator = 0, attack_indicator = 0, death_indicator = 0;
     bool is_getting_damaged = false, is_alive = true;
     string current_status = "";
@@ -1139,20 +1159,20 @@ struct Enemy2
     void setup()
     {
         for (int i = 0; i < 5; i++)
-        {  
+        {
             enemy2[i].RWSpr.setTexture(RWTexRun);
             enemy2[i].RWSpr.setScale(plScale, plScale);
             enemy2[i].RWSpr.setTextureRect(IntRect(0, 0, 36, 48));
             enemy2[i].RWSpr.setPosition(RwInitialPos + i * 1500, 750);
         }
     }
-    void movement(Enemy2 &s)
+    void movement(Enemy2& s)
     {
         s.RWSpr.setTexture(RWTexRun);
         s.RWSpr.setOrigin(0, 0);
         if (player.rec.getPosition().x < s.RWSpr.getPosition().x)
         {
-            
+
             s.RWSpr.setScale(plScale, plScale);
             EnemiAnimation(s.RWSpr, 11, 49, 52, 0.02, s.run_indicator);
             s.RWSpr.move(-5, 0);
@@ -1163,7 +1183,7 @@ struct Enemy2
             EnemiAnimation(s.RWSpr, 11, 49, 52, 0.02, s.run_indicator);
             s.RWSpr.move(5, 0);
         }
-        
+
     }
     void Damaged()
     {
@@ -1187,7 +1207,7 @@ struct Enemy2
                     if (enemy2[i].RWSpr.getGlobalBounds().intersects(rifle.rects[j].first.getGlobalBounds()) && rifle.rects[j].second.first != 0)
                     {
                         enemy2[i].health -= rifle.damage;
-                        if(enemy2[i].health > 0)
+                        if (enemy2[i].health > 0)
                             enemy2[i].is_getting_damaged = 1;
                         rifle.rects[j].second.first = 0;
                     }
@@ -1204,7 +1224,8 @@ struct Enemy2
                 }
                 if (enemy2[i].is_getting_damaged == 1)  // this adds red color to enemies when damaged
                 {
-                    if (enemy2[i].damage_timer.getElapsedTime().asMilliseconds() <= 300) {
+                    if (enemy2[i].damage_timer.getElapsedTime().asMilliseconds() <= 300) 
+{
                         enemy2[i].RWSpr.setColor(Color::Red);
                     }
                     else {
@@ -1222,26 +1243,32 @@ struct Enemy2
 
                 }
             }
+            if (player.holding_knife && player.rec.getGlobalBounds().intersects(enemy2[i].RWSpr.getGlobalBounds()))
+            {
+                enemy2[i].health -= 0.3 / 5;
+                enemy2[i].is_getting_damaged = true;
+            }
         }
+
     }
-    void attack(Enemy2 &s)
+    void attack(Enemy2& s)
     {
         s.RWSpr.setTexture(RWTexAttack);
         s.RWSpr.setOrigin(92 / 2.0, 5);
         player.is_getting_damaged = true;
         player.health -= s.damage;
-        if(player.rec.getPosition().x < s.RWSpr.getPosition().x)
+        if (player.rec.getPosition().x < s.RWSpr.getPosition().x)
         {
             s.RWSpr.setScale(plScale, plScale);
-            EnemiAnimation(s.RWSpr, 8, 92, 54, 0.02, s.attack_indicator);
+            EnemiAnimation(s.RWSpr, 8, 92, 54, 0.02 / 2, s.attack_indicator);
         }
         else
-        {           
+        {
             s.RWSpr.setScale(-plScale, plScale);
-            EnemiAnimation(s.RWSpr, 8, 92, 54, 0.02, s.attack_indicator);
+            EnemiAnimation(s.RWSpr, 8, 92, 54, 0.02 / 2, s.attack_indicator);
         }
     }
-    void death(Enemy2 &s) 
+    void death(Enemy2& s)
     {
         s.RWSpr.setTexture(RWTexDeath);
         s.RWSpr.setOrigin(55 / 2.0, 0);
@@ -1274,7 +1301,7 @@ struct Enemy2
 
             for (int i = 0; i < 5; i++)
             {
-                if(enemy2[i].is_alive && enemy2[i].health > 0)
+                if (enemy2[i].is_alive && enemy2[i].health > 0)
                 {
                     if (enemy2[i].current_status == "move")
                         movement(enemy2[i]);
@@ -1328,19 +1355,28 @@ struct Tank
     }shooting;
 
 
-    Texture tanktex;
+    Texture tanktex, tankidle, tankmove, tankshoot, tankdie;
     Sprite tankSprite;
+    bool stopped = 0;
+    float shoot_timer = 0;
+    Clock damage_timer;
+    bool is_getting_damaged = 0;
     int tankInitialPos = 400;
     float tankAnimationInd[4];
     bool isdead = false;
     int dmg = 100;
-    int health = 1000;
+    int health = 10;
     int last_key = RIGHT;
     bool is_alive = 1;
     //127 × 48 pixels
     void setup(Tank& tank)
     {
         tank.tanktex.loadFromFile(pathh + "Tank Idle Sprite Sheet.png");
+        tank.tankidle.loadFromFile(pathh + "Tank Idle Sprite Sheet.png");
+        tank.tankmove.loadFromFile(pathh + "Tank Moving Forward Sprite Sheet.png");
+        tank.tankshoot.loadFromFile(pathh + "Tank Shooting Sprite Sheet.png");
+        tank.tankdie.loadFromFile(pathh + "Tank Destroyed Sprite Sheet.png");
+
         tank.tankSprite.setTexture(tank.tanktex);
         tank.tankSprite.setTextureRect(IntRect(0, 0, 64, 48));
         tank.tankSprite.setOrigin(32, 48);
@@ -1349,22 +1385,26 @@ struct Tank
     }
     void draw(Tank& tank)
     {
-        window.draw(tank.tankSprite);
-        tank.shooting.draw_tank_bullets(tank.shooting);
+        if (tank.is_alive)
+        {
+            window.draw(tank.tankSprite);
+            tank.shooting.draw_tank_bullets(tank.shooting);
+        }
+
     }
     void tankIdleAnimation(Tank& tank)
     {//127 × 48
-        tank.tanktex.loadFromFile(pathh + "Tank Idle Sprite Sheet.png");
+        tank.tankSprite.setTexture(tankidle);
         EnemiAnimation(tank.tankSprite, 2, 127 / 2, 48, 0.004, tank.tankAnimationInd[0]);
     }
     void tankMovingAnimation(Tank& tank)
     {//512 × 48
-        tank.tanktex.loadFromFile(pathh + "Tank Moving Forward Sprite Sheet.png");
+        tank.tankSprite.setTexture(tankmove);
         EnemiAnimation(tank.tankSprite, 8, 512 / 8, 48, 0.01, tank.tankAnimationInd[1]);
     }
     void tankShootingAnimation(Tank& tank)
     {//260 × 48
-        tank.tanktex.loadFromFile(pathh + "Tank Shooting Sprite Sheet.png");
+        tank.tankSprite.setTexture(tankshoot);
         tank.tankAnimationInd[2] += 0.004 * dt;
         if (tank.tankAnimationInd[2] > 3.9)
         {
@@ -1377,101 +1417,104 @@ struct Tank
     }
     void tankDeathAnimation(Tank& tank)
     {//2133 × 200
-        tank.tanktex.loadFromFile(pathh + "Tank Destroyed Sprite Sheet");
-        EnemiAnimation(tank.tankSprite, 27, 2133 / 27, 200, 0.005, tank.tankAnimationInd[3]);
-    }
 
+        tank.tankSprite.setTexture(tankdie);
+        // EnemiAnimation(tank.tankSprite, 27, 2133 / 27, 200, 0.005, tank.tankAnimationInd[3]);
+
+        tank.tankAnimationInd[3] += 0.2;
+        if (tank.tankAnimationInd[3] > 26.9)
+        {
+            //tank.tankAnimationInd[3]=0;
+            tank.is_alive = 0;
+        }
+        tank.tankSprite.setTextureRect(IntRect(int(tank.tankAnimationInd[3]) * 2133 / 27, 0, 2133 / 27, 200));
+    }
     void tankState(Tank& tank)
     {
-        int distance = tank.tankSprite.getPosition().x - player.upperbodySprite.getPosition().x;
-        if (abs(distance) > 1000)
-        {
-            tankIdleAnimation(tank);
-        }
-        else if (abs(distance) < 600)
-        {
-
-            if (tank.shooting.shooting_timer.getElapsedTime().asMilliseconds() > 1000)
+            int distance = tank.tankSprite.getPosition().x - player.upperbodySprite.getPosition().x;
+            if (abs(distance) > 1000)
             {
-                tankShootingAnimation(tank);
+                tankIdleAnimation(tank);
             }
-        }
-        else
-        {
-            tankMovingAnimation(tank);
-
-            if (distance > 0)
+            else if (abs(distance) < 600)
             {
-                tank.tankSprite.setScale(4, 4);
-                tank.tankSprite.move(-3, 0);
-                tank.last_key = LEFT;
+
+                if (tank.shooting.shooting_timer.getElapsedTime().asMilliseconds() > 1000)
+                {
+                    tankShootingAnimation(tank);
+                }
             }
             else
             {
-                tank.tankSprite.setScale(-4, 4);
-                tank.tankSprite.move(3, 0);
-                tank.last_key = RIGHT;
+                tankMovingAnimation(tank);
+
+                if (distance > 0)
+                {
+                    tank.tankSprite.setScale(4, 4);
+                    tank.tankSprite.move(-3, 0);
+                    tank.last_key = LEFT;
+                }
+                else
+                {
+                    tank.tankSprite.setScale(-4, 4);
+                    tank.tankSprite.move(3, 0);
+                    tank.last_key = RIGHT;
+                }
+            }
+    }
+    void Damaged(Tank& tank)
+    {
+        if (tank.is_alive)
+        {
+            for (int j = 0; j < pistol.rects.size(); j++)
+            {
+                if (tank.tankSprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
+                {
+                    tank.health -= pistol.damage;
+                    tank.is_getting_damaged = 1;
+                    pistol.rects[j].second.first = 0;
+                }
+            }
+            for (int j = 0; j < rifle.rects.size(); j++)
+            {
+                if (tank.tankSprite.getGlobalBounds().intersects(rifle.rects[j].first.getGlobalBounds()) && rifle.rects[j].second.first != 0)
+                {
+                    tank.health -= rifle.damage;
+                    tank.is_getting_damaged = 1;
+                    rifle.rects[j].second.first = 0;
+                }
+            }
+            for (int j = 0; j < liser.rects.size(); j++)
+            {
+                if (tank.tankSprite.getGlobalBounds().intersects(liser.rects[j].first.getGlobalBounds()) && liser.rects[j].second != 0)
+                {
+                    tank.health -= liser.damage;
+                    tank.is_getting_damaged = 1;
+                    liser.rects[j].second = 0;
+                }
+            }
+            if (tank.is_getting_damaged == 1)  // this adds red color to enemies when damaged
+            {
+                if (tank.damage_timer.getElapsedTime().asMilliseconds() <= 300) {
+                    tank.tankSprite.setColor(Color::Red);
+                }
+                else {
+                    tank.is_getting_damaged = 0;
+                }
+            }
+            else
+            {
+                tank.tankSprite.setColor(Color::White);
+                tank.damage_timer.restart();
+            }
+            if (tank.health <= 0)
+            {
+                tank.isdead = 1;
+                tank.tankDeathAnimation(tank);
             }
         }
     }
-	//void Damaged(Tank& tank)
-	//{
-	//		if (tank.is_alive)
-	//		{
-
-	//			for (int j = 0; j < pistol.rects.size(); j++)
-	//			{
-	//				if (tank.sprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
-	//				{
-	//					tank.velocity.x = 0;
-	//					enemy1[i].health -= pistol.damage;
-	//					enemy1[i].is_getting_damaged = 1;
-	//					pistol.rects[j].second.first = 0;
-	//				}
-	//			}
-	//			for (int j = 0; j < rifle.rects.size(); j++)
-	//			{
-	//				if (enemy1[i].sprite.getGlobalBounds().intersects(rifle.rects[j].first.getGlobalBounds()) && rifle.rects[j].second.first != 0)
-	//				{
-	//					enemy1[i].velocity.x = 0;
-	//					enemy1[i].health -= rifle.damage;
-	//					enemy1[i].is_getting_damaged = 1;
-	//					rifle.rects[j].second.first = 0;
-	//				}
-	//			}
-	//			for (int j = 0; j < liser.rects.size(); j++)
-	//			{
-	//				if (enemy1[i].sprite.getGlobalBounds().intersects(liser.rects[j].first.getGlobalBounds()) && liser.rects[j].second != 0)
-	//				{
-	//					enemy1[i].velocity.x = 0;
-	//					enemy1[i].health -= liser.damage;
-	//					enemy1[i].is_getting_damaged = 1;
-	//					liser.rects[j].second = 0;
-	//				}
-	//			}
-	//			if (enemy1[i].is_getting_damaged == 1)  // this adds red color to enemies when damaged
-	//			{
-	//				if (enemy1[i].damage_timer.getElapsedTime().asMilliseconds() <= 300) {
-	//					enemy1[i].sprite.setColor(Color::Red);
-	//				}
-	//				else {
-	//					enemy1[i].is_getting_damaged = 0;
-	//				}
-	//			}
-	//			else
-	//			{
-	//				enemy1[i].sprite.setColor(Color::White);
-	//				enemy1[i].damage_timer.restart();
-	//			}
-	//			if (enemy1[i].health <= 0)
-	//			{
-	//				enemy1[i].death_animation(i, enemy1);
-
-	//			}
-	//		}
-	//	}
-	//}
-
+    //void Tankshooting()
 }tank;
 
 
@@ -1494,240 +1537,41 @@ struct Enemy3
     int health = 10;
     int damage = 1;
     bool check = 1;
-    vector <pair <RectangleShape, int>> bullet; //enemy3 pistol
-
-    void Damaged(vector<Enemy3>& enemy3)
-    {
-        for (int i = 0; i < enemy3.size(); i++)
-        {
-            if (enemy3[i].is_alive)
-            {
-
-                for (int j = 0; j < pistol.rects.size(); j++)
-                {
-                    if (enemy3[i].sprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
-                    {
-                        enemy3[i].velocity.x = 0;
-                        enemy3[i].health -= pistol.damage;
-                        enemy3[i].is_getting_damaged = 1;
-                        pistol.rects[j].second.first = 0;
-                    }
-                }
-                for (int j = 0; j < rifle.rects.size(); j++)
-                {
-                    if (enemy3[i].sprite.getGlobalBounds().intersects(rifle.rects[j].first.getGlobalBounds()) && rifle.rects[j].second.first != 0)
-                    {
-                        enemy3[i].velocity.x = 0;
-                        enemy3[i].health -= rifle.damage;
-                        enemy3[i].is_getting_damaged = 1;
-                        rifle.rects[j].second.first = 0;
-                    }
-                }
-                for (int j = 0; j < liser.rects.size(); j++)
-                {
-                    if (enemy3[i].sprite.getGlobalBounds().intersects(liser.rects[j].first.getGlobalBounds()) && liser.rects[j].second != 0)
-                    {
-                        enemy3[i].velocity.x = 0;
-                        enemy3[i].health -= liser.damage;
-                        enemy3[i].is_getting_damaged = 1;
-                        liser.rects[j].second = 0;
-                    }
-                }
-                if (enemy3[i].is_getting_damaged == 1)  // this adds red color to enemies when damaged
-                {
-                    if (enemy3[i].damage_timer.getElapsedTime().asMilliseconds() <= 300) {
-                        enemy3[i].sprite.setColor(Color::Red);
-                    }
-                    else {
-                        enemy3[i].is_getting_damaged = 0;
-                    }
-                }
-                else
-                {
-                    enemy3[i].sprite.setColor(Color::White);
-                    enemy3[i].damage_timer.restart();
-                }
-                    enemy3[i].death_animation(enemy3);
-                
-            }
-        }
-    }
-    void death_animation(vector<Enemy3>& enemy3)
-    {
-        for (int i = 0; i < enemy3.size(); i++)
-        {
-            if (enemy3[i].health <= 0)
-            {
-                enemy3[i].stopped = 1;
-                
-                if (!enemy3[i].death_animation_done)
-                {
-                    enemy3[i].velocity.x = 0;
-                    enemy3[i].texture.loadFromFile(pathh + "RS Dying Sprite Sheet.png");
-                    enemy3[i].sprite.setOrigin(341 / 11 / 2, 0);
-                    enemy3[i].sprite_indicator[1] += 0.2;
-                    if (enemy3[i].sprite_indicator[1] > 10.9)
-                    {
-                        enemy3[i].sprite_indicator[1] = 0.2;
-                        enemy3[i].death_animation_done = 1;
-						player.score += 100;
-                    }
-                    enemy3[i].sprite.setTextureRect(IntRect(int(enemy3[i].sprite_indicator[1]) * 341 / 11, 0, 341 / 11, 39));
-
-
-                }
-                else
-                {
-                    enemy3[i].is_alive = 0;
-                }
-            }
-        }
-    }
-    void draw(vector<Enemy3>& enemy3)
-    {
-        for (int i = 0; i < enemy3.size(); i++)
-        {
-            if (enemy3[i].is_alive == 1)
-            {
-                window.draw(enemy3[i].sprite);
-            }
-            enemy3[i].drawbullets(enemy3);
-        }
-    }
-    void drawbullets(vector<Enemy3>& enemy3)
-    {
-        for (int i = 0; i < enemy3.size(); i++)
-        {
-            for (int x = 0; x < enemy3[i].bullet.size(); x++)
-            {
-                if (enemy3[i].bullet[x].second == LEFT)
-                {
-                    enemy3[i].bullet[x].first.move(-10, 0);
-                    window.draw(enemy3[i].bullet[x].first);
-                }
-                else if (enemy3[i].bullet[x].second == RIGHT)
-                {
-                    window.draw(enemy3[i].bullet[x].first);
-                    enemy3[i].bullet[x].first.move(10, 0);
-                }
-            }
-        }
-    }
-    void Carrying_a_weapon(vector<Enemy3>& enemy3)
-    {
-        for (int i = 0; i < enemy3.size(); i++)
-        {
-            float distance = abs(enemy3[i].sprite.getPosition().x - player.lowerbodySprite.getPosition().x);
-            if (distance <= 300 && !enemy3[i].stopped && !enemy3[i].isCarrying_a_weapon)
-            {
-                enemy3[i].check = 0;
-                enemy3[i].velocity.x = 0;
-                enemy3[i].texture.loadFromFile(pathh + "RS Equipping Sprite Sheet.png");
-                enemy3[i].sprite.setOrigin(322 / 7 / 2, 0);
-                //   animation(enemy1[i].sprite, 6.9, 322 / 7, 44, 0.002, 9);
-                enemy3[i].sprite_indicator[1] += 0.28;
-                if (enemy3[i].sprite_indicator[1] > 6.9)
-                {
-                    enemy3[i].sprite_indicator[1] = 0;
-                    enemy3[i].isCarrying_a_weapon = 1;
-                }
-                enemy3[i].sprite.setTextureRect(IntRect(int(enemy3[i].sprite_indicator[1]) * 322 / 7, 0, 322 / 7, 44));
-            }
-        }
-    }
-    void shooting(vector<Enemy3>& enemy3)
-    {
-        for (int i = 0; i < enemy3.size(); i++)
-        {
-            enemy3[i].shoot_timer += 0.08;
-            if (enemy3[i].shoot_timer > 1 || enemy3[i].shoot_timer == 0.05) 
-            {
-                Vector2f pl = enemy3[i].sprite.getPosition();
-                RectangleShape rect(sf::Vector2f(20, 10));
-                rect.setOrigin(-pl.x, -(pl.y + 50));
-                enemy3[i].bullet.push_back({ rect ,enemy3[i].last_key });
-                enemy3[i].shoot_timer = 0;
-            }
-        }
-    }
-    void movement(vector<Enemy3>& enemy3)
-    {
-            for (int i = 0; i < enemy3.size(); i++)
-            {
-                float distance = abs(enemy3[i].sprite.getPosition().x - player.lowerbodySprite.getPosition().x);
-                if (distance > 300&&!enemy3[i].stopped)
-                {
-                    enemy3[i].shoot_timer = 1;
-                    enemy3[i].isCarrying_a_weapon = 0;
-                    enemy3[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
-                    EnemiAnimation(enemy3[i].sprite, 11.9, 312 / 12, 40, 0.017, enemy3[i].sprite_indicator[2]);
-                    if (player.upperbodySprite.getPosition().x > enemy3[i].sprite.getPosition().x && player.health > 0)
-                    {
-                        enemy3[i].velocity.x = 3;
-                        enemy3[i].sprite.setScale(-plScale, plScale);
-                        enemy3[i].sprite.setOrigin(0, 0);
-                        enemy3[i].last_key = RIGHT;
-                    }
-                    else if (player.upperbodySprite.getPosition().x < enemy3[i].sprite.getPosition().x && player.health > 0)
-                    {
-                        enemy3[i].velocity.x = -3;
-                        enemy3[i].sprite.setScale(plScale, plScale);
-                        enemy3[i].sprite.setOrigin(enemy3[i].sprite.getLocalBounds().width, 0);
-                        enemy3[i].last_key = LEFT;
-                    }
-                    else
-                    {
-                        enemy3[i].velocity.x = 3;
-                        enemy3[i].sprite.setScale(-plScale, plScale);
-                        enemy3[i].sprite.setOrigin(0, 0);
-                        enemy3[i].last_key = RIGHT;
-                    }
-                }
-            }
-    }
-    void EnemyShootingAnimation(vector<Enemy3>& enemy3)
-    {
-        for (int i = 0; i < enemy3.size(); i++)
-        {
-            float distance = abs(enemy3[i].sprite.getPosition().x - player.lowerbodySprite.getPosition().x);
-            if(distance <= 300 && !enemy3[i].stopped&& enemy3[i].isCarrying_a_weapon)
-            {
-                enemy3[i].shooting(enemy3);
-                enemy3[i].check = 1;
-                enemy3[i].velocity.x = 0;
-                enemy3[i].texture.loadFromFile(pathh + "RS Shooting Sprite Sheet.png");
-                EnemiAnimation(enemy3[i].sprite, 2.9, 183 / 3, 38, 0.008, enemy3[i].sprite_indicator[0]);
-                if (player.upperbodySprite.getPosition().x > enemy3[i].sprite.getPosition().x)
-                {
-                    enemy3[i].sprite.setScale(-plScale, plScale);
-                    enemy3[i].sprite.setOrigin(0, 0);
-                    enemy3[i].last_key = RIGHT;
-                }
-                else
-                {
-                    enemy3[i].sprite.setScale(plScale, plScale);
-                    enemy3[i].sprite.setOrigin(enemy3[i].sprite.getLocalBounds().width, 0);
-                    enemy3[i].last_key = LEFT;
-                }
-            }
-        }
-    }
-    void Gravity(vector<Enemy3>& enemy3)//update y position
-    { 
-        for (int i = 0; i < enemy3.size(); i++)
-        {
-            float x = enemy3[i].rec.getPosition().x;
-            enemy3[i].rec.setPosition(x, 820);
-        }
-    }
+    vector <pair <RectangleShape, int>> bullet; //enemy3 pistol  
+	void shooting(int i, vector<Enemy3>& enemy1)
+	{
+		enemy1[i].shoot_timer += 0.08;
+		if (enemy1[i].shoot_timer > 1 || enemy1[i].shoot_timer == 0.05) {
+			Vector2f pl = enemy1[i].sprite.getPosition();
+			RectangleShape rect(sf::Vector2f(20, 10));
+			rect.setOrigin(-pl.x, -(pl.y + 50));
+			enemy1[i].bullet.push_back({ rect ,enemy1[i].last_key });
+			enemy1[i].shoot_timer = 0;
+		}
+	}
+	void drawbullets(int i,vector<Enemy3>& RS)
+	{
+       for (int x = 0; x < RS[i].bullet.size(); x++)
+	  {
+				if (RS[i].bullet[x].second == LEFT)
+				{
+					RS[i].bullet[x].first.move(-10, 0);
+					window.draw(RS[i].bullet[x].first);
+				}
+				else if (RS[i].bullet[x].second == RIGHT)
+				{
+					window.draw(RS[i].bullet[x].first);
+					RS[i].bullet[x].first.move(10, 0);
+				}
+    	}
+	}
 }new_enemy;
 vector<Enemy3>enemy3;
 void new_enemy_setup()
 {
     new_enemy.rec.setSize(Vector2f(100, 130));
     new_enemy.rec.setPosition(Vector2f(19650, 820));
-    new_enemy.texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
-    new_enemy.sprite.setTexture(new_enemy.texture);
+    new_enemy.sprite.setTexture(RS[0].runningtex);
     new_enemy.sprite.setScale(plScale, plScale);
     new_enemy.sprite.setTextureRect(IntRect(0, 0, 312 / 12, 40));
     new_enemy.sprite.setPosition(Vector2f(19650, 820));
@@ -1736,33 +1580,103 @@ void call()
 {
     if (bgCounter == LEVEL_1_C_BG)
     {
-        if (push_timer.getElapsedTime().asSeconds()*delay > 3)
+        if (push_timer.getElapsedTime().asSeconds() * delay > 3)
         {
             delay += 0.1;
             enemy3.push_back(new_enemy);
             push_timer.restart();
         }
-      /*  for (int i = 0; i < enemy3.size(); i++)
+         for (int i = 0; i < enemy3.size(); i++)
         {
-            float distance = abs(enemy3[i].sprite.getPosition().x - player.lowerbodySprite.getPosition().x);
-            if (distance > 300 && !enemy3[i].stopped)
-            {
-                enemy3[i].texture.loadFromFile(pathh + "RS Running Sprite Sheet.png");
-            }
-            else if (distance <= 300 && !enemy3[i].stopped && enemy3[i].isCarrying_a_weapon)
-            {
-                enemy3[i].texture.loadFromFile(pathh + "RS Shooting Sprite Sheet.png");
-            }
-            else if (distance <= 300 && !enemy3[i].stopped && !enemy3[i].isCarrying_a_weapon)
-            {
-                enemy3[i].texture.loadFromFile(pathh + "RS Equipping Sprite Sheet.png");
-            }
-      }*/
-        new_enemy.movement(enemy3);
-        new_enemy.Carrying_a_weapon(enemy3);
-        new_enemy.EnemyShootingAnimation(enemy3);
-        new_enemy.Damaged(enemy3);
-        
+			 if (abs(player.upperbodySprite.getPosition().x - enemy3[i].sprite.getPosition().x) + 10 * i <= ENEMY_PLAYER_SHOOTING_RANGE && player.health > 0)
+			 {
+				 if (!enemy3[i].isCarrying_a_weapon)
+				 {
+					// Carrying_a_weapon
+
+					 enemy3[i].check = 0;
+					 enemy3[i].velocity.x = 0;
+					 enemy3[i].sprite.setTexture(RS[0].Equippingtex);
+					 enemy3[i].sprite.setOrigin(322 / 7 / 2, 0);
+					 //   animation(enemy1[i].sprite, 6.9, 322 / 7, 44, 0.002, 9);
+					 enemy3[i].sprite_indicator[1] += 0.28;
+					 if (enemy3[i].sprite_indicator[1] > 6.9)
+					 {
+						 enemy3[i].sprite_indicator[1] = 0;
+						 enemy3[i].isCarrying_a_weapon = 1;
+					 }
+					 enemy3[i].sprite.setTextureRect(IntRect(int(enemy3[i].sprite_indicator[1]) * 322 / 7, 0, 322 / 7, 44));
+				 }
+				 else
+				 {
+					 //EnemyShootingAnimation
+
+				     enemy3[i].shooting(i, enemy3);
+					 enemy3[i].check = 1;
+					 enemy3[i].velocity.x = 0;
+					 enemy3[i].sprite.setTexture(RS[i].shootingtex);
+					 EnemiAnimation(enemy3[i].sprite, 2.9, 183 / 3, 38, 0.008, enemy3[i].sprite_indicator[0]);
+					 if (player.upperbodySprite.getPosition().x > enemy3[i].sprite.getPosition().x)
+					 {
+						 enemy3[i].sprite.setScale(-plScale, plScale);
+						 enemy3[i].sprite.setOrigin(0, 0);
+						 enemy3[i].last_key = RIGHT;
+					 }
+					 else
+					 {
+						 enemy3[i].sprite.setScale(plScale, plScale);
+						 enemy3[i].sprite.setOrigin(enemy3[i].sprite.getLocalBounds().width, 0);
+						 enemy3[i].last_key = LEFT;
+					 }
+				 }
+			 }
+			 else
+			 {
+				// EnemyRunningToPl
+				 enemy3[i].shoot_timer = 1;
+				 enemy3[i].isCarrying_a_weapon = 0;
+				 enemy3[i].sprite.setTexture(RS[0].runningtex);
+				 EnemiAnimation(enemy3[i].sprite, 11.9, 312 / 12, 40, 0.017, enemy3[i].sprite_indicator[2]);
+				 if (player.upperbodySprite.getPosition().x > enemy3[i].sprite.getPosition().x && player.health > 0)
+				 {
+					 if (i % 2 == 0)
+						 enemy3[i].velocity.x = 3;
+					 else if (i % 3 == 0)
+						 enemy3[i].velocity.x = 4.5;
+					 else
+						 enemy3[i].velocity.x = 3;
+					 enemy3[i].sprite.setScale(-plScale, plScale);
+					 enemy3[i].sprite.setOrigin(0, 0);
+					 enemy3[i].last_key = RIGHT;
+				 }
+				 else if (player.upperbodySprite.getPosition().x < enemy3[i].sprite.getPosition().x && player.health > 0)
+				 {
+					 if (i % 2 == 0)
+						 enemy3[i].velocity.x = -3;
+					 else if (i % 3 == 0)
+						 enemy3[i].velocity.x = -4.5;
+					 else
+						 enemy3[i].velocity.x = -3;
+					 enemy3[i].sprite.setScale(plScale, plScale);
+					 enemy3[i].sprite.setOrigin(enemy3[i].sprite.getLocalBounds().width, 0);
+					 enemy3[i].last_key = LEFT;
+				 }
+				 else
+				 {
+					 if (i % 2 == 0)
+						 enemy3[i].velocity.x = 3;
+					 else if (i % 3 == 0)
+						 enemy3[i].velocity.x = 4.5;
+					 else
+						 enemy3[i].velocity.x = 3;
+					 enemy3[i].sprite.setScale(-plScale, plScale);
+					 enemy3[i].sprite.setOrigin(0, 0);
+					 enemy3[i].last_key = RIGHT;
+				 }
+
+			 }
+        }
+
         for (int i = 0; i < enemy3.size(); i++)
         {
             enemy3[i].rec.move(enemy3[i].velocity);
@@ -1822,7 +1736,7 @@ int main()
     hud.setup(hud);
     bgSetup();
     TS_Setups();
-    player.Playersetup(player);
+    player.Playersetup();
     timer.restart();
     Menu();
     return 0;
@@ -2202,7 +2116,8 @@ void windowfunction()
     {
         player.gun = PISTOL;
     }
-
+    if (!Keyboard::isKeyPressed(Keyboard::K))
+        player.holding_knife = false;
     blood.move(blood);
     //map shortcut
     if (Keyboard::isKeyPressed(sf::Keyboard::T))
@@ -2211,11 +2126,11 @@ void windowfunction()
     cameraView();
     RS->movement(RS);
     RS->Gravity(RS);
-    if(enemy3.size()>0)
-        enemy3[0].Gravity(enemy3);
+
     RS->Damaged(RS);
     enemy2->status();
     enemy2->Damaged();
+    tank.Damaged(tank);
     playerDamageFromEnemy1();
 
     if (enemy3.size() < 30)
@@ -2543,14 +2458,14 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
                 pistol.shoot_timer = 0;
                 if (player.gun == PISTOL)
                 {
-                    player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
-                    player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
+                    player.upperbodySprite.setTexture(PTexRPU);
+                    player.lowerbodySprite.setTexture(PTexRPL);
                     animation(s, maxframe, x, y, delay, index);
                 }
                 else if (player.gun == RIFLE)
                 {
-                    player.upperbodyTex.loadFromFile(pathh + "Running (Rifle) Sprite Sheet.png");
-                    player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
+                    player.upperbodySprite.setTexture(PTexRRU);
+                    player.lowerbodySprite.setTexture(PTexRRL);
                     animation(player.upperbodySprite, 11.9, 528 / 12, 29, 0.0001, 32);
                     animation(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
                 }
@@ -2583,14 +2498,14 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
                 pistol.shoot_timer = 0;
                 if (player.gun == PISTOL)
                 {
-                    player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
-                    player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
+                    player.upperbodySprite.setTexture(PTexRPU);
+                    player.lowerbodySprite.setTexture(PTexRPL);
                     animation(s, maxframe, x, y, delay, index);
                 }
                 else if (player.gun == RIFLE)
                 {
-                    player.upperbodyTex.loadFromFile(pathh + "Running (Rifle) Sprite Sheet.png");
-                    player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
+                    player.upperbodySprite.setTexture(PTexRRU);
+                    player.lowerbodySprite.setTexture(PTexRPL);
                     animation(player.upperbodySprite, 11.9, 528 / 12, 29, 0.0001, 32);
                     animation(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
                 }
@@ -2610,24 +2525,24 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
                 if (player.gun == PISTOL)
                 {
                     //  liser.shooting(liser);
-                    pistol.shooting(pistol);
-                    player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
+                    pistol.shooting(pistol);                   
+                    player.upperbodySprite.setTexture(PTexSSPU);
                     animation(player.upperbodySprite, 9.9, 520 / 10, 41, pistolshooting_delay, 10);
                 }
-                else if (player.gun == RIFLE && rifle.ammo!=0)
+                else if (player.gun == RIFLE && rifle.ammo != 0)
                 {
                     cout << rifle.ammo << "   ";
                     rifle.shooting(rifle);
-                    player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Rifle) Sprite Sheet.png");
+                    player.upperbodySprite.setTexture(PTexSSRU);
                     animation(player.upperbodySprite, 3.9, 240 / 4, 27, rifleshooting_delay, 10);
                 }
-
-                player.lowerbodyTex.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Lower Body.png");
+                player.lowerbodySprite.setTexture(PTexIPL);
                 animation(player.lowerbodySprite, 3.9, 128 / 4, 37, 0.04, 3);
             }
             else  if (Keyboard::isKeyPressed(Keyboard::K))
             {
-                meeleAnimation();
+                player.melee_animation();
+                player.holding_knife = true;
                 pistol.shoot_timer = 0;
             }
             //if player not move then load idle sprite sheet
@@ -2643,8 +2558,6 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
         }
 
     }
-
-
 }
 
 void window_draw()
@@ -2666,9 +2579,17 @@ void window_draw()
 
     //window.draw(player.rec);
     RS->draw(RS);
-   if(enemy3.size())
-        enemy3[0].draw(enemy3);
-    
+    for (int i = 0; i < enemy3.size(); i++)
+    {
+        if (enemy3[i].is_alive)
+        {
+            window.draw(enemy3[i].sprite);
+            for(int j=0;j<enemy3[i].bullet.size();j++)
+            {
+                enemy3[i].drawbullets(i,enemy3);
+            }
+        }
+    }
     // enemy3[0].draw(enemy3[0]);
     window.draw(ground[12]);
     if (player.live || player.isdead)
@@ -2721,34 +2642,34 @@ void IdleAnimation()
 {
     if (player.gun == PISTOL)
     {
-        player.lowerbodyTex.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Lower Body.png");
+        player.lowerbodySprite.setTexture(PTexIPSL);
         animation(player.lowerbodySprite, 3.9, 128 / 4, 37, idle, 3);
         player.is_shooting = 0;
-        player.upperbodyTex.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Upper Body.png");
+        player.upperbodySprite.setTexture(PTexIPSU);
         animation(player.upperbodySprite, 3.9, 128 / 4, 37, idle, 3);
     }
-    else if (player.gun == RIFLE)
+    else if (player.gun == RIFLE)//////////////////
     {
-        player.lowerbodyTex.loadFromFile(pathh + "Idle (Rifle) Sprite Sheet Lower Body.png");
+        player.lowerbodySprite.setTexture(PTexIRL);
         animation(player.lowerbodySprite, 3.9, 152 / 4, 37, idle, 3);
         player.is_shooting = 0;
-        player.upperbodyTex.loadFromFile(pathh + "Idle (Rifle) Sprite Sheet Upper Body.png");
+        player.upperbodySprite.setTexture(PTexIRU);      
         animation(player.upperbodySprite, 3.9, 152 / 4, 37, idle, 3);
     }
 }
 void ShootingAnimation()
 {
-    player.lowerbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
-    animation(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
+    player.lowerbodySprite.setTexture(PTexRPL);
+    animation(player.lowerbodySprite, 11.9, 408 / 12.0, 41, 0.004, 2);
     if (player.gun == PISTOL)
     {
-        player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
-        animation(player.upperbodySprite, 9.9, 520 / 10, 41, pistolshooting_delay, 10);
+        player.upperbodySprite.setTexture(PTexSSPU);
+        animation(player.upperbodySprite, 9.9, 520 / 10.0, 41, pistolshooting_delay, 10);
     }
     else if (player.gun == RIFLE)
     {
-        player.upperbodyTex.loadFromFile(pathh + "Shooting - Standing (Rifle) Sprite Sheet.png");
-        animation(player.upperbodySprite, 3.9, 240 / 4, 27, rifleshooting_delay, 10);
+        player.upperbodySprite.setTexture(PTexSSRU);
+        animation(player.upperbodySprite, 3.9, 240 / 4.0, 27, rifleshooting_delay, 10);
     }
 }
 void crouchingAnimation()
@@ -2760,59 +2681,51 @@ void crouchingAnimation()
         if (player.gun == PISTOL)
         {
             liser.shooting(liser);
-            player.lowerbodyTex.loadFromFile(pathh + "Shooting - Crouching (Pistol) Sprite Sheet.png");
+            player.lowerbodySprite.setTexture(PTexSCPL);
+
             animation(player.lowerbodySprite, 9.9, 520 / 10, 29, pistolshooting_delay, 14);
         }
         else if (player.gun == RIFLE)
         {
             pistol.shooting(pistol);
-            player.lowerbodyTex.loadFromFile(pathh + "Shooting - Crouching (Rifle) Sprite Sheet.png");
+            player.lowerbodySprite.setTexture(PTexSCRL);
             animation(player.lowerbodySprite, 3.9, 268 / 4, 28, pistolshooting_delay, 14);
         }
         player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y - 10);
     }
     else if (Keyboard::isKeyPressed(Keyboard::K))
     {
-        player.lowerbodyTex.loadFromFile(pathh + "Melee - Crouching (Pistol) Sprite Sheet.png");
-        player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y - 30);
-        animation(player.lowerbodySprite, 6.9, 294 / 7, 35, pistolshooting_delay, 15);
+        player.melee_animation();
+        player.holding_knife = true;
     }
     else
     {
         player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y);
         if (player.gun == PISTOL)
         {
-            player.lowerbodyTex.loadFromFile(pathh + "Idle - Crouching (Pistol) Sprite Sheet.png");
-            animation(player.lowerbodySprite, 3.9, 136 / 4, 24, idle, 4);
+            player.lowerbodySprite.setTexture(PTexICPL);
+            animation(player.lowerbodySprite, 3.9, 136 / 4.0, 24, idle, 4);
         }
-        else if (player.gun == RIFLE && rifle.ammo !=0)
+        else if (player.gun == RIFLE && rifle.ammo != 0)
         {
-            player.lowerbodyTex.loadFromFile(pathh + "Idle - Crouching (Rifle) Sprite Sheet.png");
-            animation(player.lowerbodySprite, 3.9, 164 / 4, 24, idle, 4);
+            player.lowerbodySprite.setTexture(PTexICRL);
+            animation(player.lowerbodySprite, 3.9, 164 / 4.0, 24, idle, 4);
         }
     }
-}
-void meeleAnimation()
-{
-    // melee animation when pl standing
-    player.lowerbodyTex.loadFromFile(pathh + "Melee (Pistol) Sprite Sheet Lower Body.png");
-    animation(player.lowerbodySprite, 5.9, 288 / 6, 53, melee_delay, 12);
-    player.upperbodyTex.loadFromFile(pathh + "Melee (Pistol) Sprite Sheet Upper Body.png");
-    animation(player.upperbodySprite, 5.9, 288 / 6, 53, melee_delay, 12);
 }
 void jumpingAnimation(float delay)
 {
     if (player.gun == PISTOL)
     {
-        player.upperbodyTex.loadFromFile(pathh + "Jumping (Pistol) Sprite Sheet Upper Body.png");
+        player.upperbodySprite.setTexture(PTexJPU);
         animation(player.upperbodySprite, 10.9, 319.0 / 11, 49, delay, 5);
     }
     else if (player.gun == RIFLE)
     {
-        player.upperbodyTex.loadFromFile(pathh + "Jumping (Rifle) Sprite Sheet.png");
+        player.upperbodySprite.setTexture(PTexJRU);
         animation(player.upperbodySprite, 5.9, 222 / 6, 27, delay, 5);
     }
-    player.lowerbodyTex.loadFromFile(pathh + "Jumping (Pistol) Sprite Sheet Lower Body.png");
+    player.lowerbodySprite.setTexture(PTexJPL);
     animation(player.lowerbodySprite, 10.9, 319.0 / 11, 49, delay, 6);
 }
 bool collisonPl(RectangleShape arr[], int size)
@@ -2856,7 +2769,7 @@ void playerDamageFromEnemy1()
                 {
                     player.health -= RS[i].damage;
 
-                    
+
 
                     player.is_getting_damaged = 1;
                     RS[i].bullet[j].second = 0;
@@ -2893,7 +2806,7 @@ void playerDeathAnimation()
         //   if (player.gun == PISTOL)
           // {
         player.one_sprite_needed = 1;
-        player.lowerbodyTex.loadFromFile(pathh + "Dying Sprite Sheet.png");
+        player.lowerbodySprite.setTexture(PTexDL);
         player.lowerbodySprite.setOrigin(480 / 10 / 2, 0);
         animiindecator[30] += 0.1;
         if (animiindecator[30] > 9.9)
@@ -2902,12 +2815,6 @@ void playerDeathAnimation()
             player.isdead = 1;
         }
         player.lowerbodySprite.setTextureRect(IntRect(int(animiindecator[30]) * 480 / 10, 0, 480 / 10, 44));
-        //   }
-        //   else if (player.gun == RIFLE)
-        //   {
-
-        //   }
-
     }
     else
     {
@@ -3001,6 +2908,27 @@ void texture_setup()
     RWTexRun.loadFromFile("RW Running Sprite Sheet.png");
     RWTexAttack.loadFromFile("RW Fighting Sprite Sheet.png");
     RWTexDeath.loadFromFile("RW Dying Sprite Sheet.png");
+    PTexMU.loadFromFile("Melee (Pistol) Sprite Sheet Upper Body.png");
+    PTexML.loadFromFile("Melee (Pistol) Sprite Sheet Lower Body.png");
+    PTexRPU.loadFromFile("Running (Pistol) Sprite Sheet Upper Body.png");
+    PTexRPL.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
+    PTexRRU.loadFromFile("Running (Rifle) Sprite Sheet.png");
+    PTexRRL.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
+    PTexSSPU.loadFromFile("Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
+    PTexSSRU.loadFromFile("Shooting - Standing (Rifle) Sprite Sheet.png");
+    PTexIPSL.loadFromFile("Idle (Pistol) Sprite Sheet Lower Body.png");
+    PTexIPSU.loadFromFile("Idle (Pistol) Sprite Sheet Upper Body.png");
+    PTexIRL.loadFromFile("Idle (Rifle) Sprite Sheet Lower Body.png");
+    PTexIRU.loadFromFile("Idle (Rifle) Sprite Sheet Upper Body.png");
+    PTexSCPL.loadFromFile("Shooting - Crouching (Pistol) Sprite Sheet.png");
+    PTexIPL.loadFromFile("Idle (Pistol) Sprite Sheet Lower Body.png");
+    PTexSCRL.loadFromFile("Shooting - Crouching (Rifle) Sprite Sheet.png");
+    PTexICPL.loadFromFile("Idle - Crouching (Pistol) Sprite Sheet.png");
+    PTexICRL.loadFromFile("Idle - Crouching (Rifle) Sprite Sheet.png");
+    PTexJPU.loadFromFile("Jumping (Pistol) Sprite Sheet Upper Body.png");
+    PTexJRU.loadFromFile("Jumping (Rifle) Sprite Sheet.png");
+    PTexJPL.loadFromFile("Jumping (Pistol) Sprite Sheet Lower Body.png");
+    PTexDL.loadFromFile("Dying Sprite Sheet.png");
 }
 void mouse_pos()
 {
