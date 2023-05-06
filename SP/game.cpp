@@ -29,7 +29,9 @@ pistolshooting_delay = 0.007, rifleshooting_delay = 0.005,
 plVelocity = 0.2,
 plScale = 3.25,
 melee_delay = 0.003;
-Texture TS_BGTex, TS_TandGTex, TS_LTex, TS_VTex, TS_LogoTex, TS_PETex, TS_buttonsTex, TS_SSTex, TS_OlTex, OptionsTex, MusicControlTex, PMTex;
+Texture TS_BGTex, TS_TandGTex, TS_LTex, TS_VTex, TS_LogoTex, TS_PETex, 
+TS_buttonsTex, TS_SSTex, TS_OlTex, OptionsTex, MusicControlTex, PMTex, 
+RWTexRun, RWTexAttack, RWTexDeath;
 Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr;
 Music TS_BGTheme;
 Music TS_BGFireFX;
@@ -54,6 +56,7 @@ int full_time_played = 0;
 
 // DECLRATIONS
 
+void texture_setup();
 void window_draw();
 void mouse_pos();
 void TS_Setups();
@@ -93,7 +96,8 @@ struct Player
     Sprite upperbodySprite, lowerbodySprite;
     RectangleShape rec;//make rectangle to better collision
     Vector2f Velocity = { 0,0 };
-    int health = 100;
+    float health = 100;
+    int score = 0;
     int gun = PISTOL;
     bool canshoot = 0;
     bool crouch = 0;
@@ -120,6 +124,9 @@ struct Player
         //rectangle
         player.rec.setPosition(player.upperbodySprite.getPosition().x - 50, player.upperbodySprite.getPosition().y);
         player.rec.setSize(Vector2f(75, 130));
+    }
+    void score_increase(){
+        //if (hud.score_increase_timer<)
     }
 };
 Player player;
@@ -598,7 +605,7 @@ struct HUD {
     Texture score_num_tex;
     Sprite score_num_sprite[6];
     int score_num_index[6]{ 9,9,9,9,9,9 };
-
+	Clock score_increase_timer;
     void setup(HUD& hud) {
         hud.HP_bar_tex.loadFromFile("Health Bar.png");
         hud.HP_bar_sprite.setTexture(hud.HP_bar_tex);
@@ -700,7 +707,8 @@ struct HUD {
         window.draw(hud.time_num1_sprite);
         hud.time_num2_sprite.setTextureRect(IntRect(time_num2_index * (550 / 10), 0, 550 / 10, 55));
         window.draw(hud.time_num2_sprite);
-
+		for (int i = 0; i < 6; i++)
+			hud.score_num_sprite[i].setTextureRect(IntRect(score_num_index[i] * (360 / 10), 0, 360 / 10, 36));
         for (int i = 0; i < 6; i++)
             window.draw(hud.score_num_sprite[i]);
 		for (int i = 0; i < 3; i++)
@@ -714,9 +722,16 @@ struct HUD {
         else if (player.gun == PISTOL)
             window.draw(hud.infinity_sprite);
     }
+    void HUD_mechanics_call(){
+		hud.positions(hud);
+        hud.time_calculation();
+        hud.ammo_display();
+        hud.score_display();
+        hud.hp_display();
+    }
     void time_calculation() {
         hud_int_time = hud_time.getElapsedTime().asSeconds();
-        if (!(time_num1_index == 0 && time_num2_index == 0)) {
+        if (hud_time.getElapsedTime().asSeconds() <= 99) {
             time_num2_index = 9 - (hud_int_time % 10);
             time_num1_index = 9 - (hud_int_time / 10);
         }
@@ -730,6 +745,21 @@ struct HUD {
         ammo_num_index[1] = 9-((rifle.ammo/10)-(rifle.ammo/100)*10);
         ammo_num_index[0] = 9 - (rifle.ammo / 100);
 
+    }
+    void score_display(){
+        //123456
+        score_num_index[5] = 9 - (player.score % 10);// 6
+        score_num_index[4] =  9-((player.score/10)-(player.score/100)*10);//5
+        score_num_index[3] =  9-((player.score/100)-(player.score/1000)*10);//4
+		score_num_index[2] = 9 - ((player.score / 1000) - (player.score / 10000) * 10);//3
+		score_num_index[1] = 9 - ((player.score / 10000) - (player.score / 100000) * 10);//2
+        score_num_index[0] =  9-(player.score/100000);//1
+    }
+    void hp_display(){
+        if (player.health>=20)
+        hp_index = 5 - ((int)player.health / 20);
+        else if (player.health<=0)
+            hp_index = 5;
     }
 }hud;
 //ground & wall
@@ -751,7 +781,7 @@ struct Enemy1
     Vector2f velocity = { 0,0 };
 
     int damage = 1;
-    int health = 10;
+    float health = 10;
     float sprite_indicator[10];
     bool isCarrying_a_weapon = 0;
     bool death_animation_done = 0, is_getting_damaged = 0;
@@ -906,6 +936,7 @@ struct Enemy1
                 if (enemy1[i].health <= 0)
                 {
                     enemy1[i].death_animation(i, enemy1);
+                    
                 }
             }
         }
@@ -1044,6 +1075,7 @@ struct Enemy1
             {
                 enemy1[i].sprite_indicator[1] = 0.2;
                 enemy1[i].death_animation_done = 1;
+				player.score += 100;
             }
             enemy1[i].sprite.setTextureRect(IntRect(int(enemy1[i].sprite_indicator[1]) * 341 / 11, 0, 341 / 11, 39));
 
@@ -1097,29 +1129,164 @@ struct Enemy1
 
 struct Enemy2
 {
-    Texture RWTex;
     Sprite RWSpr;
-    int RwInitialPos = 12500, hp = 10, current_status, damage = 10;
-    
+    int RwInitialPos = 12500, health = 10, damage = 0.2;
+    float run_indicator = 0, attack_indicator = 0, death_indicator = 0;
+    bool is_getting_damaged = false, is_alive = true;
+    string current_status = "";
+    Clock damage_timer;
 
-    void setup(Enemy2 enemy2[5])
+    void setup()
+    {
+        for (int i = 0; i < 5; i++)
+        {  
+            enemy2[i].RWSpr.setTexture(RWTexRun);
+            enemy2[i].RWSpr.setScale(plScale, plScale);
+            enemy2[i].RWSpr.setTextureRect(IntRect(0, 0, 36, 48));
+            enemy2[i].RWSpr.setPosition(RwInitialPos + i * 1500, 750);
+        }
+    }
+    void movement(Enemy2 &s)
+    {
+        s.RWSpr.setTexture(RWTexRun);
+        s.RWSpr.setOrigin(0, 0);
+        if (player.rec.getPosition().x < s.RWSpr.getPosition().x)
+        {
+            
+            s.RWSpr.setScale(plScale, plScale);
+            EnemiAnimation(s.RWSpr, 11, 49, 52, 0.02, s.run_indicator);
+            s.RWSpr.move(-5, 0);
+        }
+        else
+        {
+            s.RWSpr.setScale(-plScale, plScale);
+            EnemiAnimation(s.RWSpr, 11, 49, 52, 0.02, s.run_indicator);
+            s.RWSpr.move(5, 0);
+        }
+        
+    }
+    void Damaged()
     {
         for (int i = 0; i < 5; i++)
         {
-            enemy2[i].RWTex.loadFromFile(pathh + "RW Idle Sprite Sheet.png");
-            enemy2[i].RWSpr.setTexture(enemy2[i].RWTex);
-            enemy2[i].RWSpr.setScale(plScale, plScale);
-            enemy2[i].RWSpr.setTextureRect(IntRect(0, 0, 36, 48));
-            enemy2[i].RWSpr.setPosition(RwInitialPos + i * 200, 765);
+            if (enemy2[i].is_alive)
+            {
+
+                for (int j = 0; j < pistol.rects.size(); j++)
+                {
+                    if (enemy2[i].RWSpr.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
+                    {
+                        enemy2[i].health -= pistol.damage;
+                        if (enemy2[i].health > 0)
+                            enemy2[i].is_getting_damaged = 1;
+                        pistol.rects[j].second.first = 0;
+                    }
+                }
+                for (int j = 0; j < rifle.rects.size(); j++)
+                {
+                    if (enemy2[i].RWSpr.getGlobalBounds().intersects(rifle.rects[j].first.getGlobalBounds()) && rifle.rects[j].second.first != 0)
+                    {
+                        enemy2[i].health -= rifle.damage;
+                        if(enemy2[i].health > 0)
+                            enemy2[i].is_getting_damaged = 1;
+                        rifle.rects[j].second.first = 0;
+                    }
+                }
+                for (int j = 0; j < liser.rects.size(); j++)
+                {
+                    if (enemy2[i].RWSpr.getGlobalBounds().intersects(liser.rects[j].first.getGlobalBounds()) && liser.rects[j].second != 0)
+                    {
+                        enemy2[i].health -= liser.damage;
+                        if (enemy2[i].health > 0)
+                            enemy2[i].is_getting_damaged = 1;
+                        liser.rects[j].second = 0;
+                    }
+                }
+                if (enemy2[i].is_getting_damaged == 1)  // this adds red color to enemies when damaged
+                {
+                    if (enemy2[i].damage_timer.getElapsedTime().asMilliseconds() <= 300) {
+                        enemy2[i].RWSpr.setColor(Color::Red);
+                    }
+                    else {
+                        enemy2[i].is_getting_damaged = 0;
+                    }
+                }
+                else
+                {
+                    enemy2[i].RWSpr.setColor(Color::White);
+                    enemy2[i].damage_timer.restart();
+                }
+                if (enemy2[i].health <= 0)
+                {
+                    death(enemy2[i]);
+
+                }
+            }
         }
     }
-    void movement();
-    void fighting();
-    void death();
+    void attack(Enemy2 &s)
+    {
+        s.RWSpr.setTexture(RWTexAttack);
+        s.RWSpr.setOrigin(92 / 2.0, 5);
+        player.is_getting_damaged = true;
+        player.health -= s.damage;
+        if(player.rec.getPosition().x < s.RWSpr.getPosition().x)
+        {
+            s.RWSpr.setScale(plScale, plScale);
+            EnemiAnimation(s.RWSpr, 8, 92, 54, 0.02, s.attack_indicator);
+        }
+        else
+        {           
+            s.RWSpr.setScale(-plScale, plScale);
+            EnemiAnimation(s.RWSpr, 8, 92, 54, 0.02, s.attack_indicator);
+        }
+    }
+    void death(Enemy2 &s) 
+    {
+        s.RWSpr.setTexture(RWTexDeath);
+        s.RWSpr.setOrigin(55 / 2.0, 0);
+        s.RWSpr.setTextureRect(IntRect(int(s.death_indicator) * 55, 0, 55, 45));
+        s.death_indicator += 0.02 * 10;
+        if (s.death_indicator > 10)
+        {
+            s.death_indicator = 0;
+            s.is_alive = false;
+        }
 
-    void status();
+    }
 
-    void draw(Enemy2 enemy2[5])
+    void status()
+    {
+        if (bgCounter == LEVEL_1_B_BG)
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                if (enemy2[i].is_alive)
+                {
+                    if (!player.rec.getGlobalBounds().intersects(enemy2[i].RWSpr.getGlobalBounds()))
+                        enemy2[i].current_status = "move";
+                    else
+                        enemy2[i].current_status = "attack";
+                }
+                else
+                    enemy2[i].RWSpr.setScale(0, 0);
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                if(enemy2[i].is_alive && enemy2[i].health > 0)
+                {
+                    if (enemy2[i].current_status == "move")
+                        movement(enemy2[i]);
+                    else if (enemy2[i].current_status == "attack")
+                        attack(enemy2[i]);
+                }
+
+            }
+        }
+    }
+
+    void draw()
     {
         for (int i = 0; i < 5; i++)
             window.draw(enemy2[i].RWSpr);
@@ -1169,6 +1336,7 @@ struct Tank
     int dmg = 100;
     int health = 1000;
     int last_key = RIGHT;
+    bool is_alive = 1;
     //127 × 48 pixels
     void setup(Tank& tank)
     {
@@ -1246,6 +1414,64 @@ struct Tank
             }
         }
     }
+	//void Damaged(Tank& tank)
+	//{
+	//		if (tank.is_alive)
+	//		{
+
+	//			for (int j = 0; j < pistol.rects.size(); j++)
+	//			{
+	//				if (tank.sprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
+	//				{
+	//					tank.velocity.x = 0;
+	//					enemy1[i].health -= pistol.damage;
+	//					enemy1[i].is_getting_damaged = 1;
+	//					pistol.rects[j].second.first = 0;
+	//				}
+	//			}
+	//			for (int j = 0; j < rifle.rects.size(); j++)
+	//			{
+	//				if (enemy1[i].sprite.getGlobalBounds().intersects(rifle.rects[j].first.getGlobalBounds()) && rifle.rects[j].second.first != 0)
+	//				{
+	//					enemy1[i].velocity.x = 0;
+	//					enemy1[i].health -= rifle.damage;
+	//					enemy1[i].is_getting_damaged = 1;
+	//					rifle.rects[j].second.first = 0;
+	//				}
+	//			}
+	//			for (int j = 0; j < liser.rects.size(); j++)
+	//			{
+	//				if (enemy1[i].sprite.getGlobalBounds().intersects(liser.rects[j].first.getGlobalBounds()) && liser.rects[j].second != 0)
+	//				{
+	//					enemy1[i].velocity.x = 0;
+	//					enemy1[i].health -= liser.damage;
+	//					enemy1[i].is_getting_damaged = 1;
+	//					liser.rects[j].second = 0;
+	//				}
+	//			}
+	//			if (enemy1[i].is_getting_damaged == 1)  // this adds red color to enemies when damaged
+	//			{
+	//				if (enemy1[i].damage_timer.getElapsedTime().asMilliseconds() <= 300) {
+	//					enemy1[i].sprite.setColor(Color::Red);
+	//				}
+	//				else {
+	//					enemy1[i].is_getting_damaged = 0;
+	//				}
+	//			}
+	//			else
+	//			{
+	//				enemy1[i].sprite.setColor(Color::White);
+	//				enemy1[i].damage_timer.restart();
+	//			}
+	//			if (enemy1[i].health <= 0)
+	//			{
+	//				enemy1[i].death_animation(i, enemy1);
+
+	//			}
+	//		}
+	//	}
+	//}
+
 }tank;
 
 
@@ -1333,6 +1559,7 @@ struct Enemy3
             if (enemy3[i].health <= 0)
             {
                 enemy3[i].stopped = 1;
+                
                 if (!enemy3[i].death_animation_done)
                 {
                     enemy3[i].velocity.x = 0;
@@ -1343,6 +1570,7 @@ struct Enemy3
                     {
                         enemy3[i].sprite_indicator[1] = 0.2;
                         enemy3[i].death_animation_done = 1;
+						player.score += 100;
                     }
                     enemy3[i].sprite.setTextureRect(IntRect(int(enemy3[i].sprite_indicator[1]) * 341 / 11, 0, 341 / 11, 39));
 
@@ -1585,10 +1813,11 @@ RectangleShape powerups(Vector2f(50, 50));
 
 int main()
 {
+    texture_setup();
     blood.setup(blood);
     window.setFramerateLimit(60);
     RS->setup(RS);
-    enemy2->setup(enemy2);
+    enemy2->setup();
     tank.setup(tank);
     hud.setup(hud);
     bgSetup();
@@ -1985,6 +2214,8 @@ void windowfunction()
     if(enemy3.size()>0)
         enemy3[0].Gravity(enemy3);
     RS->Damaged(RS);
+    enemy2->status();
+    enemy2->Damaged();
     playerDamageFromEnemy1();
 
     if (enemy3.size() < 30)
@@ -2002,9 +2233,7 @@ void windowfunction()
     window.clear();
     window_draw();
     window.setView(view);
-    hud.positions(hud);
-    hud.time_calculation();
-	hud.ammo_display();
+    hud.HUD_mechanics_call();
     transition_pos_check();
 }
 void BGanimation()
@@ -2460,7 +2689,7 @@ void window_draw()
     // window.draw(ground[0]);
     hud.draw(hud);
     //window.draw(powerups);
-    enemy2->draw(enemy2);
+    enemy2->draw();
     tank.draw(tank);
 }
 void moveToRight(Sprite& s)
@@ -2627,8 +2856,7 @@ void playerDamageFromEnemy1()
                 {
                     player.health -= RS[i].damage;
 
-                    if (player.health % 20 == 0)
-                        hud.hp_index++;
+                    
 
                     player.is_getting_damaged = 1;
                     RS[i].bullet[j].second = 0;
@@ -2643,8 +2871,7 @@ void playerDamageFromEnemy1()
                 {
                     player.health -= enemy3[i].damage;
 
-                    if (player.health % 20 == 0)
-                        hud.hp_index++;
+
 
                     player.is_getting_damaged = 1;
                     enemy3[i].bullet[j].second = 0;
@@ -2768,6 +2995,13 @@ void TS_Setups()
     MenuScroll.setBuffer(MenuScrollB);
     MenuScroll.setVolume(100);//100;
 }
+
+void texture_setup()
+{
+    RWTexRun.loadFromFile("RW Running Sprite Sheet.png");
+    RWTexAttack.loadFromFile("RW Fighting Sprite Sheet.png");
+    RWTexDeath.loadFromFile("RW Dying Sprite Sheet.png");
+}
 void mouse_pos()
 {
     if (Mouse::isButtonPressed(Mouse::Left))
@@ -2776,4 +3010,5 @@ void mouse_pos()
         cout << mousePos.x << ' ' << mousePos.y << '\n';
     }
 }
+
 ///
