@@ -677,13 +677,13 @@ struct HUD {
         for (int i = 0; i < 6; i++)
         {
             hud.score_num_sprite[i].setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
-            hud.score_num_sprite[i].setPosition(view.getCenter().x - (850 * view.getSize().x / 1920.0) + i * 38, view.getCenter().y - (520 * view.getSize().y / 1080.0));
+            hud.score_num_sprite[i].setPosition(view.getCenter().x - (850 * view.getSize().x / 1920.0) + i * 38 * view.getSize().x / 1920.0, view.getCenter().y - (520 * view.getSize().y / 1080.0));
         }
 
         for (int i = 0; i < 3; i++)
         {
             hud.ammo_num_sprite[i].setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
-            hud.ammo_num_sprite[i].setPosition(view.getCenter().x - (771 * view.getSize().x / 1920.0) + i * 41, view.getCenter().y + (460 * view.getSize().y * 1080.0));
+            hud.ammo_num_sprite[i].setPosition(view.getCenter().x - (771 * view.getSize().x / 1920.0) + i * 41 * view.getSize().x / 1920.0, view.getCenter().y + (460 * view.getSize().y / 1080.0));
         }
 
     }
@@ -1099,7 +1099,8 @@ struct Enemy2
 {
     Texture RWTex;
     Sprite RWSpr;
-    int RwInitialPos = 12500;
+    int RwInitialPos = 12500, hp = 10, current_status, damage = 10;
+    
 
     void setup(Enemy2 enemy2[5])
     {
@@ -1115,6 +1116,9 @@ struct Enemy2
     void movement();
     void fighting();
     void death();
+
+    void status();
+
     void draw(Enemy2 enemy2[5])
     {
         for (int i = 0; i < 5; i++)
@@ -2456,7 +2460,7 @@ void window_draw()
     // window.draw(ground[0]);
     hud.draw(hud);
     //window.draw(powerups);
-    //enemy2->draw(enemy2);
+    enemy2->draw(enemy2);
     tank.draw(tank);
 }
 void moveToRight(Sprite& s)
