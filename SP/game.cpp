@@ -339,8 +339,11 @@ struct MusicSoundControl
 
         else
         {
-            TS_OlSpr.setPosition(view.getCenter().x - 1000, view.getCenter().y - 600);
-            MusicControlSpr.setPosition(view.getCenter().x - 400, view.getCenter().y - 150);
+            TS_OlSpr.setScale(3 * view.getSize().x / 1920.0, 3 * view.getSize().y / 1080.0);
+            TS_OlSpr.setPosition(view.getCenter().x - (1000 * view.getSize().x / 1920), view.getCenter().y - (600 * view.getSize().y / 1080.0));
+            MusicControlSpr.setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
+            MusicControlSpr.setPosition(view.getCenter().x - (400 * view.getSize().x / 1920.0), view.getCenter().y - (150 * view.getSize().y / 1080.0));
+
             MusicControlSpr.setTextureRect(IntRect((selected - 1) * 755, 0, 755, 240));
             window.clear();
             window_draw();
@@ -373,8 +376,10 @@ struct Pause
     }
     void draw()
     {
-        TS_OlSpr.setPosition(view.getCenter().x - 1000, view.getCenter().y - 600);
-        PMSpr.setPosition(view.getCenter().x - 195, view.getCenter().y - 60);
+        TS_OlSpr.setScale(3 * view.getSize().x / 1920.0, 3 * view.getSize().y / 1080.0);
+        TS_OlSpr.setPosition(view.getCenter().x - (1000 * view.getSize().x / 1920), view.getCenter().y - (600 * view.getSize().y / 1080.0));
+        PMSpr.setScale(0.7 * view.getSize().x / 1920.0, 0.7 * view.getSize().y / 1080.0);
+        PMSpr.setPosition(view.getCenter().x - (195 * view.getSize().x / 1920.0), view.getCenter().y - 60 * (view.getSize().y / 1080.0));
         PMSpr.setTextureRect(IntRect((selected - 1) * 588, 0, 588, 352));
         window.draw(TS_OlSpr);
         window.draw(PMSpr);
@@ -482,7 +487,8 @@ struct OptionsScreen
         }
         else
         {
-            OptionsSpr.setPosition(view.getCenter().x - 420, view.getCenter().y - 100);
+            OptionsSpr.setPosition(view.getCenter().x - (420 * view.getSize().x / 1920.0), view.getCenter().y - (100 * view.getSize().y / 1080.0));
+            OptionsSpr.setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
             OptionsSpr.setTextureRect(IntRect(OptionsSprCnt * 843, 0, 843, 441));
             window.clear();
             window_draw();
@@ -641,30 +647,43 @@ struct HUD {
 
     }
     void positions(HUD& hud) {
-        hud.HP_bar_sprite.setPosition(view.getCenter().x - 850, view.getCenter().y - 474);
+        hud.HP_bar_sprite.setScale(3.455 * view.getSize().x / 1920.0, 3.455 * view.getSize().y / 1080.0);
+        hud.HP_bar_sprite.setPosition(view.getCenter().x - (850 * view.getSize().x / 1920.0), view.getCenter().y - (474 * view.getSize().y / 1080.0));
+        
+        hud.Mug_shot_sprite.setScale(3.5 * view.getSize().x / 1920.0, 3.5 * view.getSize().y / 1080.0);
+        hud.Mug_shot_sprite.setPosition(view.getCenter().x - (940 * view.getSize().x / 1920.0), view.getCenter().y - (520 * view.getSize().y / 1080.0));
 
-        hud.Mug_shot_sprite.setPosition(view.getCenter().x - 940, view.getCenter().y - 520);
+        hud.lives_sprite.setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
+        hud.lives_sprite.setPosition(view.getCenter().x + (783 * view.getSize().x / 1920.0), view.getCenter().y - (520 * view.getSize().y / 1080.0));
 
-        hud.lives_sprite.setPosition(view.getCenter().x + 783, view.getCenter().y - 520);
+        hud.infinity_sprite.setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
+        hud.infinity_sprite.setPosition(view.getCenter().x - (771 * view.getSize().x / 1920.0), view.getCenter().y + (453 * view.getSize().y / 1080.0));
 
-        hud.infinity_sprite.setPosition(view.getCenter().x - 771, view.getCenter().y + 453);
+        hud.weapons_holder_sprite.setScale(2.7 * view.getSize().x / 1920.0, 2.7 * view.getSize().y / 1080.0);
+        hud.weapons_holder_sprite.setPosition(view.getCenter().x - (940 * view.getSize().x / 1920.0), view.getCenter().y + (439 * view.getSize().y / 1080.0));
 
-        hud.weapons_holder_sprite.setPosition(view.getCenter().x - 940, view.getCenter().y + 439);
+        hud.lives_number_1_sprite.setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
+        hud.lives_number_1_sprite.setPosition(view.getCenter().x + (882 * view.getSize().x / 1920.0), view.getCenter().y - (510 * view.getSize().y / 1080.0));
 
-        hud.lives_number_1_sprite.setPosition(view.getCenter().x + 882, view.getCenter().y - 510);
-        hud.lives_number_2_sprite.setPosition(view.getCenter().x + 911, view.getCenter().y - 510);
+        hud.lives_number_2_sprite.setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
+        hud.lives_number_2_sprite.setPosition(view.getCenter().x + (911 * view.getSize().x / 1920.0), view.getCenter().y - (510 * view.getSize().y / 1080.0));
 
-        hud.time_num1_sprite.setPosition(view.getCenter().x - 57, view.getCenter().y - 520);
-        hud.time_num2_sprite.setPosition(view.getCenter().x + 2, view.getCenter().y - 520);
+        hud.time_num1_sprite.setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
+        hud.time_num1_sprite.setPosition(view.getCenter().x - (57 * view.getSize().x / 1920.0), view.getCenter().y - (520 * view.getSize().y / 1080.0));
+
+        hud.time_num2_sprite.setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
+        hud.time_num2_sprite.setPosition(view.getCenter().x + (2 * view.getSize().x / 1920.0), view.getCenter().y - (520 * view.getSize().y /1080.0));
 
         for (int i = 0; i < 6; i++)
         {
-            hud.score_num_sprite[i].setPosition(view.getCenter().x - 850 + i * 38, view.getCenter().y - 520);
+            hud.score_num_sprite[i].setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
+            hud.score_num_sprite[i].setPosition(view.getCenter().x - (850 * view.getSize().x / 1920.0) + i * 38, view.getCenter().y - (520 * view.getSize().y / 1080.0));
         }
 
         for (int i = 0; i < 3; i++)
         {
-            hud.ammo_num_sprite[i].setPosition(view.getCenter().x - 771 + i * 41, view.getCenter().y + 460);
+            hud.ammo_num_sprite[i].setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
+            hud.ammo_num_sprite[i].setPosition(view.getCenter().x - (771 * view.getSize().x / 1920.0) + i * 41, view.getCenter().y + (460 * view.getSize().y * 1080.0));
         }
 
     }
