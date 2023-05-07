@@ -12,8 +12,15 @@
 #define LEVEL_1_B_BG 1
 #define LEVEL_1_C_BG 2
 #define LEVEL_1_D_BG 3
+
+//player.gun 
 #define PISTOL 1
 #define RIFLE 2
+#define LISER 3
+#define FLAME 4
+#define BIOCHEMICAL 5
+
+//power ups
 #define ENEMY_PLAYER_RANGE 700
 #define ENEMY_PLAYER_SHOOTING_RANGE 400
 #define HEALTH_KIT 1
@@ -21,6 +28,9 @@
 #define SPEED_POTION 3
 #define DAMAGE_POTION 4
 #define RIFLE_AMMO 5
+#define LISER_AMMO 6
+#define FLAME_AMMO 7
+#define BIOCHEMICAL_AMMO 8
 using namespace std;
 using namespace sf;
 
@@ -28,7 +38,7 @@ RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Default);
 Event event;
 
 //make the variable=
-string pathh ="";
+string pathh = "";
 const float idle = 0.001,
 pistolshooting_delay = 0.007, rifleshooting_delay = 0.005,
 plVelocity = 0.2,
@@ -38,7 +48,7 @@ Texture TS_BGTex, TS_TandGTex, TS_LTex, TS_VTex, TS_LogoTex, TS_PETex,
 TS_buttonsTex, TS_SSTex, TS_OlTex, OptionsTex, MusicControlTex, PMTex,
 RWTexRun, RWTexAttack, RWTexDeath, PTexSCPL, PTexIPL, PTexSCRL, PTexICPL, PTexICRL, PTexJRU, PTexJPL, PTexDL,
 PTexMU, PTexML, PTexRPU, PTexRPL, PTexRRU, PTexRRL, PTexSSPU, PTexSSRU, PTexIPSL, PTexIPSU, PTexIRL, PTexIRU, PTexJPU,
-health_kit_tex, health_potion_tex, speed_potion_tex, damage_potion_tex;
+health_kit_tex, health_potion_tex, speed_potion_tex, damage_potion_tex, rifle_ammo_tex;
 Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr;
 Music TS_BGTheme;
 Music TS_BGFireFX;
@@ -116,7 +126,7 @@ struct Player
     Clock damage_timer;
     bool isdead = 0;
     bool holding_knife = 0;
-    void Playersetup(Player &player)
+    void Playersetup(Player& player)
     {
         //sprite upperbody
         player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
@@ -134,7 +144,7 @@ struct Player
         player.rec.setPosition(player.upperbodySprite.getPosition().x - 50, player.upperbodySprite.getPosition().y);
         player.rec.setSize(Vector2f(75, 130));
     }
-    void melee_animation(Player&player)
+    void melee_animation(Player& player)
     {
         player.upperbodySprite.setOrigin(48 / 2.0, 15);
         player.upperbodySprite.setTexture(PTexMU);
@@ -162,7 +172,7 @@ struct Pistol
     int range = 900;
     void setup(Pistol& pistol)
     {
-        pistol.tex.loadFromFile(pathh+"Handgun Ammo.png");
+        pistol.tex.loadFromFile(pathh + "Handgun Ammo.png");
     }
     void update_bUllets_distance(Pistol& pistol, int i)
     {
@@ -220,7 +230,7 @@ struct Rifle
     Texture tex;
     void setup(Rifle& rifle)
     {
-        rifle.tex.loadFromFile(pathh+"Rifle Ammo.png");
+        rifle.tex.loadFromFile(pathh + "Rifle Ammo.png");
     }
     void update_bUllets_distance(Rifle& rifle, int i)
     {
@@ -273,16 +283,25 @@ struct Rifle
 //liser
 struct Liser
 {
-    float damage = 0.001;
+    float damage = 0.1;
     vector<pair<RectangleShape, int>>rects;
-
+    Clock shooting_timer;
     void shooting(Liser& liser)
     {
+        if (liser.shooting_timer.getElapsedTime().asSeconds() > 6)
+        {
+            liser.shooting_timer.restart();
+        }
+        liser.damage = 0.01 * liser.shooting_timer.getElapsedTime().asMilliseconds();
         Vector2f pl = player.lowerbodySprite.getPosition();
-        RectangleShape rect(sf::Vector2f(100, 5));
+        RectangleShape rect(sf::Vector2f(100, 2*liser.shooting_timer.getElapsedTime().asSeconds()+5));
         rect.setOrigin(-pl.x, -(pl.y + 50));
         rect.setFillColor(Color::Red);
         liser.rects.push_back({ rect ,player.last_key });
+        if (liser.shooting_timer.getElapsedTime().asSeconds() > 6)
+        {
+            liser.shooting_timer.restart();
+        }
     }
 
     void drawliser(Liser& liser)
@@ -655,45 +674,45 @@ struct HUD {
     int score_num_index[6]{ 9,9,9,9,9,9 };
     Clock score_increase_timer;
     void setup(HUD& hud) {
-        hud.HP_bar_tex.loadFromFile(pathh+"Health Bar.png");
+        hud.HP_bar_tex.loadFromFile(pathh + "Health Bar.png");
         hud.HP_bar_sprite.setTexture(hud.HP_bar_tex);
         hud.HP_bar_sprite.setScale(3.455, 3.455);
         hud.HP_bar_sprite.setTextureRect(IntRect(hp_index * (390 / 6), 0, 390 / 6, 11));
 
-        hud.Mug_shot_tex.loadFromFile(pathh+"Mugshot.png");
+        hud.Mug_shot_tex.loadFromFile(pathh + "Mugshot.png");
         hud.Mug_shot_sprite.setTexture(hud.Mug_shot_tex);
         hud.Mug_shot_sprite.setScale(3.5, 3.5);
 
-        hud.lives_tex.loadFromFile(pathh+"Lives.png");
+        hud.lives_tex.loadFromFile(pathh + "Lives.png");
         hud.lives_sprite.setTexture(hud.lives_tex);
 
-        hud.infinity_tex.loadFromFile(pathh+"Infinity.png");
+        hud.infinity_tex.loadFromFile(pathh + "Infinity.png");
         hud.infinity_sprite.setTexture(hud.infinity_tex);
 
-        hud.weapons_holder_tex.loadFromFile(pathh+"Weapons Holder.png");
+        hud.weapons_holder_tex.loadFromFile(pathh + "Weapons Holder.png");
         hud.weapons_holder_sprite.setTexture(hud.weapons_holder_tex);
         hud.weapons_holder_sprite.setScale(2.7, 2.7);
 
-        hud.lives_number_tex.loadFromFile(pathh+"Numbers Lives.png");
+        hud.lives_number_tex.loadFromFile(pathh + "Numbers Lives.png");
         hud.lives_number_1_sprite.setTexture(hud.lives_number_tex);
         hud.lives_number_1_sprite.setTextureRect(IntRect(lives_num1_index * (290 / 10), 0, 290 / 10, 29));
         hud.lives_number_2_sprite.setTexture(hud.lives_number_tex);
         hud.lives_number_2_sprite.setTextureRect(IntRect(lives_num2_index * (290 / 10), 0, 290 / 10, 29));
 
-        hud.time_num_tex.loadFromFile(pathh+"Numbers.png");
+        hud.time_num_tex.loadFromFile(pathh + "Numbers.png");
         hud.time_num1_sprite.setTexture(hud.time_num_tex);
         hud.time_num1_sprite.setTextureRect(IntRect(time_num1_index * (550 / 10), 0, 550 / 10, 55));
         hud.time_num2_sprite.setTexture(hud.time_num_tex);
         hud.time_num2_sprite.setTextureRect(IntRect(time_num2_index * (550 / 10), 0, 550 / 10, 55));
 
-        hud.score_num_tex.loadFromFile(pathh+"Numbers Score.png");
+        hud.score_num_tex.loadFromFile(pathh + "Numbers Score.png");
         for (int i = 0; i < 6; i++)
         {
             hud.score_num_sprite[i].setTexture(hud.score_num_tex);
             hud.score_num_sprite[i].setTextureRect(IntRect(score_num_index[i] * (360 / 10), 0, 360 / 10, 36));
         }
 
-        hud.ammo_num_tex.loadFromFile(pathh+"Numbers Ammo.png");
+        hud.ammo_num_tex.loadFromFile(pathh + "Numbers Ammo.png");
         for (int i = 0; i < 3; i++)
         {
             hud.ammo_num_sprite[i].setTexture(hud.ammo_num_tex);
@@ -770,7 +789,7 @@ struct HUD {
         else if (player.gun == PISTOL)
             window.draw(hud.infinity_sprite);
     }
-    void HUD_mechanics_call(HUD hud) {
+    void HUD_mechanics_call(HUD &hud) {
         hud.positions(hud);
         hud.time_calculation();
         hud.ammo_display();
@@ -812,20 +831,28 @@ struct HUD {
 }hud;
 
 //PowerUps
-struct PowerUps {
+struct PowerUps 
+{
     int pick_power_up = 1 + rand() % 5;
     Sprite powerup_sprite;
-    void drop_power_up() {
-        if (player.kill_count % 3 == 0) {
-            if (pick_power_up == HEALTH_KIT) {
+    Clock powerup_timer;
+    void drop_power_up(vector<PowerUps>&powerups )
+    {
+        powerup.pick_power_up = 1 + rand() % 5;
+        if (player.kill_count % 3 == 0)
+        {
+            if (pick_power_up == HEALTH_KIT) 
+            {
                 powerup_sprite.setTexture(health_kit_tex);
 
             }
-            else if (pick_power_up == HEALTH_POTION) {
+            else if (pick_power_up == HEALTH_POTION)
+            {
                 powerup_sprite.setTexture(health_potion_tex);
 
             }
-            else if (pick_power_up == SPEED_POTION) {
+            else if (pick_power_up == SPEED_POTION) 
+            {
                 powerup_sprite.setTexture(speed_potion_tex);
 
             }
@@ -834,14 +861,72 @@ struct PowerUps {
                 powerup_sprite.setTexture(damage_potion_tex);
 
             }
-            else if (pick_power_up == RIFLE_AMMO) {
+            else if (pick_power_up == RIFLE_AMMO)
+            {
+                powerup_sprite.setTexture(rifle_ammo_tex);
+            }
+            else if (pick_power_up == LISER_AMMO)
+            {
 
             }
-            powerup_sprite.setPosition(player.last_enemy_pos);
-            //powerups.push_back(powerup);
+            else if (pick_power_up == FLAME_AMMO)
+            {
+
+            }
+            else if (pick_power_up == BIOCHEMICAL_AMMO)
+            {
+
+            }
+            /*
+              #define LISER_AMMO 6
+              #define FLAME_AMMO 7
+              #define BIOCHEMICAL_AMMO 8
+              */
+            powerup_sprite.setPosition(player.last_enemy_pos.x,player.last_enemy_pos.y+100);
+            powerup_sprite.setScale(2.5,2.5);
+            powerups.push_back(powerup);
         }
     }
-    void apply_effects() {
+    void apply_effects(vector<PowerUps>& powerups) {
+        for (int i=0;i<powerups.size();i++){
+             if (player.rec.getGlobalBounds().intersects(powerups[i].powerup_sprite.getGlobalBounds())){
+				 if (pick_power_up == HEALTH_KIT)
+				 {
+                     player.health = 100;
+				 }
+				 else if (pick_power_up == HEALTH_POTION)
+				 {
+                     if (player.health <= 60)
+                         player.health += 40;
+                     else player.health = 100;
+				 }
+				 else if (pick_power_up == SPEED_POTION)
+				 {
+					
+
+				 }
+				 else if (pick_power_up == DAMAGE_POTION)
+				 {
+
+				 }
+				 else if (pick_power_up == RIFLE_AMMO)
+				 {
+                     rifle.ammo += 100;
+				 }
+				 else if (pick_power_up == LISER_AMMO)
+				 {
+
+				 }
+				 else if (pick_power_up == FLAME_AMMO)
+				 {
+
+				 }
+				 else if (pick_power_up == BIOCHEMICAL_AMMO)
+				 {
+
+				 }
+             }
+        }
 
     }
 }powerup;
@@ -1176,7 +1261,7 @@ struct Enemy1
                 if (player.kill_count % 3 == 0) {
                     player.last_enemy_pos.x = enemy1[i].sprite.getPosition().x;
                     player.last_enemy_pos.y = enemy1[i].sprite.getPosition().y;
-                    powerup.drop_power_up();
+                    powerup.drop_power_up(powerups);
                 }
                 enemy1[i].sprite_indicator[1] = 0.2;
                 enemy1[i].death_animation_done = 1;
@@ -2221,6 +2306,10 @@ void windowfunction()
     {
         player.gun = PISTOL;
     }
+    else if (Keyboard::isKeyPressed(Keyboard::E))
+    {
+        player.gun = LISER;
+    }
     if (rifle.ammo <= 0)
         player.gun = PISTOL;
 
@@ -2489,20 +2578,20 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
     {
         //functoin -> movement & animation
         move_with_animation(s, maxframe, x, y, delay, index);
-        if (player.gun == PISTOL)
+        if (player.gun == PISTOL || player.gun == BIOCHEMICAL || player.gun == FLAME)
             move_with_animation(player.upperbodySprite, maxframe, x, y, delay, index);
-        else if (player.gun == RIFLE)
+        else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
             move_with_animation(player.upperbodySprite, 11.9, 528 / 11, 29, delay, 32);
 
     }
 
     //move player
-    if (player.gun == PISTOL)
+    if (player.gun == PISTOL || player.gun == BIOCHEMICAL || player.gun == FLAME)
     {
         s.move(player.Velocity);
         player.upperbodySprite.move(player.Velocity);
     }
-    else if (player.gun == RIFLE)//with rifle the speed is slower than pistol
+    else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
     {
         s.move(player.Velocity.x * 0.5, player.Velocity.y);
         player.upperbodySprite.move(player.Velocity.x * 0.5, player.Velocity.y);
@@ -2553,24 +2642,33 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             if (Keyboard::isKeyPressed(Keyboard::J))
             {
                 if (player.gun == PISTOL)
-                    //liser.shooting(liser);
                     pistol.shooting(pistol);
-                else if (player.gun == RIFLE)
+                else if (player.gun == RIFLE&&rifle.ammo>0)
                     rifle.shooting(rifle);
-
+                else if(player.gun==FLAME){
+                    //flame.shooting
+                }
+                else if (player.gun == BIOCHEMICAL_AMMO)
+                {  //biohemial shooting
+                
+                }
+                else if(player.gun==LISER)
+                {//liser shooting
+                    liser.shooting(liser);
+                }
                 ShootingAnimation();//when pl (move&&shoot)
             }
             //if player move load running sprite sheet
             else
             {
                 pistol.shoot_timer = 0;
-                if (player.gun == PISTOL)
+                if (player.gun == PISTOL || player.gun == BIOCHEMICAL || player.gun == FLAME)
                 {
                     player.upperbodySprite.setTexture(PTexRPU);
                     player.lowerbodySprite.setTexture(PTexRPL);
                     animation(s, maxframe, x, y, delay, index);
                 }
-                else if (player.gun == RIFLE)
+                else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
                 {
                     player.upperbodySprite.setTexture(PTexRRU);
                     player.lowerbodySprite.setTexture(PTexRRL);
@@ -2592,11 +2690,20 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             if (Keyboard::isKeyPressed(Keyboard::J))
             {
                 if (player.gun == PISTOL)
-                    //   liser.shooting(liser);
                     pistol.shooting(pistol);
-                else if (player.gun == RIFLE)
+                else if (player.gun == RIFLE && rifle.ammo > 0)
                     rifle.shooting(rifle);
+                else if (player.gun == FLAME) {
+                    //flame.shooting
+                }
+                else if (player.gun == BIOCHEMICAL_AMMO)
+                {  //biohemial shooting
 
+                }
+                else if (player.gun == LISER)
+                {//liser shooting
+                    liser.shooting(liser);
+                }
                 ShootingAnimation();//when pl (move&&shoot)
             }
             //if player move load running sprite sheet
@@ -2604,13 +2711,13 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             {
                 rifle.shoot_timer = 0;
                 pistol.shoot_timer = 0;
-                if (player.gun == PISTOL)
+                if (player.gun == PISTOL||player.gun==BIOCHEMICAL||player.gun==FLAME)
                 {
                     player.upperbodySprite.setTexture(PTexRPU);
                     player.lowerbodySprite.setTexture(PTexRPL);
                     animation(s, maxframe, x, y, delay, index);
                 }
-                else if (player.gun == RIFLE)
+                else if (player.gun == RIFLE||player.gun==LISER)
                 {
                     player.upperbodySprite.setTexture(PTexRRU);
                     player.lowerbodySprite.setTexture(PTexRPL);
@@ -2630,19 +2737,30 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             {
 
                 // shooting animation when pl standing
-                if (player.gun == PISTOL)
+                if (player.gun == PISTOL || player.gun == BIOCHEMICAL || player.gun == FLAME)
                 {
-                    //  liser.shooting(liser);
-                    pistol.shooting(pistol);
                     player.upperbodySprite.setTexture(PTexSSPU);
                     animation(player.upperbodySprite, 9.9, 520 / 10, 41, pistolshooting_delay, 10);
                 }
-                else if (player.gun == RIFLE && rifle.ammo > 0)
+                else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
                 {
-                    cout << rifle.ammo << "   ";
-                    rifle.shooting(rifle);
                     player.upperbodySprite.setTexture(PTexSSRU);
                     animation(player.upperbodySprite, 3.9, 240 / 4, 27, rifleshooting_delay, 10);
+                }
+                if (player.gun == PISTOL)
+                    pistol.shooting(pistol);
+                else if (player.gun == RIFLE && rifle.ammo > 0)
+                    rifle.shooting(rifle);
+                else if (player.gun == FLAME) {
+                    //flame.shooting
+                }
+                else if (player.gun == BIOCHEMICAL_AMMO)
+                {  //biohemial shooting
+
+                }
+                else if (player.gun == LISER)
+                {//liser shooting
+                    liser.shooting(liser);
                 }
                 player.lowerbodySprite.setTexture(PTexIPL);
                 animation(player.lowerbodySprite, 3.9, 128 / 4, 37, 0.04, 3);
@@ -2667,7 +2785,6 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
 
     }
 }
-
 void window_draw()
 {
     for (int i = 0; i < 5; i++)
@@ -2700,9 +2817,14 @@ void window_draw()
     }
     // enemy3[0].draw(enemy3[0]);
     window.draw(ground[12]);
+
+
+    //guns
     pistol.drawpistol(window, pistol);//draw pistol bullets
     rifle.drawrifle(rifle); //draw rifle bullets
     liser.drawliser(liser);
+
+
     if (player.live && !player.isdead)
     {
         window.draw(player.lowerbodySprite);
@@ -2715,11 +2837,15 @@ void window_draw()
         if (i == 1)continue;
         window.draw(Lvl1FG[i]);
     }
+    for(int i=0;i<powerups.size();i++)
+    {
+        window.draw(powerups[i].powerup_sprite);
+    }
+        
     // window.draw(ground[0]);
     hud.draw(hud);
     enemy2->draw(enemy2);
     tank.draw(tank);
-
 }
 void moveToRight(Sprite& s)
 {
@@ -2748,7 +2874,7 @@ void jump()
 }
 void IdleAnimation()
 {
-    if (player.gun == PISTOL)
+    if (player.gun == PISTOL || player.gun == BIOCHEMICAL || player.gun == FLAME)
     {
         player.lowerbodySprite.setTexture(PTexIPSL);
         animation(player.lowerbodySprite, 3.9, 128 / 4, 37, idle, 3);
@@ -2756,7 +2882,7 @@ void IdleAnimation()
         player.upperbodySprite.setTexture(PTexIPSU);
         animation(player.upperbodySprite, 3.9, 128 / 4, 37, idle, 3);
     }
-    else if (player.gun == RIFLE)//////////////////
+    else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
     {
         player.lowerbodySprite.setTexture(PTexIRL);
         animation(player.lowerbodySprite, 3.9, 152 / 4, 37, idle, 3);
@@ -2769,12 +2895,12 @@ void ShootingAnimation()
 {
     player.lowerbodySprite.setTexture(PTexRPL);
     animation(player.lowerbodySprite, 11.9, 408 / 12.0, 41, 0.004, 2);
-    if (player.gun == PISTOL)
+    if (player.gun == PISTOL || player.gun == BIOCHEMICAL || player.gun == FLAME)
     {
         player.upperbodySprite.setTexture(PTexSSPU);
         animation(player.upperbodySprite, 9.9, 520 / 10.0, 41, pistolshooting_delay, 10);
     }
-    else if (player.gun == RIFLE)
+    else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
     {
         player.upperbodySprite.setTexture(PTexSSRU);
         animation(player.upperbodySprite, 3.9, 240 / 4.0, 27, rifleshooting_delay, 10);
@@ -2786,18 +2912,35 @@ void crouchingAnimation()
     player.one_sprite_needed = 1;
     if (Keyboard::isKeyPressed(Keyboard::J))
     {
-        if (player.gun == PISTOL)
+        if (player.gun == PISTOL || player.gun == BIOCHEMICAL || player.gun == FLAME)
         {
-            liser.shooting(liser);
             player.lowerbodySprite.setTexture(PTexSCPL);
-
             animation(player.lowerbodySprite, 9.9, 520 / 10, 29, pistolshooting_delay, 14);
         }
-        else if (player.gun == RIFLE)
+        else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
         {
-            pistol.shooting(pistol);
             player.lowerbodySprite.setTexture(PTexSCRL);
             animation(player.lowerbodySprite, 3.9, 268 / 4, 28, pistolshooting_delay, 14);
+        }
+        if (player.gun == PISTOL)
+        {
+            pistol.shooting(pistol);
+        }
+        else if (player.gun == RIFLE && rifle.ammo > 0)
+        {
+            rifle.shooting(rifle);
+        }
+        else if (player.gun == FLAME)
+        {
+            //flame.shooting
+        }
+        else if (player.gun == BIOCHEMICAL_AMMO)
+        {  //biohemial shooting
+
+        }
+        else if (player.gun == LISER)
+        {//liser shooting
+            liser.shooting(liser);
         }
         player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y - 10);
     }
@@ -2809,12 +2952,12 @@ void crouchingAnimation()
     else
     {
         player.lowerbodySprite.setPosition(player.upperbodySprite.getPosition().x, player.upperbodySprite.getPosition().y + player.upperbodyTex.getSize().y);
-        if (player.gun == PISTOL)
+        if (player.gun == PISTOL || player.gun == BIOCHEMICAL || player.gun == FLAME)
         {
             player.lowerbodySprite.setTexture(PTexICPL);
             animation(player.lowerbodySprite, 3.9, 136 / 4.0, 24, idle, 4);
         }
-        else if (player.gun == RIFLE && rifle.ammo > 0)
+        else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
         {
             player.lowerbodySprite.setTexture(PTexICRL);
             animation(player.lowerbodySprite, 3.9, 164 / 4.0, 24, idle, 4);
@@ -2823,12 +2966,12 @@ void crouchingAnimation()
 }
 void jumpingAnimation(float delay)
 {
-    if (player.gun == PISTOL)
+    if (player.gun == PISTOL || player.gun == BIOCHEMICAL || player.gun == FLAME)
     {
         player.upperbodySprite.setTexture(PTexJPU);
         animation(player.upperbodySprite, 10.9, 319.0 / 11, 49, delay, 5);
     }
-    else if (player.gun == RIFLE)
+    else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
     {
         player.upperbodySprite.setTexture(PTexJRU);
         animation(player.upperbodySprite, 5.9, 222 / 6, 27, delay, 5);
@@ -3010,37 +3153,37 @@ void TS_Setups()
     MenuScroll.setBuffer(MenuScrollB);
     MenuScroll.setVolume(100);//100;
 }
-
 void texture_setup()
 {
-    RWTexRun.loadFromFile(pathh+"RW Running Sprite Sheet.png");
-    RWTexAttack.loadFromFile(pathh+"RW Fighting Sprite Sheet.png");
-    RWTexDeath.loadFromFile(pathh+"RW Dying Sprite Sheet.png");
-    PTexMU.loadFromFile(pathh+"Melee (Pistol) Sprite Sheet Upper Body.png");
-    PTexML.loadFromFile(pathh+"Melee (Pistol) Sprite Sheet Lower Body.png");
-    PTexRPU.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Upper Body.png");
-    PTexRPL.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Lower Body.png");
-    PTexRRU.loadFromFile(pathh+"Running (Rifle) Sprite Sheet.png");
-    PTexRRL.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Lower Body.png");
-    PTexSSPU.loadFromFile(pathh+"Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
-    PTexSSRU.loadFromFile(pathh+"Shooting - Standing (Rifle) Sprite Sheet.png");
-    PTexIPSL.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Lower Body.png");
-    PTexIPSU.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Upper Body.png");
-    PTexIRL.loadFromFile(pathh+"Idle (Rifle) Sprite Sheet Lower Body.png");
-    PTexIRU.loadFromFile(pathh+"Idle (Rifle) Sprite Sheet Upper Body.png");
-    PTexSCPL.loadFromFile(pathh+"Shooting - Crouching (Pistol) Sprite Sheet.png");
-    PTexIPL.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Lower Body.png");
-    PTexSCRL.loadFromFile(pathh+"Shooting - Crouching (Rifle) Sprite Sheet.png");
-    PTexICPL.loadFromFile(pathh+"Idle - Crouching (Pistol) Sprite Sheet.png");
-    PTexICRL.loadFromFile(pathh+"Idle - Crouching (Rifle) Sprite Sheet.png");
-    PTexJPU.loadFromFile(pathh+"Jumping (Pistol) Sprite Sheet Upper Body.png");
-    PTexJRU.loadFromFile(pathh+"Jumping (Rifle) Sprite Sheet.png");
-    PTexJPL.loadFromFile(pathh+"Jumping (Pistol) Sprite Sheet Lower Body.png");
-    PTexDL.loadFromFile(pathh+"Dying Sprite Sheet.png");
-    health_kit_tex.loadFromFile(pathh+"Health Kit.png");
-    health_potion_tex.loadFromFile(pathh+"Health Potion.png");
-    speed_potion_tex.loadFromFile(pathh+"Speed Potion.png");
-    damage_potion_tex.loadFromFile(pathh+"Damage Potion.png");
+    RWTexRun.loadFromFile(pathh + "RW Running Sprite Sheet.png");
+    RWTexAttack.loadFromFile(pathh + "RW Fighting Sprite Sheet.png");
+    RWTexDeath.loadFromFile(pathh + "RW Dying Sprite Sheet.png");
+    PTexMU.loadFromFile(pathh + "Melee (Pistol) Sprite Sheet Upper Body.png");
+    PTexML.loadFromFile(pathh + "Melee (Pistol) Sprite Sheet Lower Body.png");
+    PTexRPU.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
+    PTexRPL.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
+    PTexRRU.loadFromFile(pathh + "Running (Rifle) Sprite Sheet.png");
+    PTexRRL.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Lower Body.png");
+    PTexSSPU.loadFromFile(pathh + "Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
+    PTexSSRU.loadFromFile(pathh + "Shooting - Standing (Rifle) Sprite Sheet.png");
+    PTexIPSL.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Lower Body.png");
+    PTexIPSU.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Upper Body.png");
+    PTexIRL.loadFromFile(pathh + "Idle (Rifle) Sprite Sheet Lower Body.png");
+    PTexIRU.loadFromFile(pathh + "Idle (Rifle) Sprite Sheet Upper Body.png");
+    PTexSCPL.loadFromFile(pathh + "Shooting - Crouching (Pistol) Sprite Sheet.png");
+    PTexIPL.loadFromFile(pathh + "Idle (Pistol) Sprite Sheet Lower Body.png");
+    PTexSCRL.loadFromFile(pathh + "Shooting - Crouching (Rifle) Sprite Sheet.png");
+    PTexICPL.loadFromFile(pathh + "Idle - Crouching (Pistol) Sprite Sheet.png");
+    PTexICRL.loadFromFile(pathh + "Idle - Crouching (Rifle) Sprite Sheet.png");
+    PTexJPU.loadFromFile(pathh + "Jumping (Pistol) Sprite Sheet Upper Body.png");
+    PTexJRU.loadFromFile(pathh + "Jumping (Rifle) Sprite Sheet.png");
+    PTexJPL.loadFromFile(pathh + "Jumping (Pistol) Sprite Sheet Lower Body.png");
+    PTexDL.loadFromFile(pathh + "Dying Sprite Sheet.png");
+    health_kit_tex.loadFromFile(pathh + "Health Kit.png");
+    health_potion_tex.loadFromFile(pathh + "Health Potion.png");
+    speed_potion_tex.loadFromFile(pathh + "Speed Potion.png");
+    damage_potion_tex.loadFromFile(pathh + "Damage Potion.png");
+    rifle_ammo_tex.loadFromFile(pathh + "Rifle Icon.png");
 }
 void mouse_pos()
 {
