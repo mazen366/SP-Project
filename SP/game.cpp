@@ -28,7 +28,7 @@ RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Default);
 Event event;
 
 //make the variable=
-string pathh = "";
+string pathh ="";
 const float idle = 0.001,
 pistolshooting_delay = 0.007, rifleshooting_delay = 0.005,
 plVelocity = 0.2,
@@ -53,7 +53,7 @@ float TS_PECnt = 0;
 float AlphaPE = 255;
 int TS_ButtonsCnt = 0, TSS_ButtonsCnt = 0, OptionsSprCnt = 0;
 
-// Moved from down to here because 
+// Moved from down to here because
 
 int bgCounter = 0, leftEnd, rightEnd;//indicator for current map, start of map, end of map
 bool  isMoved = false, ismoved2 = 0, ismoved3 = 0;//flags for clearing the previous map
@@ -116,7 +116,7 @@ struct Player
     Clock damage_timer;
     bool isdead = 0;
     bool holding_knife = 0;
-    void Playersetup()
+    void Playersetup(Player &player)
     {
         //sprite upperbody
         player.upperbodyTex.loadFromFile(pathh + "Running (Pistol) Sprite Sheet Upper Body.png");
@@ -134,7 +134,7 @@ struct Player
         player.rec.setPosition(player.upperbodySprite.getPosition().x - 50, player.upperbodySprite.getPosition().y);
         player.rec.setSize(Vector2f(75, 130));
     }
-    void melee_animation()
+    void melee_animation(Player&player)
     {
         player.upperbodySprite.setOrigin(48 / 2.0, 15);
         player.upperbodySprite.setTexture(PTexMU);
@@ -162,7 +162,7 @@ struct Pistol
     int range = 900;
     void setup(Pistol& pistol)
     {
-        pistol.tex.loadFromFile("Handgun Ammo.png");
+        pistol.tex.loadFromFile(pathh+"Handgun Ammo.png");
     }
     void update_bUllets_distance(Pistol& pistol, int i)
     {
@@ -220,7 +220,7 @@ struct Rifle
     Texture tex;
     void setup(Rifle& rifle)
     {
-        rifle.tex.loadFromFile("Rifle Ammo.png");
+        rifle.tex.loadFromFile(pathh+"Rifle Ammo.png");
     }
     void update_bUllets_distance(Rifle& rifle, int i)
     {
@@ -655,45 +655,45 @@ struct HUD {
     int score_num_index[6]{ 9,9,9,9,9,9 };
     Clock score_increase_timer;
     void setup(HUD& hud) {
-        hud.HP_bar_tex.loadFromFile("Health Bar.png");
+        hud.HP_bar_tex.loadFromFile(pathh+"Health Bar.png");
         hud.HP_bar_sprite.setTexture(hud.HP_bar_tex);
         hud.HP_bar_sprite.setScale(3.455, 3.455);
         hud.HP_bar_sprite.setTextureRect(IntRect(hp_index * (390 / 6), 0, 390 / 6, 11));
 
-        hud.Mug_shot_tex.loadFromFile("Mugshot.png");
+        hud.Mug_shot_tex.loadFromFile(pathh+"Mugshot.png");
         hud.Mug_shot_sprite.setTexture(hud.Mug_shot_tex);
         hud.Mug_shot_sprite.setScale(3.5, 3.5);
 
-        hud.lives_tex.loadFromFile("Lives.png");
+        hud.lives_tex.loadFromFile(pathh+"Lives.png");
         hud.lives_sprite.setTexture(hud.lives_tex);
 
-        hud.infinity_tex.loadFromFile("Infinity.png");
+        hud.infinity_tex.loadFromFile(pathh+"Infinity.png");
         hud.infinity_sprite.setTexture(hud.infinity_tex);
 
-        hud.weapons_holder_tex.loadFromFile("Weapons Holder.png");
+        hud.weapons_holder_tex.loadFromFile(pathh+"Weapons Holder.png");
         hud.weapons_holder_sprite.setTexture(hud.weapons_holder_tex);
         hud.weapons_holder_sprite.setScale(2.7, 2.7);
 
-        hud.lives_number_tex.loadFromFile("Numbers Lives.png");
+        hud.lives_number_tex.loadFromFile(pathh+"Numbers Lives.png");
         hud.lives_number_1_sprite.setTexture(hud.lives_number_tex);
         hud.lives_number_1_sprite.setTextureRect(IntRect(lives_num1_index * (290 / 10), 0, 290 / 10, 29));
         hud.lives_number_2_sprite.setTexture(hud.lives_number_tex);
         hud.lives_number_2_sprite.setTextureRect(IntRect(lives_num2_index * (290 / 10), 0, 290 / 10, 29));
 
-        hud.time_num_tex.loadFromFile("Numbers.png");
+        hud.time_num_tex.loadFromFile(pathh+"Numbers.png");
         hud.time_num1_sprite.setTexture(hud.time_num_tex);
         hud.time_num1_sprite.setTextureRect(IntRect(time_num1_index * (550 / 10), 0, 550 / 10, 55));
         hud.time_num2_sprite.setTexture(hud.time_num_tex);
         hud.time_num2_sprite.setTextureRect(IntRect(time_num2_index * (550 / 10), 0, 550 / 10, 55));
 
-        hud.score_num_tex.loadFromFile("Numbers Score.png");
+        hud.score_num_tex.loadFromFile(pathh+"Numbers Score.png");
         for (int i = 0; i < 6; i++)
         {
             hud.score_num_sprite[i].setTexture(hud.score_num_tex);
             hud.score_num_sprite[i].setTextureRect(IntRect(score_num_index[i] * (360 / 10), 0, 360 / 10, 36));
         }
 
-        hud.ammo_num_tex.loadFromFile("Numbers Ammo.png");
+        hud.ammo_num_tex.loadFromFile(pathh+"Numbers Ammo.png");
         for (int i = 0; i < 3; i++)
         {
             hud.ammo_num_sprite[i].setTexture(hud.ammo_num_tex);
@@ -770,7 +770,7 @@ struct HUD {
         else if (player.gun == PISTOL)
             window.draw(hud.infinity_sprite);
     }
-    void HUD_mechanics_call() {
+    void HUD_mechanics_call(HUD hud) {
         hud.positions(hud);
         hud.time_calculation();
         hud.ammo_display();
@@ -1243,7 +1243,7 @@ struct Enemy2
     string current_status = "";
     Clock damage_timer;
 
-    void setup()
+    void setup(Enemy2 enemy2[5])
     {
         for (int i = 0; i < 5; i++)
         {
@@ -1272,7 +1272,7 @@ struct Enemy2
         }
 
     }
-    void Damaged()
+    void Damaged(Enemy2 enemy2[5])
     {
         for (int i = 0; i < 5; i++)
         {
@@ -1379,7 +1379,7 @@ struct Enemy2
         EnemiAnimation(s.RWSpr, 11, 49, 52, 0.02, s.run_indicator);
         s.RWSpr.move(6, 0);
     }
-    void status()
+    void status(Enemy2 enemy2[5])
     {
         if (bgCounter == LEVEL_1_B_BG)
         {
@@ -1414,7 +1414,7 @@ struct Enemy2
         }
     }
 
-    void draw()
+    void draw(Enemy2 enemy2[5])
     {
         for (int i = 0; i < 5; i++)
             window.draw(enemy2[i].RWSpr);
@@ -1427,7 +1427,7 @@ struct Tank
     struct Tank_shooting
     {
         float  damage = 30;
-        vector<pair<RectangleShape, int>>rects;// bullets //checker 
+        vector<pair<RectangleShape, int>>rects;// bullets //checker
         Clock shooting_timer;
         void shooting(Tank_shooting& tank_shooting, Tank& tank)
         {
@@ -1640,7 +1640,7 @@ struct Enemy3
     int health = 10;
     int damage = 1;
     bool check = 1;
-    vector <pair <RectangleShape, int>> bullet; //enemy3 pistol  
+    vector <pair <RectangleShape, int>> bullet; //enemy3 pistol
     void shooting(int i, vector<Enemy3>& enemy1)
     {
         enemy1[i].shoot_timer += 0.08;
@@ -1836,12 +1836,12 @@ int main()
     blood.setup(blood);
     window.setFramerateLimit(60);
     RS->setup(RS);
-    enemy2->setup();
+    enemy2->setup(enemy2);
     tank.setup(tank);
     hud.setup(hud);
     bgSetup();
     TS_Setups();
-    player.Playersetup();
+    player.Playersetup(player);
     timer.restart();
     Menu();
     return 0;
@@ -2236,8 +2236,8 @@ void windowfunction()
     RS->Gravity(RS);
 
     RS->Damaged(RS);
-    enemy2->status();
-    enemy2->Damaged();
+    enemy2->status(enemy2);
+    enemy2->Damaged(enemy2);
     tank.Damaged(tank);
     playerDamageFromEnemy1();
 
@@ -2256,7 +2256,7 @@ void windowfunction()
     window.clear();
     window_draw();
     window.setView(view);
-    hud.HUD_mechanics_call();
+    hud.HUD_mechanics_call(hud);
     transition_pos_check();
 }
 void BGanimation()
@@ -2649,7 +2649,7 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
             }
             else  if (Keyboard::isKeyPressed(Keyboard::K))
             {
-                player.melee_animation();
+                player.melee_animation(player);
                 player.holding_knife = true;
                 pistol.shoot_timer = 0;
             }
@@ -2717,7 +2717,7 @@ void window_draw()
     }
     // window.draw(ground[0]);
     hud.draw(hud);
-    enemy2->draw();
+    enemy2->draw(enemy2);
     tank.draw(tank);
 
 }
@@ -2803,7 +2803,7 @@ void crouchingAnimation()
     }
     else if (Keyboard::isKeyPressed(Keyboard::K))
     {
-        player.melee_animation();
+        player.melee_animation(player);
         player.holding_knife = true;
     }
     else
@@ -3013,34 +3013,34 @@ void TS_Setups()
 
 void texture_setup()
 {
-    RWTexRun.loadFromFile("RW Running Sprite Sheet.png");
-    RWTexAttack.loadFromFile("RW Fighting Sprite Sheet.png");
-    RWTexDeath.loadFromFile("RW Dying Sprite Sheet.png");
-    PTexMU.loadFromFile("Melee (Pistol) Sprite Sheet Upper Body.png");
-    PTexML.loadFromFile("Melee (Pistol) Sprite Sheet Lower Body.png");
-    PTexRPU.loadFromFile("Running (Pistol) Sprite Sheet Upper Body.png");
-    PTexRPL.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
-    PTexRRU.loadFromFile("Running (Rifle) Sprite Sheet.png");
-    PTexRRL.loadFromFile("Running (Pistol) Sprite Sheet Lower Body.png");
-    PTexSSPU.loadFromFile("Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
-    PTexSSRU.loadFromFile("Shooting - Standing (Rifle) Sprite Sheet.png");
-    PTexIPSL.loadFromFile("Idle (Pistol) Sprite Sheet Lower Body.png");
-    PTexIPSU.loadFromFile("Idle (Pistol) Sprite Sheet Upper Body.png");
-    PTexIRL.loadFromFile("Idle (Rifle) Sprite Sheet Lower Body.png");
-    PTexIRU.loadFromFile("Idle (Rifle) Sprite Sheet Upper Body.png");
-    PTexSCPL.loadFromFile("Shooting - Crouching (Pistol) Sprite Sheet.png");
-    PTexIPL.loadFromFile("Idle (Pistol) Sprite Sheet Lower Body.png");
-    PTexSCRL.loadFromFile("Shooting - Crouching (Rifle) Sprite Sheet.png");
-    PTexICPL.loadFromFile("Idle - Crouching (Pistol) Sprite Sheet.png");
-    PTexICRL.loadFromFile("Idle - Crouching (Rifle) Sprite Sheet.png");
-    PTexJPU.loadFromFile("Jumping (Pistol) Sprite Sheet Upper Body.png");
-    PTexJRU.loadFromFile("Jumping (Rifle) Sprite Sheet.png");
-    PTexJPL.loadFromFile("Jumping (Pistol) Sprite Sheet Lower Body.png");
-    PTexDL.loadFromFile("Dying Sprite Sheet.png");
-    health_kit_tex.loadFromFile("Health Kit.png");
-    health_potion_tex.loadFromFile("Health Potion.png");
-    speed_potion_tex.loadFromFile("Speed Potion.png");
-    damage_potion_tex.loadFromFile("Damage Potion.png");
+    RWTexRun.loadFromFile(pathh+"RW Running Sprite Sheet.png");
+    RWTexAttack.loadFromFile(pathh+"RW Fighting Sprite Sheet.png");
+    RWTexDeath.loadFromFile(pathh+"RW Dying Sprite Sheet.png");
+    PTexMU.loadFromFile(pathh+"Melee (Pistol) Sprite Sheet Upper Body.png");
+    PTexML.loadFromFile(pathh+"Melee (Pistol) Sprite Sheet Lower Body.png");
+    PTexRPU.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Upper Body.png");
+    PTexRPL.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Lower Body.png");
+    PTexRRU.loadFromFile(pathh+"Running (Rifle) Sprite Sheet.png");
+    PTexRRL.loadFromFile(pathh+"Running (Pistol) Sprite Sheet Lower Body.png");
+    PTexSSPU.loadFromFile(pathh+"Shooting - Standing (Pistol) Sprite Sheet Upper Body.png");
+    PTexSSRU.loadFromFile(pathh+"Shooting - Standing (Rifle) Sprite Sheet.png");
+    PTexIPSL.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Lower Body.png");
+    PTexIPSU.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Upper Body.png");
+    PTexIRL.loadFromFile(pathh+"Idle (Rifle) Sprite Sheet Lower Body.png");
+    PTexIRU.loadFromFile(pathh+"Idle (Rifle) Sprite Sheet Upper Body.png");
+    PTexSCPL.loadFromFile(pathh+"Shooting - Crouching (Pistol) Sprite Sheet.png");
+    PTexIPL.loadFromFile(pathh+"Idle (Pistol) Sprite Sheet Lower Body.png");
+    PTexSCRL.loadFromFile(pathh+"Shooting - Crouching (Rifle) Sprite Sheet.png");
+    PTexICPL.loadFromFile(pathh+"Idle - Crouching (Pistol) Sprite Sheet.png");
+    PTexICRL.loadFromFile(pathh+"Idle - Crouching (Rifle) Sprite Sheet.png");
+    PTexJPU.loadFromFile(pathh+"Jumping (Pistol) Sprite Sheet Upper Body.png");
+    PTexJRU.loadFromFile(pathh+"Jumping (Rifle) Sprite Sheet.png");
+    PTexJPL.loadFromFile(pathh+"Jumping (Pistol) Sprite Sheet Lower Body.png");
+    PTexDL.loadFromFile(pathh+"Dying Sprite Sheet.png");
+    health_kit_tex.loadFromFile(pathh+"Health Kit.png");
+    health_potion_tex.loadFromFile(pathh+"Health Potion.png");
+    speed_potion_tex.loadFromFile(pathh+"Speed Potion.png");
+    damage_potion_tex.loadFromFile(pathh+"Damage Potion.png");
 }
 void mouse_pos()
 {
@@ -3050,5 +3050,4 @@ void mouse_pos()
         cout << mousePos.x << ' ' << mousePos.y << '\n';
     }
 }
-
 ///
