@@ -102,7 +102,7 @@ struct Player
     RectangleShape rec;//make rectangle to better collision
     Vector2f Velocity = { 0,0 }, last_enemy_pos;
     float health = 100;
-    
+
     int score = 0;
     int gun = PISTOL, kill_count = 0;
     bool canshoot = 0;
@@ -1025,10 +1025,10 @@ struct Enemy1
         if (enemy1[i].shoot_timer > 1 || enemy1[i].shoot_timer == 0.05) {
             Vector2f pl = enemy1[i].sprite.getPosition();
             RectangleShape rect(sf::Vector2f(20, 10));
-            rect.setOrigin(-pl.x+30, -(pl.y + 40));
+            rect.setOrigin(-pl.x + 30, -(pl.y + 40));
             Sprite spr;
             spr.setTexture(rifle.tex);
-            spr.setOrigin(-pl.x +30, -(pl.y + 40));
+            spr.setOrigin(-pl.x + 30, -(pl.y + 40));
             enemy1[i].bulletssprites.push_back(spr);
             enemy1[i].bullet.push_back({ rect ,enemy1[i].last_key });
             enemy1[i].shoot_timer = 0;
@@ -1185,7 +1185,7 @@ struct Enemy1
     {
         for (int i = 0; i < 30; i++)
         {
-           
+
         }
     }*/
     void draw(Enemy1 RS[30])
@@ -1353,8 +1353,8 @@ struct Enemy2
         }
 
     }
-    
-    void move_away(Enemy2 &s)
+
+    void move_away(Enemy2& s)
     {
         s.RWSpr.setTexture(RWTexRun);
         s.RWSpr.setOrigin(0, 0);
@@ -1369,11 +1369,11 @@ struct Enemy2
             for (int i = 0; i < 5; i++)
             {
                 if (enemy2[i].is_alive)
-                { 
+                {
                     if (player.isdead && !player.live)
                         enemy2[i].current_status = "move_away";
-                    else if (player.rec.getGlobalBounds().intersects(enemy2[i].RWSpr.getGlobalBounds()) )
-                        enemy2[i].current_status = "attack";                    
+                    else if (player.rec.getGlobalBounds().intersects(enemy2[i].RWSpr.getGlobalBounds()))
+                        enemy2[i].current_status = "attack";
                     else
                         enemy2[i].current_status = "move";
                 }
@@ -2903,8 +2903,8 @@ void playerDeathAnimation()
             cout << "is dead";
             player.isdead = 1;
         }
-        if(!player.isdead)
-        player.lowerbodySprite.setTextureRect(IntRect(int(player.pl_death_ctr) * 480 / 10, 0, 480 / 10, 44));
+        if (!player.isdead)
+            player.lowerbodySprite.setTextureRect(IntRect(int(player.pl_death_ctr) * 480 / 10, 0, 480 / 10, 44));
     }
     else
     {
