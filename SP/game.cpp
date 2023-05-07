@@ -20,6 +20,7 @@
 #define HEALTH_POTION 2
 #define SPEED_POTION 3
 #define DAMAGE_POTION 4
+#define RIFLE_AMMO 5
 using namespace std;
 using namespace sf;
 
@@ -36,7 +37,8 @@ melee_delay = 0.003;
 Texture TS_BGTex, TS_TandGTex, TS_LTex, TS_VTex, TS_LogoTex, TS_PETex,
 TS_buttonsTex, TS_SSTex, TS_OlTex, OptionsTex, MusicControlTex, PMTex,
 RWTexRun, RWTexAttack, RWTexDeath, PTexSCPL, PTexIPL, PTexSCRL, PTexICPL, PTexICRL, PTexJRU, PTexJPL, PTexDL,
-PTexMU, PTexML, PTexRPU, PTexRPL, PTexRRU, PTexRRL, PTexSSPU, PTexSSRU, PTexIPSL, PTexIPSU, PTexIRL, PTexIRU, PTexJPU;
+PTexMU, PTexML, PTexRPU, PTexRPL, PTexRRU, PTexRRL, PTexSSPU, PTexSSRU, PTexIPSL, PTexIPSU, PTexIRL, PTexIRU, PTexJPU,
+health_kit_tex, health_potion_tex, speed_potion_tex, damage_potion_tex;
 Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr;
 Music TS_BGTheme;
 Music TS_BGFireFX;
@@ -811,14 +813,7 @@ struct HUD {
 
 //PowerUps
 struct PowerUps {
-    int pick_power_up = 1 + rand() % 4;
-    Texture health_kit_tex, health_potion_tex, speed_potion_tex, damage_potion_tex;
-    void setup() {
-        health_kit_tex.loadFromFile("Health Kit.png");
-        health_potion_tex.loadFromFile("Health Potion.png");
-        speed_potion_tex.loadFromFile("Speed Potion.png");
-        damage_potion_tex.loadFromFile("Damage Potion.png");
-    }
+    int pick_power_up = 1 + rand() % 5;
     Sprite powerup_sprite;
     void drop_power_up() {
         if (player.kill_count % 3 == 0) {
@@ -826,9 +821,30 @@ struct PowerUps {
                 powerup_sprite.setTexture(health_kit_tex);
 
             }
+            else if (pick_power_up == HEALTH_POTION) {
+                powerup_sprite.setTexture(health_potion_tex);
+
+            }
+            else if (pick_power_up == SPEED_POTION) {
+                powerup_sprite.setTexture(speed_potion_tex);
+
+            }
+            else if (pick_power_up == DAMAGE_POTION)
+            {
+                powerup_sprite.setTexture(damage_potion_tex);
+
+            }
+            else if (pick_power_up == RIFLE_AMMO) {
+
+            }
+            powerup_sprite.setPosition(player.last_enemy_pos);
+            //powerups.push_back(powerup);
         }
     }
-};
+    void apply_effects() {
+
+    }
+}powerup;
 vector <PowerUps> powerups;
 //ground & wall
 RectangleShape ground[30], wall[30];
@@ -1160,6 +1176,7 @@ struct Enemy1
                 if (player.kill_count % 3 == 0) {
                     player.last_enemy_pos.x = enemy1[i].sprite.getPosition().x;
                     player.last_enemy_pos.y = enemy1[i].sprite.getPosition().y;
+                    powerup.drop_power_up();
                 }
                 enemy1[i].sprite_indicator[1] = 0.2;
                 enemy1[i].death_animation_done = 1;
@@ -2700,9 +2717,9 @@ void window_draw()
     }
     // window.draw(ground[0]);
     hud.draw(hud);
-    //window.draw(powerups);
     enemy2->draw();
     tank.draw(tank);
+
 }
 void moveToRight(Sprite& s)
 {
@@ -3020,6 +3037,10 @@ void texture_setup()
     PTexJRU.loadFromFile("Jumping (Rifle) Sprite Sheet.png");
     PTexJPL.loadFromFile("Jumping (Pistol) Sprite Sheet Lower Body.png");
     PTexDL.loadFromFile("Dying Sprite Sheet.png");
+    health_kit_tex.loadFromFile("Health Kit.png");
+    health_potion_tex.loadFromFile("Health Potion.png");
+    speed_potion_tex.loadFromFile("Speed Potion.png");
+    damage_potion_tex.loadFromFile("Damage Potion.png");
 }
 void mouse_pos()
 {
