@@ -50,13 +50,13 @@ TS_buttonsTex, TS_SSTex, TS_OlTex, OptionsTex, MusicControlTex, PMTex,
 RWTexRun, RWTexAttack, RWTexDeath, PTexSCPL, PTexIPL, PTexSCRL, PTexICPL, PTexICRL, PTexJRU, PTexJPL, PTexDL,
 PTexMU, PTexML, PTexRPU, PTexRPL, PTexRRU, PTexRRL, PTexSSPU, PTexSSRU, PTexIPSL, PTexIPSU, PTexIRL, PTexIRU, PTexJPU,
 health_kit_tex, health_potion_tex, speed_potion_tex, damage_potion_tex, rifle_ammo_tex, deathScreenBGTex, 
-deathScreenFGTex, deathScreenFGTex2;
-Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, 
+deathScreenFGTex, deathScreenFGTex2, NewGameTex;
+Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, NewGameSpr, 
 TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr, deathScreenBGSpr, deathScreenFGSpr, deathScreenFGSpr2;
 Music TS_BGTheme;
 Music TS_BGFireFX;
-SoundBuffer MenuClickB, MenuScrollB, DeathScreenFXB;
-Sound MenuClick, MenuScroll, DeathScreenFX;
+SoundBuffer MenuClickB, MenuScrollB, DeathScreenFXB, GamePlayB, MenuReturnB;
+Sound MenuClick, MenuScroll, DeathScreenFX, GamePlayTheme, MenuReturn;
 Clock timer, timer2, timer4, escTimer;
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
 float TS_TandGCnt = 0;
@@ -118,7 +118,7 @@ struct Player
     Vector2f Velocity = { 0,0 }, last_enemy_pos;
     float health = 100;
 
-    int score = 0;
+    int score = 0,speed_boost=1;
     int gun = PISTOL, kill_count = 0;
     bool canshoot = 0;
     bool crouch = 0;
@@ -162,13 +162,13 @@ struct Player
 // shooting <pistol>
 struct Pistol
 {
-    float  damage = 0.7;
+    float  damage = 1.1;
     float shoot_timer = 0;
     Texture tex;
     vector<Sprite>sprite;
     vector<pair<RectangleShape, pair<int, double>>>rects;// bullets //checker //position.x
 
-    int range = 900;
+    int range =1200;
     void setup(Pistol& pistol)
     {
         pistol.tex.loadFromFile(pathh + "Handgun Ammo.png");
@@ -221,11 +221,11 @@ struct Pistol
 // shooting <Rifle>
 struct Rifle
 {
-    float  damage = 0.7;
+    float  damage = 0.9;
     float shoot_timer = 0;
     vector<pair<RectangleShape, pair< int, double>>>rects;
     vector<Sprite>sprite;
-    int range = 1000, ammo = 200;
+    int range = 1200, ammo = 200;
     Texture tex;
     void setup(Rifle& rifle)
     {
@@ -291,7 +291,7 @@ struct Liser
         {
             liser.shooting_timer.restart();
         }
-        liser.damage = 0.01 * liser.shooting_timer.getElapsedTime().asMilliseconds();
+        liser.damage = 0.001 * liser.shooting_timer.getElapsedTime().asMilliseconds();
         Vector2f pl = player.lowerbodySprite.getPosition();
         RectangleShape rect(sf::Vector2f(100, 2*liser.shooting_timer.getElapsedTime().asSeconds()+5));
         rect.setOrigin(-pl.x, -(pl.y + 50));
@@ -396,6 +396,40 @@ struct Blood_Spatter
     }
 }blood;
 
+struct NewGameScreen
+{
+    bool is_open = false;
+    string name;
+
+    void input()
+    {
+
+    }
+
+    void draw()
+    {
+        window.clear();
+
+        TS_TandGCnt += 0.139;
+        if (TS_TandGCnt > 8)
+            TS_TandGCnt -= 8;
+        TS_TandGSpr.setTextureRect(IntRect((int)TS_TandGCnt * 600, 0, 600, 600));
+
+        TS_LCnt += 0.139;
+        if (TS_LCnt > 10)
+            TS_LCnt -= 10;
+        TS_LSpr.setTextureRect(IntRect((int)TS_LCnt * 473, 0, 473, 261));
+        window.draw(TS_BGSpr);
+        window.draw(TS_TandGSpr);
+        window.draw(TS_LSpr);
+        window.draw(TS_OlSpr);
+        window.draw(NewGameSpr);
+
+        window.display();
+    }
+
+
+}NewGameScreen;
 struct DeathScreen //Contains the Death Screen Menu Elements.
 {
     int selected = 1;
@@ -404,7 +438,7 @@ struct DeathScreen //Contains the Death Screen Menu Elements.
 
     void deathScreenSetup() //Sets up the death screen
     {
-        deathScreenBGTex.loadFromFile("DeathScreenBG.png");
+        deathScreenBGTex.loadFromFile("BG.png");
         deathScreenBGSpr.setTexture(deathScreenBGTex);
         deathScreenBGSpr.setPosition(0.f, 0.f);
         deathScreenFGTex.loadFromFile("You Died 1.png");
@@ -432,7 +466,7 @@ struct DeathScreen //Contains the Death Screen Menu Elements.
     {
         window.clear();
         window_draw();
-        deathScreenFGSpr2.setPosition(view.getCenter().x - (1000 * view.getSize().x / 1920.0), view.getCenter().y - (650 * view.getSize().y / 1080.0));
+        deathScreenFGSpr2.setPosition(view.getCenter().x - (980 * view.getSize().x / 1920.0), view.getCenter().y - (650 * view.getSize().y / 1080.0));
         deathScreenFGSpr2.setTextureRect(IntRect(deathScreenFG2cnt * 1920, 0, 1920, 1080));
         TS_OlSpr.setScale(3 * view.getSize().x / 1920.0, 3 * view.getSize().y / 1080.0);
         TS_OlSpr.setPosition(view.getCenter().x - (1000 * view.getSize().x / 1920), view.getCenter().y - (600 * view.getSize().y / 1080.0));
@@ -453,6 +487,8 @@ struct MusicSoundControl
         selected = (selected + 1 <= 7 ? selected + 1 : 7);
         soundlevel = (100 - (selected - 1) * 15 < 11 ? 0 : 100 - (selected - 1) * 15);
         TS_BGTheme.setVolume(soundlevel);
+        GamePlayTheme.setVolume(soundlevel);
+        MenuScroll.play();
     }
 
     void move_left()
@@ -460,6 +496,8 @@ struct MusicSoundControl
         selected = (selected - 1 == 0 ? 1 : selected - 1);
         soundlevel = (100 - (selected - 1) * 15 < 11 ? 0 : 100 - (selected - 1) * 15);
         TS_BGTheme.setVolume(soundlevel);
+        GamePlayTheme.setVolume(soundlevel);
+        MenuScroll.play();
     }
     void draw(string section = "")
     {
@@ -514,14 +552,17 @@ struct Pause
     void exit()
     {
         is_paused = false;
+        MenuScroll.play();
     }
     void move_up()
     {
         selected = (selected == 1 ? 3 : selected - 1);
+        MenuScroll.play();
     }
     void move_down()
     {
         selected = (selected == 3 ? 1 : selected + 1);
+        MenuScroll.play();
     }
     void draw()
     {
@@ -597,12 +638,14 @@ struct OptionsScreen
     {
         selected = (selected == 1 ? 2 : 1);
         OptionsSprCnt = selected - 1;
+        MenuScroll.play();
     }
 
     void move_down()
     {
         selected = (selected == 1 ? 2 : 1);
         OptionsSprCnt = selected - 1;
+        MenuScroll.play();
     }
 
     void exit()
@@ -965,50 +1008,51 @@ struct PowerUps
     void apply_effects(vector<PowerUps>& powerups) {
         for (int i=0;i<powerups.size();i++){
              if (player.rec.getGlobalBounds().intersects(powerups[i].powerup_sprite.getGlobalBounds())){
-				 if (pick_power_up == HEALTH_KIT)
-				 {
-                     player.health = 100;
-				 }
-				 else if (pick_power_up == HEALTH_POTION)
-				 {
-                     if (player.health <= 60)
-                         player.health += 40;
-                     else player.health = 100;
-				 }
-				 else if (pick_power_up == SPEED_POTION)
-				 {
-					if (powerup_timer.getElapsedTime().asSeconds()<=15){
-                        player.Velocity.x *= 2;
-                        player.Velocity.y *= 2;
+                powerups[i].powerup_timer.restart();
+                if (pick_power_up == HEALTH_KIT)
+                {
+                    player.health = 100;
+                }
+                else if (pick_power_up == HEALTH_POTION)
+                {
+                    if (player.health <= 60)
+                        player.health += 40;
+                    else player.health = 100;
+                }
+                else if (pick_power_up == SPEED_POTION)
+                {
+                    if (powerups[i].powerup_timer.getElapsedTime().asSeconds() <= 15) {
+                        player.speed_boost = 2;
                     }
 
-				 }
-				 else if (pick_power_up == DAMAGE_POTION)
-				 {
-					 if (powerup_timer.getElapsedTime().asSeconds() <= 15) {
-                           rifle.damage*=2;
-                           pistol.damage *= 2;
-                           liser.damage *= 2;
-					 }
-				 }
-				 else if (pick_power_up == RIFLE_AMMO)
-				 {
-                     rifle.ammo += 100;
-				 }
-				 else if (pick_power_up == LISER_AMMO)
-				 {
+                }
+                else if (pick_power_up == DAMAGE_POTION)
+                {
+                    if (powerups[i].powerup_timer.getElapsedTime().asSeconds() <= 15) {
+                        rifle.damage *= 2;
+                        pistol.damage *= 2;
+                        liser.damage *= 2;
+                    }
+                }
+                else if (pick_power_up == RIFLE_AMMO)
+                {
+                    rifle.ammo += 100;
+                }
+                else if (pick_power_up == LISER_AMMO)
+                {
 
-				 }
-				 else if (pick_power_up == FLAME_AMMO)
-				 {
+                }
+                else if (pick_power_up == FLAME_AMMO)
+                {
 
-				 }
-				 else if (pick_power_up == BIOCHEMICAL_AMMO)
-				 {
+                }
+                else if (pick_power_up == BIOCHEMICAL_AMMO)
+                {
 
-				 }
+                }
                  powerups.pop_back();
              }
+             
         }
 
     }
@@ -1702,10 +1746,10 @@ struct Tank
 
         tank.tankSprite.setTexture(tankdie);
         tank.stopped = 1;
-        tank.tankAnimationInd[3] += 0.2;
+        tank.tankAnimationInd[3] += 0.02;
         if (tank.tankAnimationInd[3] > 26.9)
         {
-            //tank.tankAnimationInd[3]=0;
+            tank.tankAnimationInd[3]=0;
             player.score += 1000;
             player.kill_count++;
             tank.is_alive = 0;
@@ -1748,60 +1792,71 @@ struct Tank
                 }
             }
         }
+        
     }
     void Damaged(Tank& tank)
     {
-        if (tank.is_alive)
-        {
-            for (int j = 0; j < pistol.rects.size(); j++)
-            {
-                if (tank.tankSprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
-                {
-                    tank.health -= pistol.damage;
-                    tank.is_getting_damaged = 1;
-                    pistol.rects[j].second.first = 0;
-                }
-            }
-            for (int j = 0; j < rifle.rects.size(); j++)
-            {
-                if (tank.tankSprite.getGlobalBounds().intersects(rifle.rects[j].first.getGlobalBounds()) && rifle.rects[j].second.first != 0)
-                {
-                    tank.health -= rifle.damage;
-                    tank.is_getting_damaged = 1;
-                    rifle.rects[j].second.first = 0;
-                }
-            }
-            for (int j = 0; j < liser.rects.size(); j++)
-            {
-                if (tank.tankSprite.getGlobalBounds().intersects(liser.rects[j].first.getGlobalBounds()) && liser.rects[j].second != 0)
-                {
-                    tank.health -= liser.damage;
-                    tank.is_getting_damaged = 1;
-                    liser.rects[j].second = 0;
-                }
-            }
-            if (tank.is_getting_damaged == 1)  // this adds red color to enemies when damaged
-            {
-                if (tank.damage_timer.getElapsedTime().asMilliseconds() <= 300) {
-                    tank.tankSprite.setColor(Color::Red);
-                }
-                else {
-                    tank.is_getting_damaged = 0;
-                }
-            }
-            else
-            {
-                tank.tankSprite.setColor(Color::White);
-                tank.damage_timer.restart();
-            }
-            if (tank.health <= 0)
-            {
-                tank.isdead = 1;
-                tank.tankDeathAnimation(tank);
-            }
-        }
+		//if (tank.is_alive)
+		//{
+
+		//	for (int j = 0; j < pistol.rects.size(); j++)
+		//	{
+		//		if (tank.RWSpr.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
+		//		{
+		//			enemy2[i].health -= pistol.damage;
+		//			if (enemy2[i].health > 0)
+		//				enemy2[i].is_getting_damaged = 1;
+		//			pistol.rects[j].second.first = 0;
+		//		}
+		//	}
+		//	for (int j = 0; j < rifle.rects.size(); j++)
+		//	{
+		//		if (enemy2[i].RWSpr.getGlobalBounds().intersects(rifle.rects[j].first.getGlobalBounds()) && rifle.rects[j].second.first != 0)
+		//		{
+		//			enemy2[i].health -= rifle.damage;
+		//			if (enemy2[i].health > 0)
+		//				enemy2[i].is_getting_damaged = 1;
+		//			rifle.rects[j].second.first = 0;
+		//		}
+		//	}
+		//	for (int j = 0; j < liser.rects.size(); j++)
+		//	{
+		//		if (enemy2[i].RWSpr.getGlobalBounds().intersects(liser.rects[j].first.getGlobalBounds()) && liser.rects[j].second != 0)
+		//		{
+		//			enemy2[i].health -= liser.damage;
+		//			if (enemy2[i].health > 0)
+		//				enemy2[i].is_getting_damaged = 1;
+		//			liser.rects[j].second = 0;
+		//		}
+		//	}
+		//	if (enemy2[i].is_getting_damaged == 1)  // this adds red color to enemies when damaged
+		//	{
+		//		if (enemy2[i].damage_timer.getElapsedTime().asMilliseconds() <= 300)
+		//		{
+		//			enemy2[i].RWSpr.setColor(Color::Red);
+		//		}
+		//		else {
+		//			enemy2[i].is_getting_damaged = 0;
+		//		}
+		//	}
+		//	else
+		//	{
+		//		enemy2[i].RWSpr.setColor(Color::White);
+		//		enemy2[i].damage_timer.restart();
+		//	}
+		//	if (enemy2[i].health <= 0)
+		//	{
+		//		death(enemy2[i]);
+
+		//	}
+		//}
+		//if (player.holding_knife && player.rec.getGlobalBounds().intersects(enemy2[i].RWSpr.getGlobalBounds()))
+		//{
+		//	enemy2[i].health -= 0.3 / 2;
+		//	enemy2[i].is_getting_damaged = true;
+		//}
     }
-    //void Tankshooting()
+ 
 }tank;
 
 
@@ -2157,6 +2212,25 @@ void Menu()
         if (player.isdead)
         {
             DeathScreen.main_screen_draw();
+            if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
+            {
+                timer.restart();
+                DeathScreen.move_up();
+            }
+            if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
+            {
+                timer.restart();
+                DeathScreen.move_down();
+            }
+            if (DeathScreen.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter)) 
+            {
+                MenuClick.play();
+            }
+            if (DeathScreen.selected == 2 && Keyboard::isKeyPressed(Keyboard::Enter)) 
+            {
+                MenuClick.play();
+                window.close();
+            }
         }
         else
 
@@ -2170,16 +2244,21 @@ void Menu()
                 }
                 if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200 && !menu.options_screen.isOpen)
                 {
+                    MenuReturn.play();
                     pause_menu.is_paused = false;
                     escTimer.restart();
                 }
                 else if (pause_menu.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter))
-                    pause_menu.exit();
-                else if (pause_menu.selected == 2 && Keyboard::isKeyPressed(Keyboard::Enter) && timer2.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.isOpen)
                 {
+                    MenuClick.play();
+                    pause_menu.exit();
+                }
+                else if (pause_menu.selected == 2 && Keyboard::isKeyPressed(Keyboard::Enter) && timer2.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.isOpen)
+                {    
                     timer2.restart();
                     if (!menu.options_screen.isOpen)
                     {
+                        MenuClick.play();
                         timer4.restart();
                         menu.options_screen.isOpen = true;
                     }
@@ -2187,6 +2266,7 @@ void Menu()
                         menu.options_screen.draw();
                     if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
                     {
+                        MenuReturn.play();
                         menu.options_screen.isOpen = false;
                         escTimer.restart();
                     }
@@ -2204,7 +2284,12 @@ void Menu()
                     {
                         timer4.restart();
                         menu.options_screen.music_slider.draw();
-                        menu.options_screen.music_slider.isOpen = true;
+                        if (!menu.options_screen.music_slider.isOpen)
+                        {
+                            menu.options_screen.music_slider.isOpen = true;
+                            MenuClick.play();
+                        }
+                        
                         if (Keyboard::isKeyPressed(Keyboard::Right) && timer.getElapsedTime().asMilliseconds() > 200)
                         {
                             timer.restart();
@@ -2217,13 +2302,17 @@ void Menu()
                         }
                         if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
                         {
+                            MenuReturn.play();
                             escTimer.restart();
                             menu.options_screen.music_slider.isOpen = false;
                         }
                     }
                 }
                 else if (pause_menu.selected == 3 && Keyboard::isKeyPressed(Keyboard::Enter))
+                {
+                    MenuClick.play();
                     window.close();
+                }
                 else if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
                 {
                     timer.restart();
@@ -2245,7 +2334,7 @@ void Menu()
                 }
                 else
                 {
-                    if (!menu.start_selected && !menu.options_screen.isOpen)
+                    if (!menu.start_selected && !menu.options_screen.isOpen && !NewGameScreen.is_open)
                         menu.main_screen_draw();
                     if (Keyboard::isKeyPressed(Keyboard::Enter) || menu.ts_escaped)
                     {
@@ -2259,12 +2348,12 @@ void Menu()
                         }
                         else
                         {
-
                             if (((menu.selected == START && Keyboard::isKeyPressed(Keyboard::Enter)) && timer2.getElapsedTime().asMilliseconds() > 200) || menu.start_selected)
                             {
                                 hud.hud_time.restart();
                                 timer2.restart();
-                                menu.start_screen.draw();
+                                if(!NewGameScreen.is_open)
+                                    menu.start_screen.draw();
                                 if (!menu.start_selected)
                                 {
                                     MenuClick.play();
@@ -2274,10 +2363,28 @@ void Menu()
                                 }
                                 if (menu.start_screen.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter) && timer.getElapsedTime().asMilliseconds() > 200)
                                 {
+                                    MenuClick.play();
+                                    TS_BGTheme.stop();
+                                    TS_BGFireFX.stop();
+                                    GamePlayTheme.play();
                                     menu.game_started = true;
                                     timer.restart();
                                     windowfunction();
 
+                                }
+                                if (menu.start_screen.selected == 2 && Keyboard::isKeyPressed(Keyboard::Enter) && timer.getElapsedTime().asMilliseconds() > 300 || NewGameScreen.is_open)
+                                {
+                                    if (!NewGameScreen.is_open)
+                                        MenuClick.play();
+                                    timer.restart();
+                                    NewGameScreen.is_open = true;
+                                    NewGameScreen.draw();
+
+                                    if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 300)
+                                    {
+                                        escTimer.restart();
+                                        NewGameScreen.is_open = false;
+                                    }
                                 }
                                 if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
                                 {
@@ -2291,29 +2398,39 @@ void Menu()
                                 }
                                 if (Keyboard::isKeyPressed(Keyboard::Escape) && timer.getElapsedTime().asMilliseconds() > 200)
                                 {
+                                    MenuReturn.play();
                                     menu.start_selected = false;
                                     timer.restart();
                                 }
+                                
 
                             }
                             else if (menu.selected == OPTIONS && Keyboard::isKeyPressed(Keyboard::Enter) && timer2.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.isOpen)
                             {
                                 timer2.restart();
                                 if (!menu.options_screen.music_slider.isOpen)
+                                {  
                                     menu.options_screen.draw("menu");
+                                }
                                 if (!menu.options_screen.isOpen)
                                 {
+                                    MenuClick.play();
                                     menu.options_screen.isOpen = true;
                                     timer4.restart();
                                 }
-                                if (Keyboard::isKeyPressed(Keyboard::Enter) && timer4.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.music_slider.isOpen)
+                                if (Keyboard::isKeyPressed(Keyboard::Enter) && menu.options_screen.selected == 1 && timer4.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.music_slider.isOpen)
                                 {
                                     timer4.restart();
                                     menu.options_screen.music_slider.draw("main");
-                                    menu.options_screen.music_slider.isOpen = true;
+                                    if (!menu.options_screen.music_slider.isOpen)
+                                    {
+                                        menu.options_screen.music_slider.isOpen = true;
+                                        MenuClick.play();
+                                    }
 
                                     if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
                                     {
+                                        MenuReturn.play();
                                         escTimer.restart();
                                         menu.options_screen.music_slider.isOpen = false;
                                     }
@@ -2343,12 +2460,16 @@ void Menu()
                                 }
                                 if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
                                 {
+                                    MenuReturn.play();
                                     escTimer.restart();
                                     menu.options_screen.exit();
                                 }
                             }
                             else if (menu.selected == EXIT && Keyboard::isKeyPressed(Keyboard::Enter))
+                            {
+                                MenuClick.play();
                                 window.close();
+                            }
 
                             else if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
                             {
@@ -2519,6 +2640,7 @@ void windowfunction()
         player.isdead = true;
     if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
     {
+        MenuReturn.play();
         pause_menu.is_paused = true;
         escTimer.restart();
     }
@@ -2552,7 +2674,6 @@ void windowfunction()
     RS->Damaged(RS);
     enemy2->status(enemy2);
     enemy2->Damaged(enemy2);
-    tank.Damaged(tank);
     playerDamageFromEnemy1();
     powerup.apply_effects(powerups);
     if (enemy3.size() < 30)
@@ -2813,13 +2934,13 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
     //move player
     if (player.gun == PISTOL || player.gun == BIOCHEMICAL || player.gun == FLAME)
     {
-        s.move(player.Velocity);
-        player.upperbodySprite.move(player.Velocity);
+        s.move(player.Velocity.x*(player.speed_boost),player.Velocity.y*player.speed_boost);
+        player.upperbodySprite.move(player.Velocity.x*(player.speed_boost), player.Velocity.y * (player.speed_boost) );
     }
     else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
     {
-        s.move(player.Velocity.x * 0.5, player.Velocity.y);
-        player.upperbodySprite.move(player.Velocity.x * 0.5, player.Velocity.y);
+		s.move(player.Velocity.x * (player.speed_boost)*0.7 , player.Velocity.y * player.speed_boost);
+		player.upperbodySprite.move(player.Velocity.x * (player.speed_boost)*0.7 ,  player.Velocity.y * (player.speed_boost));
     }
     player.rec.setPosition(s.getPosition().x - 50, s.getPosition().y);
 }
@@ -3375,6 +3496,16 @@ void TS_Setups()
     MenuScroll.setBuffer(MenuScrollB);
     MenuScroll.setVolume(100);//100;
 
+    GamePlayB.loadFromFile("Game BG Music.wav");
+    GamePlayTheme.setBuffer(GamePlayB);
+    GamePlayTheme.setLoop(true);
+
+    MenuReturnB.loadFromFile("Menu Return FX.wav");
+    MenuReturn.setBuffer(MenuReturnB);
+
+    NewGameSpr.setPosition(15, -200);
+    NewGameTex.loadFromFile("Enter Your Name.png");
+    NewGameSpr.setTexture(NewGameTex);
 
 }
 void texture_setup()
