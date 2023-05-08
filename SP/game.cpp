@@ -1,4 +1,4 @@
-﻿#include <SFML/Graphics.hpp>//elseni is gay
+﻿#include <SFML/Graphics.hpp> //elseni is gay
 #include<thread>
 #include <SFML/Audio.hpp>
 #include <iostream>
@@ -31,6 +31,7 @@
 #define LISER_AMMO 6
 #define FLAME_AMMO 7
 #define BIOCHEMICAL_AMMO 8
+
 using namespace std;
 using namespace sf;
 
@@ -48,12 +49,14 @@ Texture TS_BGTex, TS_TandGTex, TS_LTex, TS_VTex, TS_LogoTex, TS_PETex,
 TS_buttonsTex, TS_SSTex, TS_OlTex, OptionsTex, MusicControlTex, PMTex,
 RWTexRun, RWTexAttack, RWTexDeath, PTexSCPL, PTexIPL, PTexSCRL, PTexICPL, PTexICRL, PTexJRU, PTexJPL, PTexDL,
 PTexMU, PTexML, PTexRPU, PTexRPL, PTexRRU, PTexRRL, PTexSSPU, PTexSSRU, PTexIPSL, PTexIPSU, PTexIRL, PTexIRU, PTexJPU,
-health_kit_tex, health_potion_tex, speed_potion_tex, damage_potion_tex, rifle_ammo_tex;
-Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr;
+health_kit_tex, health_potion_tex, speed_potion_tex, damage_potion_tex, rifle_ammo_tex, deathScreenBGTex, 
+deathScreenFGTex, deathScreenFGTex2;
+Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, 
+TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr, deathScreenBGSpr, deathScreenFGSpr, deathScreenFGSpr2;
 Music TS_BGTheme;
 Music TS_BGFireFX;
-SoundBuffer MenuClickB, MenuScrollB;
-Sound MenuClick, MenuScroll;
+SoundBuffer MenuClickB, MenuScrollB, DeathScreenFXB;
+Sound MenuClick, MenuScroll, DeathScreenFX;
 Clock timer, timer2, timer4, escTimer;
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
 float TS_TandGCnt = 0;
@@ -61,7 +64,7 @@ float TS_LCnt = 0;
 float TS_LogoCnt = 0;
 float TS_PECnt = 0;
 float AlphaPE = 255;
-int TS_ButtonsCnt = 0, TSS_ButtonsCnt = 0, OptionsSprCnt = 0;
+int TS_ButtonsCnt = 0, TSS_ButtonsCnt = 0, OptionsSprCnt = 0, deathScreenFG2cnt = 0;
 
 // Moved from down to here because
 
@@ -153,10 +156,6 @@ struct Player
         player.lowerbodySprite.setOrigin(48 / 2.0, 15);
         player.lowerbodySprite.setTexture(PTexML);
         EnemiAnimation(player.lowerbodySprite, 5, 48, 53, 0.02 / 3, player.pl_lower_melee_ctr);
-    }
-    void knife_hitting()
-    {
-
     }
 }player;
 
@@ -283,7 +282,7 @@ struct Rifle
 //liser
 struct Liser
 {
-    float damage = 0.1;
+    float damage = 0.001;
     vector<pair<RectangleShape, int>>rects;
     Clock shooting_timer;
     void shooting(Liser& liser)
@@ -298,7 +297,7 @@ struct Liser
         rect.setOrigin(-pl.x, -(pl.y + 50));
         rect.setFillColor(Color::Red);
         liser.rects.push_back({ rect ,player.last_key });
-        if (liser.shooting_timer.getElapsedTime().asSeconds() > 6)
+        if (liser.shooting_timer.getElapsedTime().asSeconds() > 7)
         {
             liser.shooting_timer.restart();
         }
@@ -397,10 +396,57 @@ struct Blood_Spatter
     }
 }blood;
 
+struct DeathScreen //Contains the Death Screen Menu Elements.
+{
+    int selected = 1;
+    bool is_active = 0;
+
+
+    void deathScreenSetup() //Sets up the death screen
+    {
+        deathScreenBGTex.loadFromFile("DeathScreenBG.png");
+        deathScreenBGSpr.setTexture(deathScreenBGTex);
+        deathScreenBGSpr.setPosition(0.f, 0.f);
+        deathScreenFGTex.loadFromFile("You Died 1.png");
+        deathScreenFGSpr.setTexture(deathScreenFGTex);
+        deathScreenFGSpr.setPosition(0.f, 0.f);
+        deathScreenFGTex2.loadFromFile("You Died Sprite Sheet 2.png");
+        deathScreenFGSpr2.setTexture(deathScreenFGTex2);
+        deathScreenFGSpr2.setPosition(0.f, 0.f);
+        DeathScreenFXB.loadFromFile("Dark Souls Death FX.wav");
+        DeathScreenFX.setBuffer(DeathScreenFXB);
+    }
+    void move_up()
+    {
+        selected = (selected == 1 ? 2 : 1);
+        deathScreenFG2cnt = selected - 1;
+        MenuScroll.play();
+    }
+    void move_down()
+    {
+        selected = (selected == 1 ? 2 : 1);
+        deathScreenFG2cnt = selected - 1;
+        MenuScroll.play();
+    }
+    void main_screen_draw()
+    {
+        window.clear();
+        window_draw();
+        deathScreenFGSpr2.setPosition(view.getCenter().x - (1000 * view.getSize().x / 1920.0), view.getCenter().y - (650 * view.getSize().y / 1080.0));
+        deathScreenFGSpr2.setTextureRect(IntRect(deathScreenFG2cnt * 1920, 0, 1920, 1080));
+        TS_OlSpr.setScale(3 * view.getSize().x / 1920.0, 3 * view.getSize().y / 1080.0);
+        TS_OlSpr.setPosition(view.getCenter().x - (1000 * view.getSize().x / 1920), view.getCenter().y - (600 * view.getSize().y / 1080.0));
+
+        window.draw(TS_OlSpr);
+        window.draw(deathScreenFGSpr2);
+        window.display();
+    }
+} DeathScreen;
 struct MusicSoundControl
 {
     int selected = 1, soundlevel = 100;
     bool isOpen = false;
+
 
     void move_right()
     {
@@ -859,7 +905,7 @@ struct HUD {
     }
 }hud;
 
-//PowerUps
+//PowerUps4
 struct PowerUps 
 {
     int pick_power_up = 1 + rand() % 5;
@@ -931,12 +977,19 @@ struct PowerUps
 				 }
 				 else if (pick_power_up == SPEED_POTION)
 				 {
-					
+					if (powerup_timer.getElapsedTime().asSeconds()<=15){
+                        player.Velocity.x *= 2;
+                        player.Velocity.y *= 2;
+                    }
 
 				 }
 				 else if (pick_power_up == DAMAGE_POTION)
 				 {
-
+					 if (powerup_timer.getElapsedTime().asSeconds() <= 15) {
+                           rifle.damage*=2;
+                           pistol.damage *= 2;
+                           liser.damage *= 2;
+					 }
 				 }
 				 else if (pick_power_up == RIFLE_AMMO)
 				 {
@@ -1551,12 +1604,17 @@ struct Tank
     {
         float  damage = 30;
         vector<pair<RectangleShape, int>>rects;// bullets //checker
+        vector<Sprite>sprite;
         Clock shooting_timer;
         void shooting(Tank_shooting& tank_shooting, Tank& tank)
         {
             Vector2f tankpos = tank.tankSprite.getPosition();
             RectangleShape rect(sf::Vector2f(40, 10));
             rect.setOrigin(-tankpos.x, -(tankpos.y - 150));
+            //Sprite spr;
+            //spr.setTexture();
+            //spr.setOrigin(-tankpos.x, -(tankpos.y - 150));
+            //sprite.push_back(spr)
             tank_shooting.rects.push_back({ rect ,tank.last_key });
         }
         void draw_tank_bullets(Tank_shooting& tank_shooting)
@@ -1592,6 +1650,7 @@ struct Tank
     int health = 10;
     int last_key = RIGHT;
     bool is_alive = 1;
+
     //127 × 48 pixels
     void setup(Tank& tank)
     {
@@ -1612,9 +1671,8 @@ struct Tank
         if (tank.is_alive)
         {
             window.draw(tank.tankSprite);
-            tank.shooting.draw_tank_bullets(tank.shooting);
         }
-
+            tank.shooting.draw_tank_bullets(tank.shooting);
     }
     void tankIdleAnimation(Tank& tank)
     {//127 × 48
@@ -1643,8 +1701,7 @@ struct Tank
     {//2133 × 200
 
         tank.tankSprite.setTexture(tankdie);
-        // EnemiAnimation(tank.tankSprite, 27, 2133 / 27, 200, 0.005, tank.tankAnimationInd[3]);
-
+        tank.stopped = 1;
         tank.tankAnimationInd[3] += 0.2;
         if (tank.tankAnimationInd[3] > 26.9)
         {
@@ -1657,34 +1714,38 @@ struct Tank
     }
     void tankState(Tank& tank)
     {
-        int distance = tank.tankSprite.getPosition().x - player.upperbodySprite.getPosition().x;
-        if (abs(distance) > 1000)
+        if (!tank.stopped)
         {
-            tankIdleAnimation(tank);
-        }
-        else if (abs(distance) < 600)
-        {
-
-            if (tank.shooting.shooting_timer.getElapsedTime().asMilliseconds() > 1000)
+            int distance = tank.tankSprite.getPosition().x - player.upperbodySprite.getPosition().x;
+            if (abs(distance) > 1000)
             {
-                tankShootingAnimation(tank);
+                tankIdleAnimation(tank);
             }
-        }
-        else
-        {
-            tankMovingAnimation(tank);
-
-            if (distance > 0)
+            else if (abs(distance) < 600)
             {
-                tank.tankSprite.setScale(4, 4);
-                tank.tankSprite.move(-3, 0);
-                tank.last_key = LEFT;
+
+                if (tank.shooting.shooting_timer.getElapsedTime().asMilliseconds() > 1000)
+                {
+                    tankShootingAnimation(tank);
+                }
+
             }
             else
             {
-                tank.tankSprite.setScale(-4, 4);
-                tank.tankSprite.move(3, 0);
-                tank.last_key = RIGHT;
+                tankMovingAnimation(tank);
+
+                if (distance > 0)
+                {
+                    tank.tankSprite.setScale(4, 4);
+                    tank.tankSprite.move(-3, 0);
+                    tank.last_key = LEFT;
+                }
+                else
+                {
+                    tank.tankSprite.setScale(-4, 4);
+                    tank.tankSprite.move(3, 0);
+                    tank.last_key = RIGHT;
+                }
             }
         }
     }
@@ -2079,6 +2140,7 @@ int main()
     hud.setup(hud);
     bgSetup();
     TS_Setups();
+    DeathScreen.deathScreenSetup();
     player.Playersetup(player);
     timer.restart();
     Menu();
@@ -2092,207 +2154,215 @@ void Menu()
     {
         mouse_pos();
         windowclose();
-        if (pause_menu.is_paused)
+        if (player.isdead)
         {
-            if (!menu.options_screen.isOpen)
+            DeathScreen.main_screen_draw();
+        }
+        else
+
+        {
+            if (pause_menu.is_paused)
             {
-                window_draw();
-                pause_menu.draw();
-            }
-            if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200 && !menu.options_screen.isOpen)
-            {
-                pause_menu.is_paused = false;
-                escTimer.restart();
-            }
-            else if (pause_menu.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter))
-                pause_menu.exit();
-            else if (pause_menu.selected == 2 && Keyboard::isKeyPressed(Keyboard::Enter) && timer2.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.isOpen)
-            {
-                timer2.restart();
                 if (!menu.options_screen.isOpen)
                 {
-                    timer4.restart();
-                    menu.options_screen.isOpen = true;
+                    window_draw();
+                    pause_menu.draw();
                 }
-                if (!menu.options_screen.music_slider.isOpen)
-                    menu.options_screen.draw();
-                if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
+                if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200 && !menu.options_screen.isOpen)
                 {
-                    menu.options_screen.isOpen = false;
+                    pause_menu.is_paused = false;
                     escTimer.restart();
                 }
-                if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
+                else if (pause_menu.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter))
+                    pause_menu.exit();
+                else if (pause_menu.selected == 2 && Keyboard::isKeyPressed(Keyboard::Enter) && timer2.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.isOpen)
                 {
-                    timer.restart();
-                    menu.options_screen.move_up();
-                }
-                if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
-                {
-                    timer.restart();
-                    menu.options_screen.move_down();
-                }
-                if (Keyboard::isKeyPressed(Keyboard::Enter) && menu.options_screen.selected == 1 && timer4.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.music_slider.isOpen)
-                {
-                    timer4.restart();
-                    menu.options_screen.music_slider.draw();
-                    menu.options_screen.music_slider.isOpen = true;
-                    if (Keyboard::isKeyPressed(Keyboard::Right) && timer.getElapsedTime().asMilliseconds() > 200)
+                    timer2.restart();
+                    if (!menu.options_screen.isOpen)
                     {
-                        timer.restart();
-                        menu.options_screen.music_slider.move_left();
+                        timer4.restart();
+                        menu.options_screen.isOpen = true;
                     }
-                    if (Keyboard::isKeyPressed(Keyboard::Left) && timer.getElapsedTime().asMilliseconds() > 200)
-                    {
-                        timer.restart();
-                        menu.options_screen.music_slider.move_right();
-                    }
+                    if (!menu.options_screen.music_slider.isOpen)
+                        menu.options_screen.draw();
                     if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
                     {
+                        menu.options_screen.isOpen = false;
                         escTimer.restart();
-                        menu.options_screen.music_slider.isOpen = false;
+                    }
+                    if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
+                    {
+                        timer.restart();
+                        menu.options_screen.move_up();
+                    }
+                    if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
+                    {
+                        timer.restart();
+                        menu.options_screen.move_down();
+                    }
+                    if (Keyboard::isKeyPressed(Keyboard::Enter) && menu.options_screen.selected == 1 && timer4.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.music_slider.isOpen)
+                    {
+                        timer4.restart();
+                        menu.options_screen.music_slider.draw();
+                        menu.options_screen.music_slider.isOpen = true;
+                        if (Keyboard::isKeyPressed(Keyboard::Right) && timer.getElapsedTime().asMilliseconds() > 200)
+                        {
+                            timer.restart();
+                            menu.options_screen.music_slider.move_left();
+                        }
+                        if (Keyboard::isKeyPressed(Keyboard::Left) && timer.getElapsedTime().asMilliseconds() > 200)
+                        {
+                            timer.restart();
+                            menu.options_screen.music_slider.move_right();
+                        }
+                        if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
+                        {
+                            escTimer.restart();
+                            menu.options_screen.music_slider.isOpen = false;
+                        }
                     }
                 }
-            }
-            else if (pause_menu.selected == 3 && Keyboard::isKeyPressed(Keyboard::Enter))
-                window.close();
-            else if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
-            {
-                timer.restart();
-                pause_menu.move_up();
-            }
-            else if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
-            {
-                pause_menu.move_down();
-                timer.restart();
-            }
-        }
-        else {
-            if (menu.game_started)
-            {
-                TS_PESpr.setColor(Color(255, 255, 255, AlphaPE));
-                if (AlphaPE > 0)
-                    AlphaPE -= 0.05;
-                windowfunction();
-            }
-            else
-            {
-                if (!menu.start_selected && !menu.options_screen.isOpen)
-                    menu.main_screen_draw();
-                if (Keyboard::isKeyPressed(Keyboard::Enter) || menu.ts_escaped)
+                else if (pause_menu.selected == 3 && Keyboard::isKeyPressed(Keyboard::Enter))
+                    window.close();
+                else if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
                 {
-
-                    if (!menu.ts_escaped)
+                    timer.restart();
+                    pause_menu.move_up();
+                }
+                else if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
+                {
+                    pause_menu.move_down();
+                    timer.restart();
+                }
+            }
+            else {
+                if (menu.game_started)
+                {
+                    TS_PESpr.setColor(Color(255, 255, 255, AlphaPE));
+                    if (AlphaPE > 0)
+                        AlphaPE -= 0.05;
+                    windowfunction();
+                }
+                else
+                {
+                    if (!menu.start_selected && !menu.options_screen.isOpen)
+                        menu.main_screen_draw();
+                    if (Keyboard::isKeyPressed(Keyboard::Enter) || menu.ts_escaped)
                     {
-                        timer2.restart();
-                        MenuClick.play();
-                        menu.ts_escaped = true;
 
-                    }
-                    else
-                    {
-
-                        if (((menu.selected == START && Keyboard::isKeyPressed(Keyboard::Enter)) && timer2.getElapsedTime().asMilliseconds() > 200) || menu.start_selected)
+                        if (!menu.ts_escaped)
                         {
-                            hud.hud_time.restart();
                             timer2.restart();
-                            menu.start_screen.draw();
-                            if (!menu.start_selected)
-                            {
-                                MenuClick.play();
-                                menu.start_selected = true;
-                                timer.restart();
-
-                            }
-                            if (menu.start_screen.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter) && timer.getElapsedTime().asMilliseconds() > 200)
-                            {
-                                menu.game_started = true;
-                                timer.restart();
-                                windowfunction();
-
-                            }
-                            if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
-                            {
-                                menu.start_screen.move_up();
-                                timer.restart();
-                            }
-                            if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
-                            {
-                                menu.start_screen.move_down();
-                                timer.restart();
-                            }
-                            if (Keyboard::isKeyPressed(Keyboard::Escape) && timer.getElapsedTime().asMilliseconds() > 200)
-                            {
-                                menu.start_selected = false;
-                                timer.restart();
-                            }
+                            MenuClick.play();
+                            menu.ts_escaped = true;
 
                         }
-                        else if (menu.selected == OPTIONS && Keyboard::isKeyPressed(Keyboard::Enter) && timer2.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.isOpen)
+                        else
                         {
-                            timer2.restart();
-                            if (!menu.options_screen.music_slider.isOpen)
-                                menu.options_screen.draw("menu");
-                            if (!menu.options_screen.isOpen)
-                            {
-                                menu.options_screen.isOpen = true;
-                                timer4.restart();
-                            }
-                            if (Keyboard::isKeyPressed(Keyboard::Enter) && timer4.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.music_slider.isOpen)
-                            {
-                                timer4.restart();
-                                menu.options_screen.music_slider.draw("main");
-                                menu.options_screen.music_slider.isOpen = true;
 
+                            if (((menu.selected == START && Keyboard::isKeyPressed(Keyboard::Enter)) && timer2.getElapsedTime().asMilliseconds() > 200) || menu.start_selected)
+                            {
+                                hud.hud_time.restart();
+                                timer2.restart();
+                                menu.start_screen.draw();
+                                if (!menu.start_selected)
+                                {
+                                    MenuClick.play();
+                                    menu.start_selected = true;
+                                    timer.restart();
+
+                                }
+                                if (menu.start_screen.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter) && timer.getElapsedTime().asMilliseconds() > 200)
+                                {
+                                    menu.game_started = true;
+                                    timer.restart();
+                                    windowfunction();
+
+                                }
+                                if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
+                                {
+                                    menu.start_screen.move_up();
+                                    timer.restart();
+                                }
+                                if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
+                                {
+                                    menu.start_screen.move_down();
+                                    timer.restart();
+                                }
+                                if (Keyboard::isKeyPressed(Keyboard::Escape) && timer.getElapsedTime().asMilliseconds() > 200)
+                                {
+                                    menu.start_selected = false;
+                                    timer.restart();
+                                }
+
+                            }
+                            else if (menu.selected == OPTIONS && Keyboard::isKeyPressed(Keyboard::Enter) && timer2.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.isOpen)
+                            {
+                                timer2.restart();
+                                if (!menu.options_screen.music_slider.isOpen)
+                                    menu.options_screen.draw("menu");
+                                if (!menu.options_screen.isOpen)
+                                {
+                                    menu.options_screen.isOpen = true;
+                                    timer4.restart();
+                                }
+                                if (Keyboard::isKeyPressed(Keyboard::Enter) && timer4.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.music_slider.isOpen)
+                                {
+                                    timer4.restart();
+                                    menu.options_screen.music_slider.draw("main");
+                                    menu.options_screen.music_slider.isOpen = true;
+
+                                    if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
+                                    {
+                                        escTimer.restart();
+                                        menu.options_screen.music_slider.isOpen = false;
+                                    }
+
+                                    if (Keyboard::isKeyPressed(Keyboard::Right) && timer.getElapsedTime().asMilliseconds() > 200)
+                                    {
+                                        timer.restart();
+                                        menu.options_screen.music_slider.move_left();
+                                    }
+                                    if (Keyboard::isKeyPressed(Keyboard::Left) && timer.getElapsedTime().asMilliseconds() > 200)
+                                    {
+                                        timer.restart();
+                                        menu.options_screen.music_slider.move_right();
+                                    }
+
+
+                                }
+                                if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
+                                {
+                                    timer.restart();
+                                    menu.options_screen.move_down();
+                                }
+                                if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
+                                {
+                                    timer.restart();
+                                    menu.options_screen.move_up();
+                                }
                                 if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
                                 {
                                     escTimer.restart();
-                                    menu.options_screen.music_slider.isOpen = false;
+                                    menu.options_screen.exit();
                                 }
-
-                                if (Keyboard::isKeyPressed(Keyboard::Right) && timer.getElapsedTime().asMilliseconds() > 200)
-                                {
-                                    timer.restart();
-                                    menu.options_screen.music_slider.move_left();
-                                }
-                                if (Keyboard::isKeyPressed(Keyboard::Left) && timer.getElapsedTime().asMilliseconds() > 200)
-                                {
-                                    timer.restart();
-                                    menu.options_screen.music_slider.move_right();
-                                }
-
-
                             }
-                            if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
+                            else if (menu.selected == EXIT && Keyboard::isKeyPressed(Keyboard::Enter))
+                                window.close();
+
+                            else if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
                             {
+                                menu.move_up();
                                 timer.restart();
-                                menu.options_screen.move_down();
+
                             }
-                            if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
+                            else if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
                             {
+
+                                menu.move_down();
                                 timer.restart();
-                                menu.options_screen.move_up();
+
                             }
-                            if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
-                            {
-                                escTimer.restart();
-                                menu.options_screen.exit();
-                            }
-                        }
-                        else if (menu.selected == EXIT && Keyboard::isKeyPressed(Keyboard::Enter))
-                            window.close();
-
-                        else if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
-                        {
-                            menu.move_up();
-                            timer.restart();
-
-                        }
-                        else if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
-                        {
-
-                            menu.move_down();
-                            timer.restart();
-
                         }
                     }
                 }
@@ -2445,6 +2515,8 @@ void windowfunction()
     dt /= 750;
     clock_pl.restart();
 
+    if (Keyboard::isKeyPressed(Keyboard::X))
+        player.isdead = true;
     if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
     {
         pause_menu.is_paused = true;
@@ -2482,7 +2554,7 @@ void windowfunction()
     enemy2->Damaged(enemy2);
     tank.Damaged(tank);
     playerDamageFromEnemy1();
-
+    powerup.apply_effects(powerups);
     if (enemy3.size() < 30)
     {
         call();
@@ -3302,6 +3374,8 @@ void TS_Setups()
     MenuScrollB.loadFromFile(pathh + "Menu Scrolling FX.wav");
     MenuScroll.setBuffer(MenuScrollB);
     MenuScroll.setVolume(100);//100;
+
+
 }
 void texture_setup()
 {
