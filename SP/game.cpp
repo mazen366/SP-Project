@@ -51,21 +51,31 @@ RWTexRun, RWTexAttack, RWTexDeath, PTexSCPL, PTexIPL, PTexSCRL, PTexICPL, PTexIC
 PTexMU, PTexML, PTexRPU, PTexRPL, PTexRRU, PTexRRL, PTexSSPU, PTexSSRU, PTexIPSL, PTexIPSU, PTexIRL, PTexIRU, PTexJPU,
 health_kit_tex, health_potion_tex, speed_potion_tex, damage_potion_tex, rifle_ammo_tex, deathScreenBGTex, 
 deathScreenFGTex, deathScreenFGTex2, NewGameTex;
+
+
 Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, NewGameSpr, 
 TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr, deathScreenBGSpr, deathScreenFGSpr, deathScreenFGSpr2;
+
+
 Music TS_BGTheme;
 Music TS_BGFireFX;
+
+
 SoundBuffer MenuClickB, MenuScrollB, DeathScreenFXB, GamePlayB, MenuReturnB;
 Sound MenuClick, MenuScroll, DeathScreenFX, GamePlayTheme, MenuReturn;
+
+
 Clock timer, timer2, timer4, escTimer;
+
+
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
-float TS_TandGCnt = 0;
-float TS_LCnt = 0;
-float TS_LogoCnt = 0;
-float TS_PECnt = 0;
-float AlphaPE = 255;
+
+
+float TS_TandGCnt = 0, TS_LCnt = 0, TS_LogoCnt = 0, TS_PECnt = 0, AlphaPE = 255;
 int TS_ButtonsCnt = 0, TSS_ButtonsCnt = 0, OptionsSprCnt = 0, deathScreenFG2cnt = 0;
 
+Font nameFont;
+Text nameDis;
 // Moved from down to here because
 
 int bgCounter = 0, leftEnd, rightEnd;//indicator for current map, start of map, end of map
@@ -75,6 +85,7 @@ Clock blackscreenTimer;
 int full_time_played = 0;
 
 // DECLRATIONS
+char key_code(sf::Keyboard::Key);
 void EnemiAnimation(Sprite& s, float maxframe, float x, float y, float delay, float& indecator);
 void texture_setup();
 void window_draw();
@@ -401,10 +412,6 @@ struct NewGameScreen
     bool is_open = false;
     string name;
 
-    void input()
-    {
-
-    }
 
     void draw()
     {
@@ -419,12 +426,14 @@ struct NewGameScreen
         if (TS_LCnt > 10)
             TS_LCnt -= 10;
         TS_LSpr.setTextureRect(IntRect((int)TS_LCnt * 473, 0, 473, 261));
+        nameDis.setString(name);
+
         window.draw(TS_BGSpr);
         window.draw(TS_TandGSpr);
         window.draw(TS_LSpr);
         window.draw(TS_OlSpr);
         window.draw(NewGameSpr);
-
+        window.draw(nameDis);
         window.display();
     }
 
@@ -2207,8 +2216,22 @@ void Menu()
 {
     while (window.isOpen())
     {
+        Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::KeyPressed && NewGameScreen.is_open)
+            {
+                if (event.key.code == sf::Keyboard::Backspace)
+                    NewGameScreen.name.pop_back();
+                else
+                    NewGameScreen.name += key_code(event.key.code);
+            }
+
+            if (event.type == Event::Closed)
+                window.close();
+        }
         mouse_pos();
-        windowclose();
+        
         if (player.isdead)
         {
             DeathScreen.main_screen_draw();
@@ -2379,11 +2402,12 @@ void Menu()
                                     timer.restart();
                                     NewGameScreen.is_open = true;
                                     NewGameScreen.draw();
-
+                                   
                                     if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 300)
                                     {
                                         escTimer.restart();
                                         NewGameScreen.is_open = false;
+                                        NewGameScreen.name = "";
                                     }
                                 }
                                 if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
@@ -3507,6 +3531,11 @@ void TS_Setups()
     NewGameTex.loadFromFile("Enter Your Name.png");
     NewGameSpr.setTexture(NewGameTex);
 
+    nameFont.loadFromFile("Inversionz Unboxed.ttf");
+    nameDis.setFont(nameFont);
+    nameDis.setPosition(780, 740);
+    nameDis.setCharacterSize(80);
+
 }
 void texture_setup()
 {
@@ -3547,5 +3576,139 @@ void mouse_pos()
         Vector2i mousePos = Mouse::getPosition(window);
         cout << mousePos.x << ' ' << mousePos.y << '\n';
     }
+}
+
+char key_code(sf::Keyboard::Key key)
+{
+    char keyChar = '\0';
+    switch (key)
+    {
+    case sf::Keyboard::A:
+        keyChar = 'A';
+        break;
+    case sf::Keyboard::B:
+        keyChar = 'B';
+        break;
+    case sf::Keyboard::C:
+        keyChar = 'C';
+        break;
+    case sf::Keyboard::D:
+        keyChar = 'D';
+        break;
+    case sf::Keyboard::E:
+        keyChar = 'E';
+        break;
+    case sf::Keyboard::F:
+        keyChar = 'F';
+        break;
+    case sf::Keyboard::G:
+        keyChar = 'G';
+        break;
+    case sf::Keyboard::H:
+        keyChar = 'H';
+        break;
+    case sf::Keyboard::I:
+        keyChar = 'I';
+        break;
+    case sf::Keyboard::J:
+        keyChar = 'J';
+        break;
+    case sf::Keyboard::K:
+        keyChar = 'K';
+        break;
+    case sf::Keyboard::L:
+        keyChar = 'L';
+        break;
+    case sf::Keyboard::M:
+        keyChar = 'M';
+        break;
+    case sf::Keyboard::N:
+        keyChar = 'N';
+        break;
+    case sf::Keyboard::O:
+        keyChar = 'O';
+        break;
+    case sf::Keyboard::P:
+        keyChar = 'P';
+        break;
+    case sf::Keyboard::Q:
+        keyChar = 'Q';
+        break;
+    case sf::Keyboard::R:
+        keyChar = 'R';
+        break;
+    case sf::Keyboard::S:
+        keyChar = 'S';
+        break;
+    case sf::Keyboard::T:
+        keyChar = 'T';
+        break;
+    case sf::Keyboard::U:
+        keyChar = 'U';
+        break;
+    case sf::Keyboard::V:
+        keyChar = 'V';
+        break;
+    case sf::Keyboard::W:
+        keyChar = 'W';
+        break;
+    case sf::Keyboard::X:
+        keyChar = 'X';
+        break;
+    case sf::Keyboard::Y:
+        keyChar = 'Y';
+        break;
+    case sf::Keyboard::Z:
+        keyChar = 'Z';
+        break;
+    case sf::Keyboard::Num0:
+        keyChar = '0';
+        break;
+    case sf::Keyboard::Num1:
+        keyChar = '1';
+        break;
+    case sf::Keyboard::Num2:
+        keyChar = '2';
+        break;
+    case sf::Keyboard::Num3:
+        keyChar = '3';
+        break;
+    case sf::Keyboard::Num4:
+        keyChar = '4';
+        break;
+    case sf::Keyboard::Num5:
+        keyChar = '5';
+        break;
+    case sf::Keyboard::Num6:
+        keyChar = '6';
+        break;
+    case sf::Keyboard::Num7:
+        keyChar = '7';
+        break;
+    case sf::Keyboard::Num8:
+        keyChar = '8';
+        break;
+    case sf::Keyboard::Num9:
+        keyChar = '9';
+        break;
+    case sf::Keyboard::Space:
+        keyChar = ' ';
+        break;
+    case sf::Keyboard::Enter:
+        keyChar = '\n';
+        break;
+    case sf::Keyboard::Backspace:
+        keyChar = '\b';
+        break;
+    case sf::Keyboard::Tab:
+        keyChar = '\t';
+        break;
+    case sf::Keyboard::Escape:
+        keyChar = '\x1b';
+        break;
+    default:
+        break;
+    }
+    return keyChar;
 }
 ///
