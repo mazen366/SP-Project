@@ -68,7 +68,7 @@ SoundBuffer MenuClickB, MenuScrollB, DeathScreenFXB, GamePlayB, MenuReturnB;
 Sound MenuClick, MenuScroll, DeathScreenFX, GamePlayTheme, MenuReturn, startvoice;;
 
 
-Clock timer, timer2, timer4, escTimer, eventTimer;
+Clock timer, timer2, timer4, escTimer, eventTimer, LB_timer;
 
 
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
@@ -76,6 +76,8 @@ View view(Vector2f(0, 0), Vector2f(1920, 1080));
 
 float TS_TandGCnt = 0, TS_LCnt = 0, TS_LogoCnt = 0, TS_PECnt = 0, AlphaPE = 255;
 int TS_ButtonsCnt = 0, TSS_ButtonsCnt = 0, OptionsSprCnt = 0, deathScreenFG2cnt = 0;
+
+bool game_ended = 0;
 
 Font nameFont;
 Text nameDis, LeaderBoardText, LoadSaveText;
@@ -3201,16 +3203,19 @@ void transition_pos_check()
         this_thread::sleep_for(chrono::milliseconds(300));
 
     }
-    else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 2 && new_enemy.is_done(enemy3))
+    else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 2 && new_enemy.is_done(enemy3) || game_ended)
     {
+        game_ended = true;
         if (!LeaderBoard.is_compared)
         {
+            LB_timer.restart();
             LeaderBoard.compare();
             LeaderBoard.is_compared = true;
             LeaderBoard.leaderboard_show();
         }
 
-        LeaderBoard.draw();
+        if (LB_timer.getElapsedTime().asSeconds() < 10)
+            LeaderBoard.draw();
     }
     else
         window.display();
