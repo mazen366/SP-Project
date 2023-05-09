@@ -486,7 +486,7 @@ struct LeaderBoard
 
         window.draw(LeaderBoardSpr);
         window.draw(LeaderBoardSheetSpr);
-        for (int i = 0, k = leaderboard_vec.size() - 1; i < 10; i++, k--)
+        for (int i = 0, k = leaderboard_vec.size() - 1; i < names_save.size(); i++, k--)
         {
             for (int j = 0; j < 3; j++)
             {
@@ -541,6 +541,7 @@ struct LoadGameScreen
         if (TS_LCnt > 10)
             TS_LCnt -= 10;
         TS_LSpr.setTextureRect(IntRect((int)TS_LCnt * 473, 0, 473, 261));
+        TS_OlSpr.setPosition(0.f, 0.f);
 
         window.draw(TS_BGSpr);
         window.draw(TS_TandGSpr);
@@ -628,9 +629,10 @@ struct DeathScreen //Contains the Death Screen Menu Elements.
         window.clear();
         window_draw();
         deathScreenFGSpr2.setPosition(view.getCenter().x - (980 * view.getSize().x / 1920.0), view.getCenter().y - (650 * view.getSize().y / 1080.0));
+        deathScreenFGSpr2.setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
         deathScreenFGSpr2.setTextureRect(IntRect(deathScreenFG2cnt * 1920, 0, 1920, 1080));
         TS_OlSpr.setScale(3 * view.getSize().x / 1920.0, 3 * view.getSize().y / 1080.0);
-        TS_OlSpr.setPosition(view.getCenter().x - (1000 * view.getSize().x / 1920), view.getCenter().y - (600 * view.getSize().y / 1080.0));
+        TS_OlSpr.setPosition(view.getCenter().x - (1000 * view.getSize().x / 1920.0), view.getCenter().y - (600 * view.getSize().y / 1080.0));
 
         window.draw(TS_OlSpr);
         window.draw(deathScreenFGSpr2);
@@ -2249,12 +2251,21 @@ struct Enemy3
         }
 
     }
-    bool is_done(Enemy3& x)
+    bool is_done(vector <Enemy3>& enemy3)
     {
-        if (x.cnt == 20)
-            return true;
+        int a = 0;
+        for (int i = 0; i < enemy3.size(); i++)
+        {
+            if (!enemy3[i].is_alive)
+                a++;
+        }
 
-        return false;
+        if (a == 20)
+            return true;
+        else
+            return false;
+
+
     }
 	void reset(vector<Enemy3>& enemy3)
     {
@@ -2444,18 +2455,48 @@ void Menu()
         mouse_pos();
         if (player.isdead)
         {
-            DeathScreen.main_screen_draw();
-            if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
+            if (player.num_of_lives == 0)
             {
-                timer.restart();
-                DeathScreen.move_up();
+                DeathScreen.main_screen_draw();
+                
+                if (DeathScreen.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter))
+                {
+                    RS->reset();
+                    enemy2->reset();
+                    new_enemy.reset(enemy3);
+                    LoadGameScreen.isOpen = true;
+                    player.isdead = false;
+                    menu.game_started = false;
+                    player.live = true;
+                    player.health = 100;
+                    player.num_of_lives = 3;
+                    player.upperbodySprite.setPosition(0, 600);
+                    player.lowerbodySprite.setPosition(0, 600);
+                    view.setCenter(960, 540);
+                    window.setView(view);
+                    bgCounter = LEVEL_1_A_BG;
+                    this_thread::sleep_for(chrono::milliseconds(100));
+
+                    
+
+                }
+                if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
+                {
+                    timer.restart();
+                    DeathScreen.move_up();
+                }
+                if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
+                {
+                    timer.restart();
+                    DeathScreen.move_down();
+                }
+                if (DeathScreen.selected == 2 && Keyboard::isKeyPressed(Keyboard::Enter))
+                {
+                    MenuClick.play();
+                    window.close();
+                }
             }
-            if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
-            {
-                timer.restart();
-                DeathScreen.move_down();
-            }
-            if (DeathScreen.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter) && timer.getElapsedTime().asMilliseconds() > 200)
+            else
             {
                 player.isdead = false;
                 player.health = 100;
@@ -2472,16 +2513,12 @@ void Menu()
                     isMoved = 0;
                     enemy2[0].reset();
                 }
-                else if (bgCounter== LEVEL_1_C_BG){
-                    ismoved2=0;
+                else if (bgCounter == LEVEL_1_C_BG) {
+                    ismoved2 = 0;
                     new_enemy.reset(enemy3);
                 }
             }
-            if (DeathScreen.selected == 2 && Keyboard::isKeyPressed(Keyboard::Enter))
-            {
-                MenuClick.play();
-                window.close();
-            }
+            
         }
         else
 
@@ -3164,7 +3201,7 @@ void transition_pos_check()
         this_thread::sleep_for(chrono::milliseconds(300));
 
     }
-    else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 2) //&& new_enemy.is_done(new_enemy))
+    else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 2 && new_enemy.is_done(enemy3))
     {
         if (!LeaderBoard.is_compared)
         {
@@ -3174,7 +3211,6 @@ void transition_pos_check()
         }
 
         LeaderBoard.draw();
-
     }
     else
         window.display();
@@ -3202,7 +3238,7 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
     player.upperbodySprite.setOrigin(x / 2, 0);
 
     //check collision
-    if (!canMoveleft(s, leftEnd) || !canMoveRight(s, rightEnd))
+    if (!canMoveleft(s, leftEnd) || !canMoveRight(s, rightEnd) )
     {
         player.Velocity.x = 0;
         //gravity
@@ -3240,13 +3276,19 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
     //move player
     if (player.gun == PISTOL)
     {
-        s.move(player.Velocity.x * (player.speed_boost), player.Velocity.y * player.speed_boost);
-        player.upperbodySprite.move(player.Velocity.x * (player.speed_boost), player.Velocity.y * (player.speed_boost));
+        if(!pause_menu.is_paused)
+        {
+            s.move(player.Velocity.x * (player.speed_boost), player.Velocity.y * player.speed_boost);
+            player.upperbodySprite.move(player.Velocity.x * (player.speed_boost), player.Velocity.y * (player.speed_boost));
+        }
     }
     else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
     {
-        s.move(player.Velocity.x * (player.speed_boost) * 0.7, player.Velocity.y * player.speed_boost);
-        player.upperbodySprite.move(player.Velocity.x * (player.speed_boost) * 0.7, player.Velocity.y * (player.speed_boost));
+        if(!pause_menu.is_paused)
+        {
+            s.move(player.Velocity.x * (player.speed_boost) * 0.7, player.Velocity.y * player.speed_boost);
+            player.upperbodySprite.move(player.Velocity.x * (player.speed_boost) * 0.7, player.Velocity.y * (player.speed_boost));
+        }
     }
     player.rec.setPosition(s.getPosition().x - 50, s.getPosition().y);
 }
@@ -3765,7 +3807,7 @@ void TS_Setups()
     TS_OlSpr.setPosition(0.f, 0.f);
     TS_OlTex.loadFromFile(pathh + "Dark Overlay.png");
     TS_OlSpr.setTexture(TS_OlTex);
-    TS_OlSpr.setScale(3, 3);
+    TS_OlSpr.setScale(5, 3);
 
     PMSpr.setPosition(666, 364);
     PMTex.loadFromFile(pathh + "Pause Screen Sprite Sheet.png");
