@@ -52,11 +52,11 @@ TS_buttonsTex, TS_SSTex, TS_OlTex, OptionsTex, MusicControlTex, PMTex,
 RWTexRun, RWTexAttack, RWTexDeath, PTexSCPL, PTexIPL, PTexSCRL, PTexICPL, PTexICRL, PTexJRU, PTexJPL, PTexDL,
 PTexMU, PTexML, PTexRPU, PTexRPL, PTexRRU, PTexRRL, PTexSSPU, PTexSSRU, PTexIPSL, PTexIPSU, PTexIRL, PTexIRU, PTexJPU,
 health_kit_tex, health_potion_tex, speed_potion_tex, damage_potion_tex, rifle_ammo_tex, laser_ammo_tex, deathScreenBGTex,
-deathScreenFGTex, deathScreenFGTex2, NewGameTex, LeaderBoardTex, LeaderBoardSheetTex, LoadGameTex;
+deathScreenFGTex, deathScreenFGTex2, NewGameTex, LeaderBoardTex, LeaderBoardSheetTex, LoadGameTex, CreditsBG, CreditsFG;
 
 
 Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, NewGameSpr,
-TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr, deathScreenBGSpr, deathScreenFGSpr, deathScreenFGSpr2, LeaderBoardSpr, LeaderBoardSheetSpr, 
+TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr, deathScreenBGSpr, deathScreenFGSpr, deathScreenFGSpr2, LeaderBoardSpr, LeaderBoardSheetSpr, CreditsBGSpr, CreditsFGSpr,
 LoadGameSpr, SoundEffectsControlSpr;
 
 
@@ -64,8 +64,8 @@ Music TS_BGTheme;
 Music TS_BGFireFX;
 
 
-SoundBuffer MenuClickB, MenuScrollB, DeathScreenFXB, GamePlayB, MenuReturnB;
-Sound MenuClick, MenuScroll, DeathScreenFX, GamePlayTheme, MenuReturn, startvoice;;
+SoundBuffer MenuClickB, MenuScrollB, DeathScreenFXB, GamePlayB, MenuReturnB, CreditsMusicB;
+Sound MenuClick, MenuScroll, DeathScreenFX, GamePlayTheme, MenuReturn, startvoice, CreditsMusic;
 
 
 Clock timer, timer2, timer4, escTimer, eventTimer, LB_timer;
@@ -73,6 +73,23 @@ Clock timer, timer2, timer4, escTimer, eventTimer, LB_timer;
 
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
 
+bool creditsactive = 1;
+const int fadeinT = 2000;
+const int fadeoutT = 2000;
+const int waitT = 2000;
+const int totalT = fadeinT + fadeoutT + waitT;
+const float AlphaIncrementC = float(255) / fadeinT;
+float CurrentAlpha;
+float CreditsAlpha = 0;
+float CreditsCntX = 0;
+float CreditsCntY = 0;
+float CreditsFGCntX = 0;
+float CreditsFGCntY = 0;
+
+Clock CreditsTClock;
+int currentF = 0;
+int currentR = 0;
+int numF = 12;
 
 float TS_TandGCnt = 0, TS_LCnt = 0, TS_LogoCnt = 0, TS_PECnt = 0, AlphaPE = 255;
 int TS_ButtonsCnt = 0, TSS_ButtonsCnt = 0, OptionsSprCnt = 0, deathScreenFG2cnt = 0;
@@ -318,7 +335,7 @@ struct Liser
         }
     }
     void restart()//restart liser power  
-    
+
     {
         Event event;
         while (window.pollEvent(event))
@@ -339,8 +356,8 @@ struct Pistol
     //sound
     SoundBuffer soundb;
     Sound sound;
-    
-    
+
+
     Texture tex;
     vector<Sprite>sprite;
     vector<pair<RectangleShape, pair<int, double>>>rects;// bullets //checker //position.x
@@ -523,7 +540,7 @@ struct LoadGameScreen
 
     void move_up()
     {
-        selected = (selected == 1 ? names_save.size()  : selected - 1);
+        selected = (selected == 1 ? names_save.size() : selected - 1);
     }
 
     void move_down()
@@ -551,7 +568,7 @@ struct LoadGameScreen
         window.draw(TS_OlSpr);
         window.draw(LoadGameSpr);
         for (int i = 0; i < names_save.size(); i++)
-        {  
+        {
             LoadSaveText.setString(names_save[i].first);
             LoadSaveText.setPosition(850, 300 + i * 75);
 
@@ -856,7 +873,66 @@ struct OptionsScreen
         }
     }
 };
+struct CreditScreen
+{
+    bool isOpen = false;
 
+    void creditsSetup() {
+        CreditsBG.loadFromFile("Leaderboard BG Sprite Sheet.png");
+        CreditsFG.loadFromFile("Credits Sprite Sheet.png");
+        CreditsBGSpr.setTexture(CreditsBG);
+        CreditsFGSpr.setTexture(CreditsFG);
+        CreditsMusicB.loadFromFile("Credits Music.wav");
+        CreditsMusic.setBuffer(CreditsMusicB);
+    }
+
+    void creditsAnimation() 
+    {
+        CreditsBGSpr.setTextureRect(IntRect(int(CreditsCntX) * 1920, int(CreditsCntY) * 1080, 1920, 1080));
+        CreditsCntX += 0.5;
+        if (CreditsCntX > 4)
+        {
+            CreditsCntX = 0;
+            CreditsCntY = CreditsCntY == 0 ? 1 : 0;
+        }
+        float elapsedT = CreditsTClock.getElapsedTime().asMilliseconds();
+        //cout << elapsedT << endl;
+        if (elapsedT < fadeinT) {
+            CurrentAlpha = elapsedT * AlphaIncrementC;
+            CreditsFGSpr.setTextureRect(IntRect(currentF * 1920, currentR * 1080, 1920, 1080));
+            CreditsFGSpr.setColor(Color(255, 255, 255, CurrentAlpha));
+        }
+        else if (elapsedT < fadeinT + waitT) {
+            CurrentAlpha = 255;
+            CreditsFGSpr.setTextureRect(IntRect(currentF * 1920, currentR * 1080, 1920, 1080));
+            CreditsFGSpr.setColor(Color(255, 255, 255, CurrentAlpha));
+        }
+        else if (elapsedT < totalT) {
+            CurrentAlpha = 255 - ((elapsedT - (fadeinT + waitT)) * AlphaIncrementC);
+            CreditsFGSpr.setTextureRect(IntRect(currentF * 1920, currentR * 1080, 1920, 1080));
+            CreditsFGSpr.setColor(Color(255, 255, 255, CurrentAlpha));
+        }
+        else if (elapsedT >= totalT) {
+            CreditsTClock.restart();
+            currentF = (currentF + 1);
+            if (currentR == 1 && currentF == 6)
+                creditsactive = 0;
+            if (currentF > 5)
+            {
+                currentF = 0;
+                currentR = currentR == 0 ? 1 : 0;
+            }
+            CreditsFGSpr.setColor(Color(255, 255, 255, CurrentAlpha));
+        }
+        window.clear();
+        window.draw(CreditsBGSpr);
+        if (creditsactive) {
+            window.draw(CreditsFGSpr);
+        }
+        window.display();
+    }
+
+}CreditScreen;
 //menu
 struct Menu
 {
@@ -1169,7 +1245,7 @@ struct PowerUps
     void drop_power_up(vector<PowerUps>& powerups)
     {
         powerup.pick_power_up = 1 + rand() % 6;
-        if (player.kill_count % 5 == 0)
+        if (player.kill_count % 4 == 0)
         {
             if (pick_power_up == HEALTH_KIT)
             {
@@ -1245,13 +1321,13 @@ struct PowerUps
             if (player.powerup_is_on == false) {
                 powerups[i].powerup_timer.restart();
             }
-            if (powerups[i].powerup_timer.getElapsedTime().asSeconds() > 15 && player.powerup_is_on == true) {
+            if (powerups[i].powerup_timer.getElapsedTime().asSeconds() > 20 && player.powerup_is_on == true) {
                 damage_boost = 1;
                 player.speed_boost = 1;
-                    liser.can_use_laser = 0;
-                    if (player.gun==LISER){
-                        player.gun=PISTOL;
-                    }
+                liser.can_use_laser = 0;
+                if (player.gun == LISER) {
+                    player.gun = PISTOL;
+                }
                 player.powerup_is_on = false;
                 powerups.pop_back();
             }
@@ -1289,7 +1365,7 @@ struct Enemy1
     Sound deathSound2;
 
     int damage = 1;
-    float health = 10;
+    float health = 5;
     float sprite_indicator[10];
     bool isCarrying_a_weapon = 0;
     bool death_animation_done = 0, is_getting_damaged = 0;
@@ -1623,7 +1699,7 @@ struct Enemy1
                 player.score += 125;
 
                 player.kill_count++;
-                if (player.kill_count % 5 == 0) {
+                if (player.kill_count % 4 == 0) {
                     player.last_enemy_pos.x = enemy1[i].sprite.getPosition().x;
                     player.last_enemy_pos.y = enemy1[i].sprite.getPosition().y;
                     powerup.drop_power_up(powerups);
@@ -1676,29 +1752,29 @@ struct Enemy1
             }
         }
     }
-	void reset()
-	{
-		for (int i = 0; i < 30; i++)
-		{
-			RS[i].sprite.setTexture(RS[i].runningtex);
-			RS[i].sprite.setScale(plScale, plScale);
-			RS[i].sprite.setTextureRect(IntRect(0, 0, 36, 48));
-			RS[i].sprite.setPosition(RS[i].initial_position, 670);
+    void reset()
+    {
+        for (int i = 0; i < 30; i++)
+        {
+            RS[i].sprite.setTexture(RS[i].runningtex);
+            RS[i].sprite.setScale(plScale, plScale);
+            RS[i].sprite.setTextureRect(IntRect(0, 0, 36, 48));
+            RS[i].sprite.setPosition(RS[i].initial_position, 670);
             RS[i].isCarrying_a_weapon = 0;
-			RS[i].is_alive = true;
-			RS[i].health = 10;
-			RS[i].damage = 1;
-            RS[i].sprite_indicator[10] = {0};
-			RS[i].is_getting_damaged = false;
+            RS[i].is_alive = true;
+            RS[i].health = 5;
+            RS[i].damage = 1;
+            RS[i].sprite_indicator[10] = { 0 };
+            RS[i].is_getting_damaged = false;
             RS[i].death_animation_done = 0;
             RS[i].check = 0;
             RS[i].reversed_direction = 0;
             RS[i].stopped = 0;
-			RS[i].shoot_timer = 0;
+            RS[i].shoot_timer = 0;
             RS[i].last_key = RIGHT;
-		}
+        }
 
-	}
+    }
 }RS[33];//Rebel Soldier
 
 
@@ -1851,7 +1927,7 @@ struct Enemy2
 
             player.kill_count++;
 
-            if (player.kill_count % 5 == 0) {
+            if (player.kill_count % 4 == 0) {
                 player.last_enemy_pos.x = s.RWSpr.getPosition().x;
                 player.last_enemy_pos.y = s.RWSpr.getPosition().y;
                 powerup.drop_power_up(powerups);
@@ -2036,7 +2112,7 @@ struct Enemy3
     float sprite_indicator[10] = { };
     bool is_alive = 1;
     Clock damage_timer;
-    int health = 10;
+    int health = 5;
     int damage = 1;
     bool check = 1;
     vector <pair <RectangleShape, int>> bullet; //enemy3 pistol
@@ -2097,7 +2173,7 @@ struct Enemy3
                 player.score += 125;
 
                 player.kill_count++;
-                if (player.kill_count % 5 == 0) {
+                if (player.kill_count % 4 == 0) {
                     player.last_enemy_pos.x = enemy1[i].sprite.getPosition().x;
                     player.last_enemy_pos.y = enemy1[i].sprite.getPosition().y;
                     powerup.drop_power_up(powerups);
@@ -2269,27 +2345,27 @@ struct Enemy3
 
 
     }
-	void reset(vector<Enemy3>& enemy3)
+    void reset(vector<Enemy3>& enemy3)
     {
-        for (int i = 0 ; i < enemy3.size() ; i++)
+        for (int i = 0; i < enemy3.size(); i++)
         {
             enemy3[i].isCarrying_a_weapon = 0;
-			enemy3[i].stopped = 0;
+            enemy3[i].stopped = 0;
             enemy3[i].shoot_timer = 0;
             enemy3[i].last_key = RIGHT;
             enemy3[i].death_animation_done = 0;
-			enemy3[i].is_getting_damaged = 0;
+            enemy3[i].is_getting_damaged = 0;
             enemy3[i].sprite_indicator[i] = 0;
             enemy3[i].is_alive = 0;
             enemy3[i].check = 0;
             enemy3[i].damage = 0;
-            enemy3[i].health = 0;   
+            enemy3[i].health = 5;
         }
         push_timer.restart();
         cnt = 0;
-        delay=0.3;
-        if(!enemy3.empty())
-          enemy3.clear();
+        delay = 0.3;
+        if (!enemy3.empty())
+            enemy3.clear();
     }
 }new_enemy;
 vector<Enemy3>enemy3;
@@ -2396,6 +2472,7 @@ Sprite lvl1lamp[4], lvl1torch[4], lvl1_D_torch[2], Exitlamp1_D;
 int main()
 {
     file.load();
+    CreditScreen.creditsSetup();
     LeaderBoard.setup();
     pistol.setup(pistol);
     liser.setup(liser);
@@ -2435,7 +2512,7 @@ void Menu()
                         NewGameScreen.name.pop_back();
                     else if (event.key.code == sf::Keyboard::Enter && NewGameScreen.name.size() > 2)
                     {
-                        if(names_save.size() < 10)
+                        if (names_save.size() < 10)
                         {
                             current_name = NewGameScreen.name;
                             names_save.push_back({ NewGameScreen.name, "0" });
@@ -2460,7 +2537,7 @@ void Menu()
             if (player.num_of_lives == 0)
             {
                 DeathScreen.main_screen_draw();
-                
+
                 if (DeathScreen.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter))
                 {
                     RS->reset();
@@ -2479,7 +2556,7 @@ void Menu()
                     bgCounter = LEVEL_1_A_BG;
                     this_thread::sleep_for(chrono::milliseconds(100));
 
-                    
+
 
                 }
                 if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
@@ -2520,7 +2597,7 @@ void Menu()
                     new_enemy.reset(enemy3);
                 }
             }
-            
+
         }
         else
 
@@ -2601,7 +2678,7 @@ void Menu()
                     {
                         timer4.restart();
                         SoundEffectsControl.draw();
-                        if(!SoundEffectsControl.isOpen)
+                        if (!SoundEffectsControl.isOpen)
                         {
                             SoundEffectsControl.isOpen = true;
                             MenuClick.play();
@@ -2622,7 +2699,7 @@ void Menu()
                             MenuReturn.play();
                             escTimer.restart();
                             SoundEffectsControl.isOpen = false;
-                        }        
+                        }
                     }
                 }
                 else if (pause_menu.selected == 3 && Keyboard::isKeyPressed(Keyboard::Enter))
@@ -2651,7 +2728,7 @@ void Menu()
                 }
                 else
                 {
-                    if (!menu.start_selected && !menu.options_screen.isOpen && !NewGameScreen.is_open && !LoadGameScreen.isOpen)
+                    if (!menu.start_selected && !menu.options_screen.isOpen && !NewGameScreen.is_open && !LoadGameScreen.isOpen && !CreditScreen.isOpen)
                         menu.main_screen_draw();
                     if (Keyboard::isKeyPressed(Keyboard::Enter) || menu.ts_escaped)
                     {
@@ -2709,7 +2786,7 @@ void Menu()
                                 {
                                     if (!LoadGameScreen.isOpen)
                                         MenuClick.play();
-                                    if(!LoadGameScreen.isOpen)
+                                    if (!LoadGameScreen.isOpen)
                                     {
                                         LoadGameScreen.isOpen = true;
                                         timer.restart();
@@ -2850,6 +2927,27 @@ void Menu()
                                     menu.options_screen.exit();
                                 }
                             }
+                            else if (menu.selected == CREDITS && Keyboard::isKeyPressed(Keyboard::Enter) || CreditScreen.isOpen)
+                            {
+                                if (!CreditScreen.isOpen)
+                                {
+                                    CreditsTClock.restart();
+                                    currentF = 0;
+                                    currentR = 0;
+                                    numF = 12;
+                                    creditsactive = 1;
+                                }
+                                CreditScreen.isOpen = true;
+                                CreditScreen.creditsAnimation();
+
+                                if (!creditsactive)
+                                {
+                                    CreditScreen.isOpen = false;
+                                }
+
+                                
+
+                            }
                             else if (menu.selected == EXIT && Keyboard::isKeyPressed(Keyboard::Enter))
                             {
                                 MenuClick.play();
@@ -2985,7 +3083,7 @@ void bgSetup()
     Lvl1FG[3].setPosition(18000, 0);
     create(ground, 7, 1640, 20, 18000, 970);
 
-    
+
 }
 void windowfunction()
 {
@@ -3068,7 +3166,7 @@ void BGanimation()
     animation(lvl1torch[3], 8, 1304.0 / 8, 303, 0.01, 29);
     animation(Exitlamp, 6, 1092.0 / 6, 99, 0.002, 30);
     animation(FireTroches, 8, 13120.0 / 8, 1192, 0.01, 31);
-   
+
 
 }
 void windowclose()
@@ -3216,6 +3314,25 @@ void transition_pos_check()
 
         if (LB_timer.getElapsedTime().asSeconds() < 10)
             LeaderBoard.draw();
+        else
+        {
+            RS->reset();
+            enemy2->reset();
+            new_enemy.reset(enemy3);
+            LoadGameScreen.isOpen = false;
+            player.isdead = false;
+            menu.game_started = false;
+            player.live = true;
+            player.health = 100;
+            player.num_of_lives = 3;
+            player.upperbodySprite.setPosition(0, 600);
+            player.lowerbodySprite.setPosition(0, 600);
+            view.setCenter(960, 540);
+            window.setView(view);
+            bgCounter = LEVEL_1_A_BG;
+            game_ended = false;
+            this_thread::sleep_for(chrono::milliseconds(100));
+        }
     }
     else
         window.display();
@@ -3243,7 +3360,7 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
     player.upperbodySprite.setOrigin(x / 2, 0);
 
     //check collision
-    if (!canMoveleft(s, leftEnd) || !canMoveRight(s, rightEnd) )
+    if (!canMoveleft(s, leftEnd) || !canMoveRight(s, rightEnd))
     {
         player.Velocity.x = 0;
         //gravity
@@ -3281,7 +3398,7 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
     //move player
     if (player.gun == PISTOL)
     {
-        if(!pause_menu.is_paused)
+        if (!pause_menu.is_paused)
         {
             s.move(player.Velocity.x * (player.speed_boost), player.Velocity.y * player.speed_boost);
             player.upperbodySprite.move(player.Velocity.x * (player.speed_boost), player.Velocity.y * (player.speed_boost));
@@ -3289,7 +3406,7 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
     }
     else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
     {
-        if(!pause_menu.is_paused)
+        if (!pause_menu.is_paused)
         {
             s.move(player.Velocity.x * (player.speed_boost) * 0.7, player.Velocity.y * player.speed_boost);
             player.upperbodySprite.move(player.Velocity.x * (player.speed_boost) * 0.7, player.Velocity.y * (player.speed_boost));
@@ -3740,7 +3857,7 @@ void playerDeathAnimation()
         player.pl_death_ctr += 0.2;
         if (player.pl_death_ctr > 9.9)
         {
-			--player.num_of_lives;
+            --player.num_of_lives;
             player.isdead = 1;
         }
         if (player.pl_death_ctr >= 0.2 && player.pl_death_ctr < 0.5)
@@ -3859,7 +3976,7 @@ void TS_Setups()
 
     LeaderBoardSheetTex.loadFromFile("Leaderboard Sprite.png");
     LeaderBoardSheetSpr.setTexture(LeaderBoardSheetTex);
-    
+
     SoundEffectsControlSpr.setPosition(580, 289);
     SoundEffectsControlSpr.setTexture(MusicControlTex);
     SoundEffectsControlSpr.setTextureRect(IntRect(0, 0, 755, 240));
