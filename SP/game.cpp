@@ -888,6 +888,8 @@ struct CreditScreen
 
     void creditsAnimation() 
     {
+        if (Keyboard::isKeyPressed(Keyboard::Escape))
+            isOpen = false;
         CreditsBGSpr.setTextureRect(IntRect(int(CreditsCntX) * 1920, int(CreditsCntY) * 1080, 1920, 1080));
         CreditsCntX += 0.5;
         if (CreditsCntX > 4)
@@ -2554,6 +2556,8 @@ void Menu()
                     view.setCenter(960, 540);
                     window.setView(view);
                     bgCounter = LEVEL_1_A_BG;
+                    rifle.ammo = 200;
+                    player.score = 0;
                     this_thread::sleep_for(chrono::milliseconds(100));
 
 
@@ -2582,6 +2586,8 @@ void Menu()
                 MenuClick.play();
                 timer.restart();
                 DeathScreen.is_active = false;
+                player.score = 0;
+                rifle.ammo = 200;
                 if (bgCounter == LEVEL_1_A_BG) {
                     player.upperbodySprite.setPosition(0, 600);
                     player.lowerbodySprite.setPosition(0, 600);
