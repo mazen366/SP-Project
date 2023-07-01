@@ -921,7 +921,7 @@ struct CreditScreen
         CreditsMusic.setBuffer(CreditsMusicB);
     }
 
-    void creditsAnimation() 
+    void creditsAnimation()
     {
         if (Keyboard::isKeyPressed(Keyboard::Escape))
             isOpen = false;
@@ -2380,30 +2380,35 @@ void new_enemy_setup()
 }
 struct FINAL_BOSS
 {
-    Texture idletex, runningtex, fightingtex, deadtex;
-    float health = 0, damage = 0,sprite_indicator =0.0;
+    Texture idletex, runningtex, fightingtex1, fightingtex2, deadtex;
+    float health = 0, damage = 0, sprite_indicator = 0.0;
     Vector2f velocity = { 0,0 };
     Vector2f initialposition = { 0,0 };
-    bool live = 1, deaths_animation_done = 0,is_alive=1, is_getting_damaged =0;
+    bool live = 1, deaths_animation_done = 0, is_alive = 1, is_getting_damaged = 0;
     Sprite sprite;
-    bool can_run=0,stopped=0,death_animation_done=0;
-    bool can_fight=0;
+    bool can_run = 0, stopped = 0, death_animation_done = 0;
+    bool can_fight = 0;
     Clock damage_timer;
-    float animation_indicator[10]={};
+    float animation_indicator[10] = {};
+
     void setup(FINAL_BOSS& boss)
-    {/*
+    {
+        /*
         boss.idletex.loadFromFile("");
         boss.deadtex.loadFromFile("");
-        boss.fightingtex.loadFromFile("");
+        boss.fightingtex1.loadFromFile("");
+        boss.fightingtex2.loadFromFile("");
         boss.runningtex.loadFromFile("");
         */
-
         boss.sprite.setPosition(boss.initialposition);
+        boss.sprite.setTexture(boss.idletex);
+
     }
     void status(FINAL_BOSS& boss)
     {
-        if (bgCounter == LEVEL_1_D_BG)
+        if (bgCounter == LEVEL_1_D_BG && boss.live)
         {
+            boss.damaged(boss);
             if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) < 500)
                 boss.can_run = 1;
 
@@ -2411,81 +2416,82 @@ struct FINAL_BOSS
                 (boss.can_fight) ? boss.fighting(boss) : boss.running(boss);
             else
                 boss.idle(boss);
-            
+
 
         }
     }
-    void damaged(FINAL_BOSS & boss)
+    void damaged(FINAL_BOSS& boss)
     {
-		if (boss.is_alive)
-		{
+        if (boss.is_alive)
+        {
 
-			for (int j = 0; j < pistol.rects.size(); j++)
-			{
-				if (boss.sprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
-				{
-					boss.velocity.x = 0;
-					boss.health -= pistol.damage;
-					boss.is_getting_damaged = 1;
-					pistol.rects[j].second.first = 0;
-				}
-			}
-			for (int j = 0; j < rifle.rects.size(); j++)
-			{
-				if (boss.sprite.getGlobalBounds().intersects(rifle.rects[j].first.getGlobalBounds()) && rifle.rects[j].second.first != 0)
-				{
-					boss.velocity.x = 0;
-					boss.health -= rifle.damage;
-					boss.is_getting_damaged = 1;
-					rifle.rects[j].second.first = 0;
-				}
-			}
-			for (int j = 0; j < liser.rects.size(); j++)
-			{
-				if (boss.sprite.getGlobalBounds().intersects(liser.rects[j].first.getGlobalBounds()) && liser.rects[j].second != 0)
-				{
-					boss.velocity.x = 0;
-					boss.health -= liser.damage;
-					boss.is_getting_damaged = 1;
-					liser.rects[j].second = 0;
-				}
-			}
-			if (boss.is_getting_damaged == 1)  // this adds red color to enemies when damaged
-			{
-				if (boss.damage_timer.getElapsedTime().asMilliseconds() <= 300) {
-					boss.sprite.setColor(Color::Red);
-				}
-				else {
-					boss.is_getting_damaged = 0;
-				}
-			}
-			else
-			{
-				boss.sprite.setColor(Color::White);
-				boss.damage_timer.restart();
-			}
-			if (boss.health <= 0)
-			{
-				boss.velocity.x = 0;
-				//boss.death_animation(i, boss);
-			}
-		}
-		if (player.holding_knife && player.rec.getGlobalBounds().intersects(boss.sprite.getGlobalBounds()))
-		{
-			boss.health -= 0.3 / 2;
-			boss.is_getting_damaged = true;
-		}
+            for (int j = 0; j < pistol.rects.size(); j++)
+            {
+                if (boss.sprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
+                {
+                    boss.velocity.x = 0;
+                    boss.health -= pistol.damage;
+                    boss.is_getting_damaged = 1;
+                    pistol.rects[j].second.first = 0;
+                }
+            }
+            for (int j = 0; j < rifle.rects.size(); j++)
+            {
+                if (boss.sprite.getGlobalBounds().intersects(rifle.rects[j].first.getGlobalBounds()) && rifle.rects[j].second.first != 0)
+                {
+                    boss.velocity.x = 0;
+                    boss.health -= rifle.damage;
+                    boss.is_getting_damaged = 1;
+                    rifle.rects[j].second.first = 0;
+                }
+            }
+            for (int j = 0; j < liser.rects.size(); j++)
+            {
+                if (boss.sprite.getGlobalBounds().intersects(liser.rects[j].first.getGlobalBounds()) && liser.rects[j].second != 0)
+                {
+                    boss.velocity.x = 0;
+                    boss.health -= liser.damage;
+                    boss.is_getting_damaged = 1;
+                    liser.rects[j].second = 0;
+                }
+            }
+            if (boss.is_getting_damaged == 1)  // this adds red color to enemies when damaged
+            {
+                if (boss.damage_timer.getElapsedTime().asMilliseconds() <= 300) {
+                    boss.sprite.setColor(Color::Red);
+                }
+                else {
+                    boss.is_getting_damaged = 0;
+                }
+            }
+            else
+            {
+                boss.sprite.setColor(Color::White);
+                boss.damage_timer.restart();
+            }
+            if (boss.health <= 0)
+            {
+                boss.velocity.x = 0;
+                //boss.death_animation(i, boss);
+            }
+        }
+        if (player.holding_knife && player.rec.getGlobalBounds().intersects(boss.sprite.getGlobalBounds()))
+        {
+            boss.health -= 0.3 / 2;
+            boss.is_getting_damaged = true;
+        }
 
     }
-    void Deat_animation(FINAL_BOSS & boss)
+    void Deat_animation(FINAL_BOSS& boss)
     {
+
         boss.stopped = 1;
         if (!boss.death_animation_done)
         {
             boss.velocity.x = 0;
             //boss.sprite.setTexture("aa ");Sprite death <----
             boss.sprite.setOrigin(341 / 11 / 2, 0);
-            boss.sprite_indicator+= 0.2;
+            boss.sprite_indicator += 0.2;
             if (boss.sprite_indicator > 10.9)
             {
                 player.score += 10000;
@@ -2500,26 +2506,30 @@ struct FINAL_BOSS
         }
     }
 
-    void fighting(FINAL_BOSS & boss)
+    void fighting(FINAL_BOSS& boss)
     {
-        
+
     }
-    void running(FINAL_BOSS & boss)
+    void running(FINAL_BOSS& boss)
     {
-          if(player.upperbodySprite.getPosition().x > boss.sprite.getPosition().x)
-          {
-              //move to right
-          boss.velocity.x = 5;
-        //  boss.sprite
-          }
-          else
-          {//move to left
-          boss.velocity.x =-5;
-          }
-		boss.sprite.setTexture(boss.runningtex);
-		EnemiAnimation(boss.sprite, 9.9, 1000 / 10, 73, 0.005, boss.animation_indicator[1]);
+        if (boss.stopped == 1)
+            return;
+
+        if (player.upperbodySprite.getPosition().x > boss.sprite.getPosition().x)
+        {
+            //move to right
+            boss.velocity.x = 5;
+            boss.sprite.setScale(3.25, 3.25);
+        }
+        else
+        {   //move to left
+            boss.velocity.x = -5;
+            boss.sprite.setScale(-3.25, 3.25);
+        }
+        boss.sprite.setTexture(boss.runningtex);
+        EnemiAnimation(boss.sprite, 9.9, 1000 / 10, 73, 0.005, boss.animation_indicator[1]);
     }
-    void idle(FINAL_BOSS & boss)
+    void idle(FINAL_BOSS& boss)
     {
         boss.sprite.setTexture(boss.idletex);
         EnemiAnimation(boss.sprite, 7.9, 856 / 8, 38, 0.005, boss.animation_indicator[0]);
@@ -3092,14 +3102,14 @@ void Menu()
                                 }
                                 CreditScreen.isOpen = true;
                                 CreditScreen.creditsAnimation();
- 
+
 
                                 if (!creditsactive)
                                 {
                                     CreditScreen.isOpen = false;
                                 }
 
-                                
+
 
                             }
                             else if (menu.selected == EXIT && Keyboard::isKeyPressed(Keyboard::Enter))
@@ -3408,33 +3418,41 @@ void cameraView()
             full_time_played += hud.hud_time.getElapsedTime().asSeconds();
             hud.hud_time.restart();
             ismoved2 = true;
-         
+
         }
         leftEnd = 18030;
         rightEnd = 19650;
         view.setCenter(18820, 596);//no player tracing
         view.setSize(1600, 1080);//whole map size
     }
-    else if (bgCounter==LEVEL_1_D_BG){
-        if (!ismoved3){
-            player.upperbodySprite.setPosition(22010, 750);
-            player.lowerbodySprite.setPosition(22010, 750);
+    else if (bgCounter == LEVEL_1_D_BG)
+    {
+        if (!ismoved3)
+        {
+            player.upperbodySprite.setPosition(22100, 600);
+            player.lowerbodySprite.setPosition(22100, 600);
             full_time_played += hud.hud_time.getElapsedTime().asSeconds();
-			hud.hud_time.restart();
-            ismoved3=true;
-            view.setSize(1920,1080);
+            hud.hud_time.restart();
+            ismoved3 = true;
+            view.setSize(1920, 1080);
         }
-        leftEnd=22000;
-        rightEnd=22000+5120;
-		//area where no black edges can appear
-		if (player.upperbodySprite.getPosition().x <= 22000+5120-(1920/2) && player.upperbodySprite.getPosition().x >= 22000+(1920/2))
-			view.setCenter(player.upperbodySprite.getPosition().x, 600);  //camera focus on player
-		//area where  black edge appear from right
-		else if (player.upperbodySprite.getPosition().x > 22000+5120-(1920/2))  //camera stop
-			view.setCenter(22000+5120-(1920/2), 600);
-		//area where  black edge appear from left
-		else if (player.upperbodySprite.getPosition().x < 22000+(1920/2))
-			view.setCenter(22000+(1920/2), 600);  //camera stop
+        leftEnd = 22000;
+        rightEnd = 22000 + 5120;
+        //area where no black edges can appear
+        if (player.upperbodySprite.getPosition().x <= 22000 + 5120 - (1920 / 2) && player.upperbodySprite.getPosition().x >= 22000 + (1920 / 2))
+        {
+            view.setCenter(player.upperbodySprite.getPosition().x, 600);  //camera focus on player
+        }
+        //area where  black edge appear from right
+        else if (player.upperbodySprite.getPosition().x > 22000 + 5120 - (1920 / 2))  //camera stop
+        {
+            view.setCenter(22000 + 5120 - (1920 / 2), 600);
+        }
+        //area where  black edge appear from left
+        else if (player.upperbodySprite.getPosition().x < 22000 + (1920 / 2))
+        {
+            view.setCenter(22000 + (1920 / 2), 600);  //camera stop
+        }
     }
 }
 void transition()
@@ -3489,7 +3507,7 @@ void transition_pos_check()
         this_thread::sleep_for(chrono::milliseconds(300));
 
     }
-    else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 2){
+    else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 2) {
         transition();
         transition_reverse();
         bgCounter = 3;
