@@ -1764,7 +1764,7 @@ struct Enemy1
             RS[i].is_alive = true;
             RS[i].health = 5;
             RS[i].damage = 1;
-            RS[i].sprite_indicator[10] = { 0 };
+            RS[i].sprite_indicator[10] = {  };
             RS[i].is_getting_damaged = false;
             RS[i].death_animation_done = 0;
             RS[i].check = 0;
@@ -2378,6 +2378,153 @@ void new_enemy_setup()
     new_enemy.sprite.setTextureRect(IntRect(0, 0, 312 / 12, 40));
     new_enemy.sprite.setPosition(Vector2f(19650, 830));
 }
+struct FINAL_BOSS
+{
+    Texture idletex, runningtex, fightingtex, deadtex;
+    float health = 0, damage = 0,sprite_indicator =0.0;
+    Vector2f velocity = { 0,0 };
+    Vector2f initialposition = { 0,0 };
+    bool live = 1, deaths_animation_done = 0,is_alive=1, is_getting_damaged =0;
+    Sprite sprite;
+    bool can_run=0,stopped=0,death_animation_done=0;
+    bool can_fight=0;
+    Clock damage_timer;
+    float animation_indicator[10]={};
+    void setup(FINAL_BOSS& boss)
+    {/*
+        boss.idletex.loadFromFile("");
+        boss.deadtex.loadFromFile("");
+        boss.fightingtex.loadFromFile("");
+        boss.runningtex.loadFromFile("");
+        */
+
+        boss.sprite.setPosition(boss.initialposition);
+    }
+    void status(FINAL_BOSS& boss)
+    {
+        if (bgCounter == LEVEL_1_D_BG)
+        {
+            if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) < 500)
+                boss.can_run = 1;
+
+            if (can_run)
+                (boss.can_fight) ? boss.fighting(boss) : boss.running(boss);
+            else
+                boss.idle(boss);
+            
+
+        }
+    }
+    void damaged(FINAL_BOSS & boss)
+    {
+		if (boss.is_alive)
+		{
+
+			for (int j = 0; j < pistol.rects.size(); j++)
+			{
+				if (boss.sprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
+				{
+					boss.velocity.x = 0;
+					boss.health -= pistol.damage;
+					boss.is_getting_damaged = 1;
+					pistol.rects[j].second.first = 0;
+				}
+			}
+			for (int j = 0; j < rifle.rects.size(); j++)
+			{
+				if (boss.sprite.getGlobalBounds().intersects(rifle.rects[j].first.getGlobalBounds()) && rifle.rects[j].second.first != 0)
+				{
+					boss.velocity.x = 0;
+					boss.health -= rifle.damage;
+					boss.is_getting_damaged = 1;
+					rifle.rects[j].second.first = 0;
+				}
+			}
+			for (int j = 0; j < liser.rects.size(); j++)
+			{
+				if (boss.sprite.getGlobalBounds().intersects(liser.rects[j].first.getGlobalBounds()) && liser.rects[j].second != 0)
+				{
+					boss.velocity.x = 0;
+					boss.health -= liser.damage;
+					boss.is_getting_damaged = 1;
+					liser.rects[j].second = 0;
+				}
+			}
+			if (boss.is_getting_damaged == 1)  // this adds red color to enemies when damaged
+			{
+				if (boss.damage_timer.getElapsedTime().asMilliseconds() <= 300) {
+					boss.sprite.setColor(Color::Red);
+				}
+				else {
+					boss.is_getting_damaged = 0;
+				}
+			}
+			else
+			{
+				boss.sprite.setColor(Color::White);
+				boss.damage_timer.restart();
+			}
+			if (boss.health <= 0)
+			{
+				boss.velocity.x = 0;
+				//boss.death_animation(i, boss);
+			}
+		}
+		if (player.holding_knife && player.rec.getGlobalBounds().intersects(boss.sprite.getGlobalBounds()))
+		{
+			boss.health -= 0.3 / 2;
+			boss.is_getting_damaged = true;
+		}
+
+    }
+    void Deat_animation(FINAL_BOSS & boss)
+    {
+        boss.stopped = 1;
+        if (!boss.death_animation_done)
+        {
+            boss.velocity.x = 0;
+            //boss.sprite.setTexture("aa ");Sprite death <----
+            boss.sprite.setOrigin(341 / 11 / 2, 0);
+            boss.sprite_indicator+= 0.2;
+            if (boss.sprite_indicator > 10.9)
+            {
+                player.score += 10000;
+                boss.death_animation_done = 1;
+            }
+            boss.sprite.setTextureRect(IntRect(int(boss.animation_indicator[1]) * 341 / 11, 0, 341 / 11, 39));
+        }
+        else
+        {
+            boss.is_alive = 0;
+            //death sound here 
+        }
+    }
+
+    void fighting(FINAL_BOSS & boss)
+    {
+        
+    }
+    void running(FINAL_BOSS & boss)
+    {
+          if(player.upperbodySprite.getPosition().x > boss.sprite.getPosition().x)
+          {
+              //move to right
+          boss.velocity.x = 5;
+        //  boss.sprite
+          }
+          else
+          {//move to left
+          boss.velocity.x =-5;
+          }
+		boss.sprite.setTexture(boss.runningtex);
+		EnemiAnimation(boss.sprite, 9.9, 1000 / 10, 73, 0.005, boss.animation_indicator[1]);
+    }
+    void idle(FINAL_BOSS & boss)
+    {
+        boss.sprite.setTexture(boss.idletex);
+        EnemiAnimation(boss.sprite, 7.9, 856 / 8, 38, 0.005, boss.animation_indicator[0]);
+    }
+}boss;
 void call()
 {
     if (bgCounter == LEVEL_1_C_BG)
@@ -3090,6 +3237,18 @@ void bgSetup()
     Lvl1FG[3].setPosition(18000, 0);
     create(ground, 7, 1640, 20, 18000, 970);
 
+    //lvl 1 d bg
+    bgTexture[4].loadFromFile(pathh + "Final Level BG upscaled2.png");
+    bgSprite[4].setTexture(bgTexture[4]);
+    bgSprite[4].setPosition(22000, 0);
+
+    //lvl 1 d fg
+    lvl1FGtex[4].loadFromFile(pathh + "Final Level FG upscaled2.png");
+    Lvl1FG[4].setTexture(lvl1FGtex[4]);
+    Lvl1FG[4].setPosition(22000, 0);
+    create(ground, 8, 5120, 20, 22000, 800);
+
+
 
 }
 void windowfunction()
@@ -3249,11 +3408,33 @@ void cameraView()
             full_time_played += hud.hud_time.getElapsedTime().asSeconds();
             hud.hud_time.restart();
             ismoved2 = true;
+         
         }
         leftEnd = 18030;
         rightEnd = 19650;
         view.setCenter(18820, 596);//no player tracing
         view.setSize(1600, 1080);//whole map size
+    }
+    else if (bgCounter==LEVEL_1_D_BG){
+        if (!ismoved3){
+            player.upperbodySprite.setPosition(22010, 750);
+            player.lowerbodySprite.setPosition(22010, 750);
+            full_time_played += hud.hud_time.getElapsedTime().asSeconds();
+			hud.hud_time.restart();
+            ismoved3=true;
+            view.setSize(1920,1080);
+        }
+        leftEnd=22000;
+        rightEnd=22000+5120;
+		//area where no black edges can appear
+		if (player.upperbodySprite.getPosition().x <= 22000+5120-(1920/2) && player.upperbodySprite.getPosition().x >= 22000+(1920/2))
+			view.setCenter(player.upperbodySprite.getPosition().x, 600);  //camera focus on player
+		//area where  black edge appear from right
+		else if (player.upperbodySprite.getPosition().x > 22000+5120-(1920/2))  //camera stop
+			view.setCenter(22000+5120-(1920/2), 600);
+		//area where  black edge appear from left
+		else if (player.upperbodySprite.getPosition().x < 22000+(1920/2))
+			view.setCenter(22000+(1920/2), 600);  //camera stop
     }
 }
 void transition()
@@ -3308,7 +3489,13 @@ void transition_pos_check()
         this_thread::sleep_for(chrono::milliseconds(300));
 
     }
-    else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 2 && new_enemy.is_done(enemy3) || game_ended)
+    else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 2){
+        transition();
+        transition_reverse();
+        bgCounter = 3;
+        this_thread::sleep_for(chrono::milliseconds(300));
+    }
+    else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 3 || game_ended)
     {
         game_ended = true;
         if (!LeaderBoard.is_compared)
@@ -3635,7 +3822,7 @@ void window_draw()
             window.draw(player.upperbodySprite);
     }
     blood.call(blood);
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 5; i++)
     {
         if (i == 1)continue;
         window.draw(Lvl1FG[i]);
