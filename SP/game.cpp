@@ -35,7 +35,7 @@
 using namespace std;
 using namespace sf;
 
-RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Default);
+RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Fullscreen);
 Event event;
 
 fstream out_names, in_names, lname;
@@ -458,7 +458,41 @@ struct Blood_Spatter
         }
     }
 }blood;
+struct File
+{
+    void load()
+    {
+        in_names.open("names.txt", ios::in);
 
+        string temp = "";
+
+        for (int i = 0; !in_names.eof(); i++)
+        {
+            names_save.push_back({ temp, temp });
+            in_names >> names_save[i].first >> names_save[i].second;
+        }
+        last_name = names_save[names_save.size() - 1].first;
+        names_save.pop_back();
+        in_names.close();
+    }
+    void save()
+    {
+        out_names.open("names.txt", ios::out);
+
+        for (int i = 0; i < names_save.size(); i++)
+        {
+            if (names_save[i].first == current_name)
+            {
+                if (player.score > stoi(names_save[i].second))
+                    names_save[i].second = to_string(player.score);
+            }
+        }
+        for (int i = 0; i < names_save.size(); i++)
+            out_names << names_save[i].first << ' ' << names_save[i].second << '\n';
+        out_names << current_name << ' ' << 'a';
+        out_names.close();
+    }
+}file;
 struct LeaderBoard
 {
     float XanimCtr = 0, YanimCtr = 0;
@@ -490,7 +524,7 @@ struct LeaderBoard
     {
         LeaderBoardSpr.setTextureRect(IntRect(int(XanimCtr) * 1920, int(YanimCtr) * 1080, 1920, 1080));
         LeaderBoardSpr.setPosition(view.getCenter().x - (980 * view.getSize().x / 1600.0), view.getCenter().y - (600 * view.getSize().y / 1080.0));
-        XanimCtr += 0.02 * 10;
+        XanimCtr += 0.06 * 10;
         if (XanimCtr > 4)
         {
             XanimCtr = 0;
@@ -541,13 +575,14 @@ struct LoadGameScreen
     void move_up()
     {
         selected = (selected == 1 ? names_save.size() : selected - 1);
+        MenuScroll.play();
     }
 
     void move_down()
     {
         selected = (selected == names_save.size() ? 1 : selected + 1);
+        MenuScroll.play();
     }
-
     void draw()
     {
         window.clear();
@@ -996,44 +1031,7 @@ struct Menu
     }
 } menu;
 
-struct File
-{
-    void load()
-    {
-        in_names.open("names.txt", ios::in);
 
-        string temp = "";
-
-        for (int i = 0; !in_names.eof(); i++)
-        {
-            names_save.push_back({ temp, temp });
-            in_names >> names_save[i].first >> names_save[i].second;
-        }
-        last_name = names_save[names_save.size() - 1].first;
-        names_save.pop_back();
-        in_names.close();
-    }
-    void save()
-    {
-        out_names.open("names.txt", ios::out);
-
-        for (int i = 0; i < names_save.size(); i++)
-        {
-            if (names_save[i].first == current_name)
-            {
-                if (player.score > stoi(names_save[i].second))
-                {
-                    names_save[i].second = to_string(player.score);
-                }
-
-            }
-        }
-        for (int i = 0; i < names_save.size(); i++)
-            out_names << names_save[i].first << ' ' << names_save[i].second << '\n';
-        out_names << current_name << ' ' << 'a';
-        out_names.close();
-    }
-}file;
 //HUD
 struct HUD {
     // health bar
@@ -2797,12 +2795,14 @@ void Menu()
                                         LoadGameScreen.isOpen = true;
                                         timer.restart();
                                     }
+                                    //timer.restart();
                                     LoadGameScreen.draw();
                                     timer4.restart();
                                     if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 300)
                                     {
                                         escTimer.restart();
                                         LoadGameScreen.isOpen = false;
+                                        this_thread::sleep_for(chrono::milliseconds(150));
                                     }
                                     if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
                                     {
@@ -2945,6 +2945,7 @@ void Menu()
                                 }
                                 CreditScreen.isOpen = true;
                                 CreditScreen.creditsAnimation();
+ 
 
                                 if (!creditsactive)
                                 {
@@ -3312,6 +3313,7 @@ void transition_pos_check()
         game_ended = true;
         if (!LeaderBoard.is_compared)
         {
+            names_save[names_save.size() - 1].second = to_string(player.score);
             LB_timer.restart();
             LeaderBoard.compare();
             LeaderBoard.is_compared = true;
@@ -3888,7 +3890,7 @@ void TS_Setups()
     TS_BGSpr.setTexture(TS_BGTex);
     TS_BGTheme.openFromFile(pathh + "Title Screen _ Main Menu Theme.wav");
     TS_BGTheme.play();
-    TS_BGTheme.setVolume(100.f);
+    TS_BGTheme.setVolume(70.f);
     TS_BGTheme.setLoop(true);
     TS_BGFireFX.openFromFile(pathh + "Title Screen _ Main Menu Fire Sound.wav");
     TS_BGFireFX.play();
