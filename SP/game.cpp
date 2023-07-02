@@ -73,7 +73,7 @@ Clock timer, timer2, timer4, escTimer, eventTimer, LB_timer;
 
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
 
-bool creditsactive = 1;
+bool creditsactive = 1, cutscene, cuton;
 const int fadeinT = 2000;
 const int fadeoutT = 2000;
 const int waitT = 2000;
@@ -143,6 +143,7 @@ void create(RectangleShape[], int, int, int, int, int);//make ground
 void animation(Sprite& s, float maxframe, float x, float y, float delay, int index);
 void playerDamageFromEnemy1();
 void playerDeathAnimation();
+void FBCutScene();
 //player
 struct Player
 {
@@ -2428,13 +2429,17 @@ struct FINAL_BOSS
 			boss.damaged(boss);
 			if (!boss.stopped)
 			{
+				cout << "WORKING? " << boss.can_run << '\n';
 				if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) < 1000)
 					boss.can_run = 1;
 				(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) < 350&&player.Velocity.x==0) ? boss.can_fight = 1 : boss.can_fight = 0;
-				if (can_run)
+				if (boss.can_run)
 					(boss.can_fight) ? boss.fighting(boss) : boss.running(boss);
 				else
+				{
+					cout << "IDLE\n";
 					boss.idle(boss);
+				}
 				boss.sprite.move(boss.velocity);
 			}
 		}
@@ -3521,21 +3526,30 @@ void cameraView()
 		leftEnd = 22000;
 		rightEnd = 22000 + 5120;
 		//area where no black edges can appear
-		if (player.upperbodySprite.getPosition().x <= 22000 + 5120 - (1250) && player.upperbodySprite.getPosition().x >= 22000 + (1250))
+		if (!cutscene && player.upperbodySprite.getPosition().x > leftEnd + 950)
 		{
-			view.setCenter(player.upperbodySprite.getPosition().x, 560);  //camera focus on player
+			FBCutScene();
+			cutscene = true;
 		}
-		//area where  black edge appear from right
-		else if (player.upperbodySprite.getPosition().x > 22000 + 5120 - (1250))  //camera stop
+		else
 		{
-			view.setCenter(22000 + 5120 - (1250), 560);
-		}
-		//area where  black edge appear from left
-		else if (player.upperbodySprite.getPosition().x < 22000 + (1250))
-		{
-			view.setCenter(22000 + (1250), 560);  //camera stop
+			if (player.upperbodySprite.getPosition().x <= 22000 + 5120 - (1250) && player.upperbodySprite.getPosition().x >= 22000 + (1250))
+			{
+				view.setCenter(player.upperbodySprite.getPosition().x, 560);  //camera focus on player
+			}
+			//area where  black edge appear from right
+			else if (player.upperbodySprite.getPosition().x > 22000 + 5120 - (1250))  //camera stop
+			{
+				view.setCenter(22000 + 5120 - (1250), 560);
+			}
+			//area where  black edge appear from left
+			else if (player.upperbodySprite.getPosition().x < 22000 + (1250))
+			{
+				view.setCenter(22000 + (1250), 560);  //camera stop
+			}
 		}
 	}
+	
 }
 void transition()
 {
@@ -3682,11 +3696,14 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
 	else
 	{
 		//functoin -> movement & animation
-		move_with_animation(s, maxframe, x, y, delay, index);
-		if (player.gun == PISTOL)
-			move_with_animation(player.upperbodySprite, maxframe, x, y, delay, index);
-		else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
-			move_with_animation(player.upperbodySprite, 11.9, 528 / 11, 29, delay, 32);
+		if (!cuton)
+		{
+			move_with_animation(s, maxframe, x, y, delay, index);
+			if (player.gun == PISTOL)
+				move_with_animation(player.upperbodySprite, maxframe, x, y, delay, index);
+			else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
+				move_with_animation(player.upperbodySprite, 11.9, 528 / 11, 29, delay, 32);
+		}
 
 	}
 
@@ -3931,7 +3948,8 @@ void window_draw()
 	{
 		window.draw(powerups[i].powerup_sprite);
 	}
-	hud.draw(hud);
+	if(!cuton)
+		hud.draw(hud);
 	enemy2->draw(enemy2);
 	if (boss.live)
 		window.draw(boss.sprite);
@@ -4330,6 +4348,38 @@ void texture_setup()//&buffers setup
 	startvoice_B.loadFromFile("Mission 1 Start.wav");
 	startvoice.setBuffer(startvoice_B);
 	startvoice.setVolume(60);
+}
+
+void FBCutScene()
+{
+
+	cuton = true;
+	Clock t1, t2;
+	float ctr = 20;
+	while (t2.getElapsedTime().asSeconds() <= 1)
+	{
+		window.clear();
+		
+		window_draw();
+		view.setCenter(boss.sprite.getPosition().x, 550);
+		window.setView(view);
+		
+		
+		window.display();
+	}
+	t1.restart();
+	while (t1.getElapsedTime().asSeconds() <= 2.5)
+	{
+		window.clear();
+		
+		window_draw();
+		view.setCenter(boss.sprite.getPosition().x - ctr, 550);
+		window.setView(view);
+		window.display();
+		ctr += 20;
+	}
+	cuton = false;
+	
 }
 void mouse_pos()
 {
