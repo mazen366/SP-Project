@@ -2389,7 +2389,7 @@ struct FINAL_BOSS
 	Sprite sprite, done;
 	bool can_run = 0, stopped = 0, death_animation_done = 0;
 	bool can_fight = 0;
-	Clock damage_timer,running_attack_timer;
+	Clock damage_timer, running_attack_timer;
 	float animation_indicator[10] = {};
 	RectangleShape hitbox;
 	SoundBuffer win_b, short_attack_B, long_attack_B;
@@ -2431,31 +2431,29 @@ struct FINAL_BOSS
 			boss.damaged(boss);
 			if (!boss.stopped)
 			{
-					if (boss.running_attack_timer.getElapsedTime().asSeconds()>=10){
-						boss.runningattack(boss);
-						
-						boss.deaths_animation_done = 0;
-					}
-					
-					if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300 && t6.getElapsedTime().asMilliseconds() > 300)
-					{
-						boss.running(boss);
-					}
-					else if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x)>100) {
-						boss.fighting2(boss);
-						if (!(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300))
-							t6.restart();
-					}
-					else if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x)<=100)
-					{
-						boss.fighting(boss);
+				if ((int)boss.running_attack_timer.getElapsedTime().asSeconds() % 10 == 0) {
+					boss.runningattack(boss);
+					boss.deaths_animation_done = 0;
+				}
+				else if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300 && t6.getElapsedTime().asMilliseconds() > 300)
+				{
+					boss.running(boss);
+				}
+				else if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 100) {
+					boss.fighting2(boss);
+					if (!(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300))
+						t6.restart();
+				}
+				else if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) <= 100)
+				{
+					boss.fighting(boss);
 
-						if (!(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300))
-							t6.restart();
-					}
-					if (!cutscene)
-						boss.velocity.x = 0;
-					boss.sprite.move(boss.velocity);
+					if (!(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300))
+						t6.restart();
+				}
+				if (!cutscene)
+					boss.velocity.x = 0;
+				boss.sprite.move(boss.velocity);
 			}
 		}
 	}
@@ -2592,20 +2590,20 @@ struct FINAL_BOSS
 		{
 			if (player.upperbodySprite.getPosition().x > boss.sprite.getPosition().x)
 			{
-				boss.velocity.x = 12;
+				boss.velocity.x = 20;
 				boss.sprite.setScale(3.25, 3.25);
 			}
 			else
 			{
-				boss.velocity.x = -12;
+				boss.velocity.x = -20;
 				boss.sprite.setScale(-3.25, 3.25);
 			}
 			boss.runnning_attack_done = 1;
-			boss.running_attack_timer.restart();
+
 		}
 		boss.sprite.setTexture(boss.running_attacktex);
 		EnemiAnimation(boss.sprite, 17.9, 3600 / 18, 98, 0.008, boss.animation_indicator[6]);
-
+		boss.sprite.move(velocity);
 
 	}
 	void running(FINAL_BOSS& boss)
