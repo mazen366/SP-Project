@@ -1,4 +1,4 @@
-﻿#include <SFML/Graphics.hpp> //seni is gay
+﻿#include <SFML/Graphics.hpp> //seni is gay//loay is gay
 #include<thread>
 #include <SFML/Audio.hpp>
 #include <iostream>
@@ -58,6 +58,9 @@ deathScreenFGTex, deathScreenFGTex2, NewGameTex, LeaderBoardTex, LeaderBoardShee
 Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, NewGameSpr,
 TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr, deathScreenBGSpr, deathScreenFGSpr, deathScreenFGSpr2, LeaderBoardSpr, LeaderBoardSheetSpr, CreditsBGSpr, CreditsFGSpr,
 LoadGameSpr, SoundEffectsControlSpr, MissionSpr, PVicSpr;
+
+Sound  win, short_attack, long_attack, music;
+SoundBuffer win_B, short_attack_B, long_attack_B, music_B;
 
 
 Music TS_BGTheme;
@@ -2398,13 +2401,77 @@ void new_enemy_setup()
 	new_enemy.sprite.setPosition(Vector2f(19650, 830));
 }
 
-Sound win, short_attack, long_attack, music;
-SoundBuffer win_B, short_attack_B, long_attack_B, music_B;
+struct BossHealthBar {
+	float currentHealth;
+
+	Texture stroke;
+	Sprite strokes;
+
+	void BossHealthBarSetup()
+	{
+
+		stroke.loadFromFile("Prince of Darkness Health Bar.png");
+		strokes.setTexture(stroke);
+		strokes.setPosition(view.getCenter().x - 636, view.getCenter().y + 320);
+		Color tandbColor = Color(42, 24, 21, 255);
+		Color midColor = Color(70, 36, 37, 255);
+		Color bgtandbColor = Color(33, 32, 33, 255);
+		Color bgmidColor = Color(66, 65, 66, 255);
+		//HNAAAAAAAAAAAAAAAAAAA view.getCenter().x, view.getCenter().y
+
+		healthBar[0].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 376);
+		healthBar[1].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 376);
+		healthBar[2].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 385);
+		healthBar[3].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 385);
+		healthBar[4].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 385);
+		healthBar[5].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 385);
+		healthBar[6].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 395);
+		healthBar[7].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 395);
+
+		healthBar[0].color = tandbColor;
+		healthBar[1].color = tandbColor;
+		healthBar[2].color = midColor;
+		healthBar[3].color = midColor;
+		healthBar[4].color = midColor;
+		healthBar[5].color = midColor;
+		healthBar[6].color = tandbColor;
+		healthBar[7].color = tandbColor;
+
+
+		bghealthBar[0].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 376);
+		bghealthBar[1].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 376);
+		bghealthBar[2].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 385);
+		bghealthBar[3].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 385);
+		bghealthBar[4].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 385);
+		bghealthBar[5].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 385);
+		bghealthBar[6].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 395);
+		bghealthBar[7].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 395);
+
+		bghealthBar[0].color = bgtandbColor;
+		bghealthBar[1].color = bgtandbColor;
+		bghealthBar[2].color = bgmidColor;
+		bghealthBar[3].color = bgmidColor;
+		bghealthBar[4].color = bgmidColor;
+		bghealthBar[5].color = bgmidColor;
+		bghealthBar[6].color = bgtandbColor;
+		bghealthBar[7].color = bgtandbColor;
+	}
+	void BossHealthBarChange(int health)
+	{
+		currentHealth = health;
+		float healthPercentage = currentHealth / 500;
+		healthBar[1].position = { (view.getCenter().x - 664) + healthPercentage * 1328,view.getCenter().y + 376 };
+		healthBar[2].position = { (view.getCenter().x - 664) + healthPercentage * 1328, view.getCenter().y + 385 };
+		healthBar[5].position = { (view.getCenter().x - 664) + healthPercentage * 1328, view.getCenter().y + 385 };
+		healthBar[6].position = {(view.getCenter().x - 664) + healthPercentage * 1328,view.getCenter().y + 395 };
+	}
+}bosshp;
+
 
 struct FINAL_BOSS
 {
 	Texture idletex, runningtex, fightingtex1, fightingtex2, deadtex, done_T, running_attacktex;
-	float health = 10, damage = 0, sprite_indicator = 0.0;
+	float health = 500, damage = 0, sprite_indicator = 0.0;
 	Vector2f velocity = { 0,0 };
 	Vector2f initialposition = { 26000,550 };
 	bool live = 1, deaths_animation_done = 0, is_alive = 1, is_getting_damaged = 0;
@@ -2444,9 +2511,11 @@ struct FINAL_BOSS
 			boss.damaged(boss);
 			if (!boss.stopped)
 			{
-				if ((int)boss.running_attack_timer.getElapsedTime().asSeconds() % 10 == 0 && (int)boss.running_attack_timer.getElapsedTime().asSeconds() != 0) {
+				//10, 11 -> false, condition true l7d ma el animation y5ls
+				if ((int)boss.running_attack_timer.getElapsedTime().asSeconds() % 10 == 0 && (int)boss.running_attack_timer.getElapsedTime().asSeconds() != 0
+					&& abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 50) {
 					boss.runningattack(boss);
-					boss.runnning_attack_done = 0;
+
 				}
 				else if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300 && t6.getElapsedTime().asMilliseconds() > 300)
 				{
@@ -2461,7 +2530,7 @@ struct FINAL_BOSS
 				{
 					boss.fighting(boss);
 
-					if (!(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300))
+					if (!(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300)) // a3ml timer lel last hit we at2kd ano 3da 0.3 sec abl ma ybtdy ygry tany
 						t6.restart();
 				}
 				if (!cutscene)
@@ -2507,6 +2576,7 @@ struct FINAL_BOSS
 			}
 			if (boss.is_getting_damaged == 1)  // this adds red color to enemies when damaged
 			{
+				
 				if (boss.damage_timer.getElapsedTime().asMilliseconds() <= 300) {
 					boss.sprite.setColor(Color::Red);
 				}
@@ -2535,6 +2605,7 @@ struct FINAL_BOSS
 			boss.health -= 0.3 / 2;
 			boss.is_getting_damaged = true;
 		}
+		bosshp.BossHealthBarChange(boss.health);
 
 	}
 	void Death_animation(FINAL_BOSS& boss)
@@ -2602,26 +2673,29 @@ struct FINAL_BOSS
 	}
 	void runningattack(FINAL_BOSS& boss)
 	{
-
 		if (!boss.runnning_attack_done)
 		{
-			if (player.upperbodySprite.getPosition().x > boss.sprite.getPosition().x)
+			if (player.upperbodySprite.getPosition().x > boss.sprite.getPosition().x && animation_indicator[6] == 0)
 			{
-				boss.velocity.x = 15;
+				boss.velocity.x = 17;
 				boss.sprite.setScale(3.25, 3.25);
 			}
-			else
+			else if (animation_indicator[6] == 0)
 			{
-				boss.velocity.x = -15;
+				boss.velocity.x = -17;
 				boss.sprite.setScale(-3.25, 3.25);
 			}
-			boss.runnning_attack_done = 1;
-
+			boss.runnning_attack_done = 0;
 		}
-		boss.sprite.setOrigin((3600 / 18) / 2, 0);
+		boss.sprite.setOrigin((3600 / 18) / 2, 20);
 		boss.sprite.setTexture(boss.running_attacktex);
 
 		EnemiAnimation(boss.sprite, 17.9, 3600 / 18, 98, 0.008, boss.animation_indicator[6]);
+		if (boss.animation_indicator[6] > 17.9)
+		{
+			boss.runnning_attack_done = 1;
+			boss.animation_indicator[6] = 0;
+		}
 		boss.sprite.move(velocity);
 
 	}
@@ -2641,7 +2715,7 @@ struct FINAL_BOSS
 			boss.velocity.x = -3;
 			boss.sprite.setScale(-3.25, 3.25);
 		}
-		boss.sprite.setOrigin(1000 / 10 / 2, 0);
+		boss.sprite.setOrigin(1000 / 10 / 2, -5);
 		boss.sprite.setTexture(boss.runningtex);
 		EnemiAnimation(boss.sprite, 9.9, 1000 / 10, 73, 0.008, boss.animation_indicator[1]);
 		boss.sprite.move(velocity);
@@ -2711,68 +2785,7 @@ void call()
 	}
 }
 
-struct BossHealthBar {
-	float currentHealth = boss.health;
 
-
-	void BossHealthBarSetup()
-	{
-		Texture stroke;
-		Sprite strokes;
-		stroke.loadFromFile("Prince of Darkness Health Bar.png");
-		strokes.setTexture(stroke);
-		strokes.setPosition(268, 860);
-		Color tandbColor = Color(42, 24, 21, 255);
-		Color midColor = Color(70, 36, 37, 255);
-		Color bgtandbColor = Color(33, 32, 33, 255);
-		Color bgmidColor = Color(66, 65, 66, 255);
-
-		healthBar[0].position = Vector2f(296, 916);
-		healthBar[1].position = Vector2f(1624, 916);
-		healthBar[2].position = Vector2f(1624, 925);
-		healthBar[3].position = Vector2f(296, 925);
-		healthBar[4].position = Vector2f(296, 925);
-		healthBar[5].position = Vector2f(1624, 925);
-		healthBar[6].position = Vector2f(1624, 935);
-		healthBar[7].position = Vector2f(296, 935);
-
-		healthBar[0].color = tandbColor;
-		healthBar[1].color = tandbColor;
-		healthBar[2].color = midColor;
-		healthBar[3].color = midColor;
-		healthBar[4].color = midColor;
-		healthBar[5].color = midColor;
-		healthBar[6].color = tandbColor;
-		healthBar[7].color = tandbColor;
-
-
-		bghealthBar[0].position = Vector2f(296, 916);
-		bghealthBar[1].position = Vector2f(1624, 916);
-		bghealthBar[2].position = Vector2f(1624, 925);
-		bghealthBar[3].position = Vector2f(296, 925);
-		bghealthBar[4].position = Vector2f(296, 925);
-		bghealthBar[5].position = Vector2f(1624, 925);
-		bghealthBar[6].position = Vector2f(1624, 935);
-		bghealthBar[7].position = Vector2f(296, 935);
-
-		bghealthBar[0].color = bgtandbColor;
-		bghealthBar[1].color = bgtandbColor;
-		bghealthBar[2].color = bgmidColor;
-		bghealthBar[3].color = bgmidColor;
-		bghealthBar[4].color = bgmidColor;
-		bghealthBar[5].color = bgmidColor;
-		bghealthBar[6].color = bgtandbColor;
-		bghealthBar[7].color = bgtandbColor;
-	}
-	void BossHealthBarChange()
-	{
-		float healthPercentage = currentHealth / 500;
-		healthBar[1].position.x = 296 + healthPercentage * 1328;
-		healthBar[2].position.x = 296 + healthPercentage * 1328;
-		healthBar[5].position.x = 296 + healthPercentage * 1328;
-		healthBar[6].position.x = 296 + healthPercentage * 1328;
-	}
-}bosshp;
 
 //gravity
 float gravity = 0.7;
@@ -2812,6 +2825,7 @@ int main()
 {
 	boss.setup(boss);
 	file.load();
+	bosshp.BossHealthBarSetup();
 	CreditScreen.creditsSetup();
 	LeaderBoard.setup();
 	pistol.setup(pistol);
@@ -2829,7 +2843,7 @@ int main()
 	DeathScreen.deathScreenSetup();
 	player.Playersetup(player);
 	timer.restart();
-	bosshp.BossHealthBarSetup();
+	
 	Menu();
 	file.save();
 	return 0;
@@ -3455,7 +3469,21 @@ void windowfunction()
 
 	liser.restart();
 
+	bosshp.strokes.setPosition(view.getCenter().x - 692, view.getCenter().y + 320);
 	boss.status(boss);
+	healthBar[0].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 376);
+	healthBar[3].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 385);
+	healthBar[4].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 385);
+	healthBar[7].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 395);
+	bghealthBar[0].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 376);
+	bghealthBar[1].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 376);
+	bghealthBar[2].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 385);
+	bghealthBar[3].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 385);
+	bghealthBar[4].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 385);
+	bghealthBar[5].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 385);
+	bghealthBar[6].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 395);
+	bghealthBar[7].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 395);
+
 
 	if (Keyboard::isKeyPressed(Keyboard::X))
 		player.isdead = true;
@@ -4075,12 +4103,13 @@ void window_draw()
 	if (!cuton)
 		hud.draw(hud);
 	enemy2->draw(enemy2);
-	if (boss.live) {
+	if (boss.live && bgCounter == 3) 
+	{
 		window.draw(boss.sprite);
-		//window.draw(bghealthbar);
-		//window.draw(healthbar);
-		//window.draw(bosshp.strokes);
 
+		window.draw(bghealthBar);
+		window.draw(healthBar);
+		window.draw(bosshp.strokes);
 	}
 }
 void moveToRight(Sprite& s)
@@ -4523,6 +4552,7 @@ void FBCutScene()
 
 		window_draw();
 		boss.idle(boss);
+		IdleAnimation();
 		view.setCenter(boss.sprite.getPosition().x - ctr, 550);
 		window.setView(view);
 		window.display();
@@ -4674,4 +4704,4 @@ char key_code(sf::Keyboard::Key key)
 	return keyChar;
 }
 
-///
+///  
