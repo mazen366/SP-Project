@@ -52,12 +52,12 @@ TS_buttonsTex, TS_SSTex, TS_OlTex, OptionsTex, MusicControlTex, PMTex,
 RWTexRun, RWTexAttack, RWTexDeath, PTexSCPL, PTexIPL, PTexSCRL, PTexICPL, PTexICRL, PTexJRU, PTexJPL, PTexDL,
 PTexMU, PTexML, PTexRPU, PTexRPL, PTexRRU, PTexRRL, PTexSSPU, PTexSSRU, PTexIPSL, PTexIPSU, PTexIRL, PTexIRU, PTexJPU,
 health_kit_tex, health_potion_tex, speed_potion_tex, damage_potion_tex, rifle_ammo_tex, laser_ammo_tex, deathScreenBGTex,
-deathScreenFGTex, deathScreenFGTex2, NewGameTex, LeaderBoardTex, LeaderBoardSheetTex, LoadGameTex, CreditsBG, CreditsFG;
+deathScreenFGTex, deathScreenFGTex2, NewGameTex, LeaderBoardTex, LeaderBoardSheetTex, LoadGameTex, CreditsBG, CreditsFG, MissionTex, PVicTex;
 
 
 Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, NewGameSpr,
 TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr, deathScreenBGSpr, deathScreenFGSpr, deathScreenFGSpr2, LeaderBoardSpr, LeaderBoardSheetSpr, CreditsBGSpr, CreditsFGSpr,
-LoadGameSpr, SoundEffectsControlSpr;
+LoadGameSpr, SoundEffectsControlSpr, MissionSpr, PVicSpr;
 
 
 Music TS_BGTheme;
@@ -2389,7 +2389,7 @@ struct FINAL_BOSS
 	Sprite sprite, done;
 	bool can_run = 0, stopped = 0, death_animation_done = 0;
 	bool can_fight = 0;
-	Clock damage_timer;
+	Clock damage_timer,running_attack_timer;
 	float animation_indicator[10] = {};
 	RectangleShape hitbox;
 	SoundBuffer win_b, short_attack_B, long_attack_B;
@@ -2408,6 +2408,8 @@ struct FINAL_BOSS
 		boss.running_attacktex.loadFromFile("running attack.png");
 		boss.done_T.loadFromFile("Mission Complete.png");
 		boss.done.setTexture(boss.done_T);
+		boss.done.setScale(3, 3);
+		boss.done.setPosition(view.getCenter());
 
 		boss.win_b.loadFromFile("Mission Complete Sound.wav");
 		boss.short_attack_B.loadFromFile("Fire Attack Short.wav");
@@ -2429,17 +2431,26 @@ struct FINAL_BOSS
 			boss.damaged(boss);
 			if (!boss.stopped)
 			{
-
+					if (boss.running_attack_timer.getElapsedTime().asSeconds()>=10){
+						boss.runningattack(boss);
+						
+						boss.deaths_animation_done = 0;
+					}
 					
-					if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 120 && t6.getElapsedTime().asMilliseconds() > 300)
+					if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300 && t6.getElapsedTime().asMilliseconds() > 300)
 					{
 						boss.running(boss);
 					}
-					else
+					else if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x)>100) {
+						boss.fighting2(boss);
+						if (!(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300))
+							t6.restart();
+					}
+					else if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x)<=100)
 					{
 						boss.fighting(boss);
 
-						if (!(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 120))
+						if (!(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300))
 							t6.restart();
 					}
 					if (!cutscene)
@@ -2517,7 +2528,7 @@ struct FINAL_BOSS
 		boss.stopped = 1;
 		if (!boss.death_animation_done)
 		{
-			boss.hitbox.setScale(0, 0);
+			boss.sprite.setScale(0, 0);
 			boss.velocity.x = 0;
 			boss.sprite.setTexture(boss.deadtex);
 			boss.sprite.setOrigin(3960 / 33 / 2, -5);
@@ -2590,6 +2601,7 @@ struct FINAL_BOSS
 				boss.sprite.setScale(-3.25, 3.25);
 			}
 			boss.runnning_attack_done = 1;
+			boss.running_attack_timer.restart();
 		}
 		boss.sprite.setTexture(boss.running_attacktex);
 		EnemiAnimation(boss.sprite, 17.9, 3600 / 18, 98, 0.008, boss.animation_indicator[6]);
@@ -3537,6 +3549,7 @@ void cameraView()
 		if (!cutscene && player.upperbodySprite.getPosition().x > leftEnd + 950)
 		{
 			FBCutScene();
+			boss.running_attack_timer.restart();
 			cutscene = true;
 		}
 		else
@@ -3617,7 +3630,7 @@ void transition_pos_check()
 		bgCounter = 3;
 		this_thread::sleep_for(chrono::milliseconds(300));
 	}
-	else if (!boss.is_alive || game_ended)
+	/*else if (!boss.is_alive || game_ended)
 	{
 		game_ended = true;
 		if (!LeaderBoard.is_compared)
@@ -3651,6 +3664,7 @@ void transition_pos_check()
 			this_thread::sleep_for(chrono::milliseconds(100));
 		}
 	}
+	*/
 	else
 		window.display();
 }
@@ -3961,9 +3975,11 @@ void window_draw()
 	enemy2->draw(enemy2);
 	if (boss.live)
 		window.draw(boss.sprite);
-	if (boss.comlete == 1)
+	if (!boss.is_alive)
 	{
-		window.draw(boss.done);
+		cout << "DRAWN\n";
+		MissionSpr.setPosition(view.getCenter().x - 930, view.getCenter().y - 750);
+		window.draw(MissionSpr);
 	}
 }
 void moveToRight(Sprite& s)
@@ -4166,7 +4182,7 @@ void playerDamageFromEnemy1()
 				}
 			}
 		}
-		if (player.upperbodySprite.getGlobalBounds().intersects(boss.hitbox.getGlobalBounds()))
+		if (player.upperbodySprite.getGlobalBounds().intersects(boss.sprite.getGlobalBounds()))
 		{
 			player.health -= boss.damage;
 			player.is_getting_damaged = 1;
@@ -4356,6 +4372,13 @@ void texture_setup()//&buffers setup
 	startvoice_B.loadFromFile("Mission 1 Start.wav");
 	startvoice.setBuffer(startvoice_B);
 	startvoice.setVolume(60);
+	MissionTex.loadFromFile(pathh + "Mission Complete.png");
+	MissionSpr.setTexture(MissionTex);
+
+	PVicTex.loadFromFile(pathh + "Victory (Pistol) Sprite Sheet.png");
+	PVicSpr.setTexture(PVicTex);
+
+
 }
 
 void FBCutScene()
