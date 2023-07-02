@@ -68,7 +68,7 @@ SoundBuffer MenuClickB, MenuScrollB, DeathScreenFXB, GamePlayB, MenuReturnB, Cre
 Sound MenuClick, MenuScroll, DeathScreenFX, GamePlayTheme, MenuReturn, startvoice, CreditsMusic;
 
 
-Clock timer, timer2, timer4, escTimer, eventTimer, LB_timer;
+Clock timer, timer2, timer4, escTimer, eventTimer, LB_timer, t6;
 
 
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
@@ -167,7 +167,7 @@ struct Player
 	bool one_sprite_needed = 0;
 	int last_key = 0;
 	bool live = 1, is_getting_damaged = 0;
-	Clock damage_timer;
+	Clock damage_timer, running_time;
 	bool isdead = 0;
 	bool holding_knife = 0, powerup_is_on = 0;
 	void Playersetup(Player& player)
@@ -2429,18 +2429,22 @@ struct FINAL_BOSS
 			boss.damaged(boss);
 			if (!boss.stopped)
 			{
-				cout << "WORKING? " << boss.can_run << '\n';
-				if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) < 1000)
-					boss.can_run = 1;
-				(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) < 350 && player.Velocity.x == 0) ? boss.can_fight = 1 : boss.can_fight = 0;
-				if (boss.can_run)
-					(boss.can_fight) ? boss.fighting(boss) : boss.running(boss);
-				else
-				{
-					cout << "IDLE\n";
-					boss.idle(boss);
-				}
-				boss.sprite.move(boss.velocity);
+
+					
+					if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 120 && t6.getElapsedTime().asMilliseconds() > 300)
+					{
+						boss.running(boss);
+					}
+					else
+					{
+						boss.fighting(boss);
+
+						if (!(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 120))
+							t6.restart();
+					}
+					if (!cutscene)
+						boss.velocity.x = 0;
+					boss.sprite.move(boss.velocity);
 			}
 		}
 	}
@@ -2600,12 +2604,12 @@ struct FINAL_BOSS
 		if (player.upperbodySprite.getPosition().x > boss.sprite.getPosition().x)
 		{
 			//move to right
-			boss.velocity.x = 5;
+			boss.velocity.x = 3;
 			boss.sprite.setScale(3.25, 3.25);
 		}
 		else
 		{   //move to left
-			boss.velocity.x = -5;
+			boss.velocity.x = -3;
 			boss.sprite.setScale(-3.25, 3.25);
 		}
 		boss.sprite.setOrigin(1000 / 10 / 2, 0);
@@ -2615,7 +2619,7 @@ struct FINAL_BOSS
 	}
 	void idle(FINAL_BOSS& boss)
 	{
-		boss.sprite.setOrigin(856 / 8 / 2, 0);
+		boss.sprite.setOrigin((856 / 8.0) / 2, -30);
 		boss.sprite.setTexture(boss.idletex);
 		EnemiAnimation(boss.sprite, 7.9, 856 / 8, 50, 0.05, boss.animation_indicator[0]);
 
@@ -3383,6 +3387,8 @@ void windowfunction()
 	}
 	if (rifle.ammo <= 0)
 		player.gun = PISTOL;
+	if (player.Velocity.x == 0)
+		player.running_time.restart();
 
 	if (!Keyboard::isKeyPressed(Keyboard::K))
 		player.holding_knife = false;
