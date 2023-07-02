@@ -68,12 +68,12 @@ SoundBuffer MenuClickB, MenuScrollB, DeathScreenFXB, GamePlayB, MenuReturnB, Cre
 Sound MenuClick, MenuScroll, DeathScreenFX, GamePlayTheme, MenuReturn, startvoice, CreditsMusic;
 
 
-Clock timer, timer2, timer4, escTimer, eventTimer, LB_timer, t6;
+Clock timer, timer2, timer4, escTimer, eventTimer, LB_timer, t6, t7;
 
 
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
 
-bool creditsactive = 1, cutscene, cuton;
+bool creditsactive = 1, cutscene, cuton, finished;
 const int fadeinT = 2000;
 const int fadeoutT = 2000;
 const int waitT = 2000;
@@ -2511,6 +2511,10 @@ struct FINAL_BOSS
 			{
 				boss.velocity.x = 0;
 				boss.Death_animation(boss);
+				if (!game_ended)
+					t7.restart();
+				game_ended = true;
+				
 			}
 		}
 		if (player.holding_knife && player.rec.getGlobalBounds().intersects(boss.sprite.getGlobalBounds()))
@@ -3606,6 +3610,7 @@ void transition_reverse()
 }
 void transition_pos_check()
 {
+
 	if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 0)
 	{
 		transition();
@@ -3628,9 +3633,28 @@ void transition_pos_check()
 		bgCounter = 3;
 		this_thread::sleep_for(chrono::milliseconds(300));
 	}
-	/*else if (!boss.is_alive || game_ended)
+
+	else if (game_ended)
 	{
-		game_ended = true;
+		float ind = 0, delay = 0.2;
+		player.upperbodySprite.setTexture(PVicTex);
+		player.lowerbodySprite.setTexture(PVicTex);
+		while (t7.getElapsedTime().asSeconds() < 4)
+		{
+			window.clear();
+			player.upperbodySprite.setTextureRect(IntRect(int(ind) * 38, 0, 38, 43));
+			player.lowerbodySprite.setTextureRect(IntRect(int(ind) * 38, 0, 38, 43));
+			ind += delay;
+			if (ind > 3)
+				ind = 0;
+
+			window_draw();
+			MissionSpr.setPosition(view.getCenter().x - 930, view.getCenter().y - 750);
+			window.draw(MissionSpr);
+
+			window.display();
+		}
+		window.clear();
 		if (!LeaderBoard.is_compared)
 		{
 			names_save[names_save.size() - 1].second = to_string(player.score);
@@ -3662,7 +3686,6 @@ void transition_pos_check()
 			this_thread::sleep_for(chrono::milliseconds(100));
 		}
 	}
-	*/
 	else
 		window.display();
 }
@@ -3973,12 +3996,6 @@ void window_draw()
 	enemy2->draw(enemy2);
 	if (boss.live)
 		window.draw(boss.sprite);
-	if (!boss.is_alive)
-	{
-		cout << "DRAWN\n";
-		MissionSpr.setPosition(view.getCenter().x - 930, view.getCenter().y - 750);
-		window.draw(MissionSpr);
-	}
 }
 void moveToRight(Sprite& s)
 {
@@ -4398,7 +4415,7 @@ void FBCutScene()
 		window.display();
 	}
 	t1.restart();
-	while (t1.getElapsedTime().asSeconds() <= 2.5)
+	while (t1.getElapsedTime().asSeconds() <= 2.2)
 	{
 		window.clear();
 
