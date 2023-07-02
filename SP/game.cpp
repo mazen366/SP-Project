@@ -532,9 +532,9 @@ struct LeaderBoard
 			YanimCtr = YanimCtr == 0 ? 1 : 0;
 		}
 
-		LeaderBoardSheetSpr.setPosition(view.getCenter().x - (940 * view.getSize().x / 1600.0), view.getCenter().y - (500 * view.getSize().y / 1080.0));
+		LeaderBoardSheetSpr.setPosition(view.getCenter().x - (790 * view.getSize().x / 1600.0), view.getCenter().y - (500 * view.getSize().y / 1080.0));
 
-
+		//150
 
 		window.clear();
 
@@ -549,15 +549,15 @@ struct LeaderBoard
 				{
 				case 0:
 					LeaderBoardText.setString("#" + to_string(i + 1));
-					LeaderBoardText.setPosition(view.getCenter().x - 550, view.getCenter().y - 230 + i * 50);
+					LeaderBoardText.setPosition(view.getCenter().x - (470 * view.getSize().x / 1600), view.getCenter().y - 230 + i * 50);
 					break;
 				case 1:
 					LeaderBoardText.setString(leaderboard_vec[k].second);
-					LeaderBoardText.setPosition(view.getCenter().x - 300, view.getCenter().y - 230 + i * 50);
+					LeaderBoardText.setPosition(view.getCenter().x - (250 * view.getSize().x / 1600), view.getCenter().y - 230 + i * 50);
 					break;
 				case 2:
 					LeaderBoardText.setString(to_string(leaderboard_vec[k].first));
-					LeaderBoardText.setPosition(view.getCenter().x + 500, view.getCenter().y - 230 + i * 50);
+					LeaderBoardText.setPosition(view.getCenter().x + (320 * view.getSize().x / 1600), view.getCenter().y - 230 + i * 50);
 					break;
 				}
 
@@ -3617,7 +3617,7 @@ void transition_pos_check()
 		bgCounter = 3;
 		this_thread::sleep_for(chrono::milliseconds(300));
 	}
-	else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 3 || game_ended)
+	else if (!boss.is_alive || game_ended)
 	{
 		game_ended = true;
 		if (!LeaderBoard.is_compared)
@@ -4304,7 +4304,7 @@ void TS_Setups()
 
 	LeaderBoardTex.loadFromFile("Leaderboard BG Sprite Sheet.png");
 	LeaderBoardSpr.setTexture(LeaderBoardTex);
-	LeaderBoardSpr.setScale(1, 1.25);
+	LeaderBoardSpr.setScale(1.5, 1.25);
 
 	LeaderBoardSheetTex.loadFromFile("Leaderboard Sprite.png");
 	LeaderBoardSheetSpr.setTexture(LeaderBoardSheetTex);
