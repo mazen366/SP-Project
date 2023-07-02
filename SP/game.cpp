@@ -2399,11 +2399,11 @@ struct FINAL_BOSS
 	void setup(FINAL_BOSS& boss)
 	{
 		hitbox.setSize(Vector2f(190, 180));
-		
+
 		boss.idletex.loadFromFile("idle.png");
 		boss.deadtex.loadFromFile("death.png");
 		boss.fightingtex1.loadFromFile("Normal Attack.png");
-     	boss.fightingtex2.loadFromFile("long range attack.png");
+		boss.fightingtex2.loadFromFile("long range attack.png");
 		boss.runningtex.loadFromFile("moving.png");
 		boss.running_attacktex.loadFromFile("running attack.png");
 		boss.done_T.loadFromFile("Mission Complete.png");
@@ -2419,20 +2419,20 @@ struct FINAL_BOSS
 		boss.sprite.setPosition(boss.initialposition);
 		boss.sprite.setTexture(boss.idletex);
 		boss.sprite.setScale(-3.25, 3.25);
-		
+
 	}
 	void status(FINAL_BOSS& boss)
 	{
 		if (bgCounter == LEVEL_1_D_BG && boss.live)
 		{
-			
+
 			boss.damaged(boss);
 			if (!boss.stopped)
 			{
 				cout << "WORKING? " << boss.can_run << '\n';
 				if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) < 1000)
 					boss.can_run = 1;
-				(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) < 350&&player.Velocity.x==0) ? boss.can_fight = 1 : boss.can_fight = 0;
+				(abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) < 350 && player.Velocity.x == 0) ? boss.can_fight = 1 : boss.can_fight = 0;
 				if (boss.can_run)
 					(boss.can_fight) ? boss.fighting(boss) : boss.running(boss);
 				else
@@ -2484,7 +2484,7 @@ struct FINAL_BOSS
 				if (boss.damage_timer.getElapsedTime().asMilliseconds() <= 300) {
 					boss.sprite.setColor(Color::Red);
 				}
-				else 
+				else
 				{
 					boss.is_getting_damaged = 0;
 				}
@@ -2513,6 +2513,7 @@ struct FINAL_BOSS
 		boss.stopped = 1;
 		if (!boss.death_animation_done)
 		{
+			boss.hitbox.setScale(0, 0);
 			boss.velocity.x = 0;
 			boss.sprite.setTexture(boss.deadtex);
 			boss.sprite.setOrigin(3960 / 33 / 2, -5);
@@ -2522,18 +2523,19 @@ struct FINAL_BOSS
 				player.score += 10000;
 				boss.death_animation_done = 1;
 			}
-			boss.sprite.setTextureRect(IntRect(int(boss.animation_indicator[4]) * 3960 / 33, 0,  3960/ 33, 64));
+			boss.sprite.setTextureRect(IntRect(int(boss.animation_indicator[4]) * 3960 / 33, 0, 3960 / 33, 64));
 		}
 		else
 		{
+
 			boss.is_alive = 0;
 			//death sound here 
 		}
 	}
 	void fighting2(FINAL_BOSS& boss)//long range 
 	{
-	
-		boss.sprite.setOrigin(3300 / 11 / 4,-8);
+
+		boss.sprite.setOrigin(3300 / 11 / 4, -8);
 		boss.velocity.x = 0;
 		if (player.upperbodySprite.getPosition().x > boss.sprite.getPosition().x)
 		{
@@ -2566,7 +2568,7 @@ struct FINAL_BOSS
 		boss.sprite.setTexture(boss.fightingtex1);
 		EnemiAnimation(boss.sprite, 20.9, 4200 / 21, 74, 0.008, boss.animation_indicator[2]);
 		boss.short_attack.play();
-        
+
 	}
 	void runningattack(FINAL_BOSS& boss)
 	{
@@ -2587,7 +2589,7 @@ struct FINAL_BOSS
 		}
 		boss.sprite.setTexture(boss.running_attacktex);
 		EnemiAnimation(boss.sprite, 17.9, 3600 / 18, 98, 0.008, boss.animation_indicator[6]);
-		
+
 
 	}
 	void running(FINAL_BOSS& boss)
@@ -2606,7 +2608,7 @@ struct FINAL_BOSS
 			boss.velocity.x = -5;
 			boss.sprite.setScale(-3.25, 3.25);
 		}
-		boss.sprite.setOrigin(1000 / 10/2,0);
+		boss.sprite.setOrigin(1000 / 10 / 2, 0);
 		boss.sprite.setTexture(boss.runningtex);
 		EnemiAnimation(boss.sprite, 9.9, 1000 / 10, 73, 0.008, boss.animation_indicator[1]);
 		boss.sprite.move(velocity);
@@ -3357,7 +3359,7 @@ void windowfunction()
 	liser.restart();
 
 	boss.status(boss);
-	
+
 	if (Keyboard::isKeyPressed(Keyboard::X))
 		player.isdead = true;
 	if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 200)
@@ -3549,7 +3551,7 @@ void cameraView()
 			}
 		}
 	}
-	
+
 }
 void transition()
 {
@@ -3948,15 +3950,15 @@ void window_draw()
 	{
 		window.draw(powerups[i].powerup_sprite);
 	}
-	if(!cuton)
+	if (!cuton)
 		hud.draw(hud);
 	enemy2->draw(enemy2);
 	if (boss.live)
 		window.draw(boss.sprite);
-		if (boss.comlete == 1)
-		{
-			window.draw(boss.done);
-		}
+	if (boss.comlete == 1)
+	{
+		window.draw(boss.done);
+	}
 }
 void moveToRight(Sprite& s)
 {
@@ -4359,27 +4361,29 @@ void FBCutScene()
 	while (t2.getElapsedTime().asSeconds() <= 1)
 	{
 		window.clear();
-		
+
 		window_draw();
+		boss.idle(boss);
 		view.setCenter(boss.sprite.getPosition().x, 550);
 		window.setView(view);
-		
-		
+
+
 		window.display();
 	}
 	t1.restart();
 	while (t1.getElapsedTime().asSeconds() <= 2.5)
 	{
 		window.clear();
-		
+
 		window_draw();
+		boss.idle(boss);
 		view.setCenter(boss.sprite.getPosition().x - ctr, 550);
 		window.setView(view);
 		window.display();
 		ctr += 20;
 	}
 	cuton = false;
-	
+
 }
 void mouse_pos()
 {
