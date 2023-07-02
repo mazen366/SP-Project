@@ -91,11 +91,13 @@ int currentF = 0;
 int currentR = 0;
 int numF = 12;
 
+
 float TS_TandGCnt = 0, TS_LCnt = 0, TS_LogoCnt = 0, TS_PECnt = 0, AlphaPE = 255;
 int TS_ButtonsCnt = 0, TSS_ButtonsCnt = 0, OptionsSprCnt = 0, deathScreenFG2cnt = 0;
 
 bool game_ended = 0;
-
+VertexArray healthBar(Quads, 8);
+VertexArray bghealthBar(Quads, 8);
 Font nameFont;
 Text nameDis, LeaderBoardText, LoadSaveText;
 // Moved from down to here because
@@ -144,6 +146,7 @@ void animation(Sprite& s, float maxframe, float x, float y, float delay, int ind
 void playerDamageFromEnemy1();
 void playerDeathAnimation();
 void FBCutScene();
+
 //player
 struct Player
 {
@@ -2022,6 +2025,10 @@ struct SoundEffectsControl
 		rifle.sound.setVolume(soundlevel);
 		pistol.sound.setVolume(soundlevel);
 		liser.sound.setVolume(soundlevel);
+		music.setVolume(soundlevel);
+		win.setVolume(soundlevel);
+		short_attack.setVolume(soundlevel);
+		long_attack.setVolume(soundlevel);
 		for (int i = 0; i < 30; i++)
 		{
 			RS[i].deathSound.setVolume(soundlevel);
@@ -2040,6 +2047,10 @@ struct SoundEffectsControl
 		rifle.sound.setVolume(soundlevel);
 		pistol.sound.setVolume(soundlevel);
 		liser.sound.setVolume(soundlevel);
+		music.setVolume(soundlevel);
+		win.setVolume(soundlevel);
+		short_attack.setVolume(soundlevel);
+		long_attack.setVolume(soundlevel);
 		for (int i = 0; i < 30; i++)
 		{
 			RS[i].deathSound.setVolume(soundlevel);
@@ -2049,6 +2060,13 @@ struct SoundEffectsControl
 		TS_BGFireFX.setVolume(soundlevel);
 		player.playerdeath.setVolume(soundlevel);
 		startvoice.setVolume(soundlevel);
+	}
+	void boss_music()
+	{
+		if (bgCounter == LEVEL_1_D_BG)
+		{
+			music.play();
+		}
 	}
 
 	void draw(string section = "")
@@ -2379,6 +2397,10 @@ void new_enemy_setup()
 	new_enemy.sprite.setTextureRect(IntRect(0, 0, 312 / 12, 40));
 	new_enemy.sprite.setPosition(Vector2f(19650, 830));
 }
+
+Sound win, short_attack, long_attack, music;
+SoundBuffer win_B, short_attack_B, long_attack_B, music_B;
+
 struct FINAL_BOSS
 {
 	Texture idletex, runningtex, fightingtex1, fightingtex2, deadtex, done_T, running_attacktex;
@@ -2392,8 +2414,6 @@ struct FINAL_BOSS
 	Clock damage_timer, running_attack_timer;
 	float animation_indicator[10] = {};
 	RectangleShape hitbox;
-	SoundBuffer win_b, short_attack_B, long_attack_B;
-	Sound win, short_attack, long_attack;
 	bool comlete = 0, runnning_attack_done = 0;;
 
 	void setup(FINAL_BOSS& boss)
@@ -2411,13 +2431,6 @@ struct FINAL_BOSS
 		boss.done.setScale(3, 3);
 		boss.done.setPosition(view.getCenter());
 
-		boss.win_b.loadFromFile("Mission Complete Sound.wav");
-		boss.short_attack_B.loadFromFile("Fire Attack Short.wav");
-		boss.long_attack_B.loadFromFile("Fire Attack Long.wav");
-		boss.win.setBuffer(win_b);
-		boss.short_attack.setBuffer(boss.short_attack_B);
-		boss.long_attack.setBuffer(boss.long_attack_B);
-
 		boss.sprite.setPosition(boss.initialposition);
 		boss.sprite.setTexture(boss.idletex);
 		boss.sprite.setScale(-3.25, 3.25);
@@ -2431,9 +2444,9 @@ struct FINAL_BOSS
 			boss.damaged(boss);
 			if (!boss.stopped)
 			{
-				if ((int)boss.running_attack_timer.getElapsedTime().asSeconds() % 10 == 0) {
+				if ((int)boss.running_attack_timer.getElapsedTime().asSeconds() % 10 == 0 && (int)boss.running_attack_timer.getElapsedTime().asSeconds() != 0) {
 					boss.runningattack(boss);
-					boss.deaths_animation_done = 0;
+					boss.runnning_attack_done = 0;
 				}
 				else if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300 && t6.getElapsedTime().asMilliseconds() > 300)
 				{
@@ -2514,7 +2527,7 @@ struct FINAL_BOSS
 				if (!game_ended)
 					t7.restart();
 				game_ended = true;
-				
+
 			}
 		}
 		if (player.holding_knife && player.rec.getGlobalBounds().intersects(boss.sprite.getGlobalBounds()))
@@ -2530,7 +2543,7 @@ struct FINAL_BOSS
 		boss.stopped = 1;
 		if (!boss.death_animation_done)
 		{
-			boss.sprite.setScale(0, 0);
+
 			boss.velocity.x = 0;
 			boss.sprite.setTexture(boss.deadtex);
 			boss.sprite.setOrigin(3960 / 33 / 2, -5);
@@ -2544,7 +2557,7 @@ struct FINAL_BOSS
 		}
 		else
 		{
-
+			boss.sprite.setScale(0, 0);
 			boss.is_alive = 0;
 			//death sound here 
 		}
@@ -2565,7 +2578,7 @@ struct FINAL_BOSS
 
 		boss.sprite.setTexture(boss.fightingtex2);
 		EnemiAnimation(boss.sprite, 10.9, 3300 / 11, 63, 0.008, boss.animation_indicator[3]);
-		boss.long_attack.play();
+		long_attack.play();
 
 	}
 	void fighting(FINAL_BOSS& boss)//melee
@@ -2584,28 +2597,30 @@ struct FINAL_BOSS
 		}
 		boss.sprite.setTexture(boss.fightingtex1);
 		EnemiAnimation(boss.sprite, 20.9, 4200 / 21, 74, 0.008, boss.animation_indicator[2]);
-		boss.short_attack.play();
+		short_attack.play();
 
 	}
 	void runningattack(FINAL_BOSS& boss)
 	{
-		boss.sprite.setOrigin(3600 / 18 / 2, 0);
+
 		if (!boss.runnning_attack_done)
 		{
 			if (player.upperbodySprite.getPosition().x > boss.sprite.getPosition().x)
 			{
-				boss.velocity.x = 20;
+				boss.velocity.x = 15;
 				boss.sprite.setScale(3.25, 3.25);
 			}
 			else
 			{
-				boss.velocity.x = -20;
+				boss.velocity.x = -15;
 				boss.sprite.setScale(-3.25, 3.25);
 			}
 			boss.runnning_attack_done = 1;
 
 		}
+		boss.sprite.setOrigin((3600 / 18) / 2, 0);
 		boss.sprite.setTexture(boss.running_attacktex);
+
 		EnemiAnimation(boss.sprite, 17.9, 3600 / 18, 98, 0.008, boss.animation_indicator[6]);
 		boss.sprite.move(velocity);
 
@@ -2696,6 +2711,69 @@ void call()
 	}
 }
 
+struct BossHealthBar {
+	float currentHealth = boss.health;
+
+
+	void BossHealthBarSetup()
+	{
+		Texture stroke;
+		Sprite strokes;
+		stroke.loadFromFile("Prince of Darkness Health Bar.png");
+		strokes.setTexture(stroke);
+		strokes.setPosition(268, 860);
+		Color tandbColor = Color(42, 24, 21, 255);
+		Color midColor = Color(70, 36, 37, 255);
+		Color bgtandbColor = Color(33, 32, 33, 255);
+		Color bgmidColor = Color(66, 65, 66, 255);
+
+		healthBar[0].position = Vector2f(296, 916);
+		healthBar[1].position = Vector2f(1624, 916);
+		healthBar[2].position = Vector2f(1624, 925);
+		healthBar[3].position = Vector2f(296, 925);
+		healthBar[4].position = Vector2f(296, 925);
+		healthBar[5].position = Vector2f(1624, 925);
+		healthBar[6].position = Vector2f(1624, 935);
+		healthBar[7].position = Vector2f(296, 935);
+
+		healthBar[0].color = tandbColor;
+		healthBar[1].color = tandbColor;
+		healthBar[2].color = midColor;
+		healthBar[3].color = midColor;
+		healthBar[4].color = midColor;
+		healthBar[5].color = midColor;
+		healthBar[6].color = tandbColor;
+		healthBar[7].color = tandbColor;
+
+
+		bghealthBar[0].position = Vector2f(296, 916);
+		bghealthBar[1].position = Vector2f(1624, 916);
+		bghealthBar[2].position = Vector2f(1624, 925);
+		bghealthBar[3].position = Vector2f(296, 925);
+		bghealthBar[4].position = Vector2f(296, 925);
+		bghealthBar[5].position = Vector2f(1624, 925);
+		bghealthBar[6].position = Vector2f(1624, 935);
+		bghealthBar[7].position = Vector2f(296, 935);
+
+		bghealthBar[0].color = bgtandbColor;
+		bghealthBar[1].color = bgtandbColor;
+		bghealthBar[2].color = bgmidColor;
+		bghealthBar[3].color = bgmidColor;
+		bghealthBar[4].color = bgmidColor;
+		bghealthBar[5].color = bgmidColor;
+		bghealthBar[6].color = bgtandbColor;
+		bghealthBar[7].color = bgtandbColor;
+	}
+	void BossHealthBarChange()
+	{
+		float healthPercentage = currentHealth / 500;
+		healthBar[1].position.x = 296 + healthPercentage * 1328;
+		healthBar[2].position.x = 296 + healthPercentage * 1328;
+		healthBar[5].position.x = 296 + healthPercentage * 1328;
+		healthBar[6].position.x = 296 + healthPercentage * 1328;
+	}
+}bosshp;
+
 //gravity
 float gravity = 0.7;
 bool canDoubleJump;
@@ -2751,6 +2829,7 @@ int main()
 	DeathScreen.deathScreenSetup();
 	player.Playersetup(player);
 	timer.restart();
+	bosshp.BossHealthBarSetup();
 	Menu();
 	file.save();
 	return 0;
@@ -3644,6 +3723,8 @@ void transition_pos_check()
 			window.clear();
 			player.upperbodySprite.setTextureRect(IntRect(int(ind) * 38, 0, 38, 43));
 			player.lowerbodySprite.setTextureRect(IntRect(int(ind) * 38, 0, 38, 43));
+			boss.Death_animation(boss);
+			boss.sprite.setColor(Color::White);
 			ind += delay;
 			if (ind > 3)
 				ind = 0;
@@ -3994,8 +4075,13 @@ void window_draw()
 	if (!cuton)
 		hud.draw(hud);
 	enemy2->draw(enemy2);
-	if (boss.live)
+	if (boss.live) {
 		window.draw(boss.sprite);
+		//window.draw(bghealthbar);
+		//window.draw(healthbar);
+		//window.draw(bosshp.strokes);
+
+	}
 }
 void moveToRight(Sprite& s)
 {
@@ -4351,6 +4437,14 @@ void TS_Setups()
 
 	LoadSaveText.setFont(nameFont);
 	LoadSaveText.setCharacterSize(54);
+
+	music.setBuffer(music_B);
+	music.setLoop(true);
+	win.setBuffer(win_B);
+	short_attack.setBuffer(short_attack_B);
+	long_attack.setBuffer(long_attack_B);
+
+
 }
 void texture_setup()//&buffers setup
 {
@@ -4393,7 +4487,15 @@ void texture_setup()//&buffers setup
 	PVicTex.loadFromFile(pathh + "Victory (Pistol) Sprite Sheet.png");
 	PVicSpr.setTexture(PVicTex);
 
+	win_B.loadFromFile("Mission Complete Sound.wav");
+	short_attack_B.loadFromFile("Fire Attack Short.wav");
+	long_attack_B.loadFromFile("Fire Attack Long.wav");
+	music_B.loadFromFile("Final_Boss_Theme_Song.wav");
 
+	music.setBuffer(music_B);
+	win.setBuffer(win_B);
+	short_attack.setBuffer(short_attack_B);
+	long_attack.setBuffer(long_attack_B);
 }
 
 void FBCutScene()
@@ -4415,7 +4517,7 @@ void FBCutScene()
 		window.display();
 	}
 	t1.restart();
-	while (t1.getElapsedTime().asSeconds() <= 2.2)
+	while (t1.getElapsedTime().asSeconds() <= 2.0)
 	{
 		window.clear();
 
@@ -4571,4 +4673,5 @@ char key_code(sf::Keyboard::Key key)
 	}
 	return keyChar;
 }
+
 ///
