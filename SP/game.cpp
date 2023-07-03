@@ -961,6 +961,7 @@ struct Creditscreen
 		window.clear();
 		window.draw(CreditsBGSpr);
 		if (creditsactive) {
+
 			window.draw(CreditsFGSpr);
 		}
 		window.display();
@@ -2615,6 +2616,7 @@ struct FINAL_BOSS
 			}
 			boss.runnning_attack_done = 0;
 		}
+		boss.velocity.x = 7 * (boss.sprite.getScale().x / 3.25);
 		boss.sprite.setOrigin((3600 / 18) / 2, 20);
 		boss.sprite.setTexture(boss.running_attacktex);
 		if (boss.looking_right = 1)
@@ -2646,12 +2648,12 @@ struct FINAL_BOSS
 		if (player.upperbodySprite.getPosition().x > boss.sprite.getPosition().x)
 		{
 			//move to right
-			boss.velocity.x = 3;
+			boss.velocity.x = 2;
 			boss.sprite.setScale(3.25, 3.25);
 		}
 		else
 		{   //move to left
-			boss.velocity.x = -3;
+			boss.velocity.x = -2;
 			boss.sprite.setScale(-3.25, 3.25);
 		}
 		boss.sprite.setOrigin(1000 / 10 / 2, -5);
