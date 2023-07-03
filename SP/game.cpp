@@ -2401,7 +2401,7 @@ struct BossHealthBar {
 	void BossHealthBarChange(int health)
 	{
 		currentHealth = health;
-		float healthPercentage = currentHealth / 500;
+		float healthPercentage = currentHealth / 250;
 		healthBar[1].position = { (view.getCenter().x - 664) + healthPercentage * 1328,view.getCenter().y + 376 };
 		healthBar[2].position = { (view.getCenter().x - 664) + healthPercentage * 1328, view.getCenter().y + 385 };
 		healthBar[5].position = { (view.getCenter().x - 664) + healthPercentage * 1328, view.getCenter().y + 385 };
@@ -2412,19 +2412,19 @@ struct BossHealthBar {
 struct FINAL_BOSS
 {
 	Texture idletex, runningtex, fightingtex1, fightingtex2, deadtex, done_T, running_attacktex;
-	float health = 14, damage = 0, sprite_indicator = 0.0;
+	float health = 250, damage = 0, sprite_indicator = 0.0;
 	Vector2f velocity = { 0,0 };
 	Vector2f initialposition = { 26000,550 };
 	bool live = 1, deaths_animation_done = 0, is_alive = 1, is_getting_damaged = 0;
 	Sprite sprite, done;
 	bool can_run = 0, stopped = 0, death_animation_done = 0;
 	bool can_fight = 0;
-	Clock damage_timer, running_attack_timer;
+	Clock damage_timer, running_attack_timer, powerup_timer;
 	float animation_indicator[10] = {};
 	RectangleShape hitbox;
 	bool comlete = 0, runnning_attack_done = 0;
 	bool looking_right = 0;
-
+	int healthint = health;
 	void setup(FINAL_BOSS& boss)
 	{
 		hitbox.setSize(Vector2f(190, 180));
@@ -2449,12 +2449,22 @@ struct FINAL_BOSS
 	{
 		if (bgCounter == LEVEL_1_D_BG && boss.live)
 		{
+			healthint = health;
+			player.last_enemy_pos.x = boss.sprite.getPosition().x + 100;
+			player.last_enemy_pos.y = boss.sprite.getPosition().y + 100;
 			boss.damaged(boss);
 			if (!boss.stopped)
 			{
+				if (boss.healthint % 50 == 0 && (int)boss.health != 250 && (int)boss.health != 0 && boss.powerup_timer.getElapsedTime().asSeconds() >= 5) {
+					boss.powerup_timer.restart();
+					powerup.drop_power_up(powerups);
+
+				}
+
 				//10, 11 -> false, condition true l7d ma el animation y5ls
-				if ((int)boss.running_attack_timer.getElapsedTime().asSeconds() % 10 == 0 && (int)boss.running_attack_timer.getElapsedTime().asSeconds() != 0
-					&& abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 50) {
+				if ((int)boss.running_attack_timer.getElapsedTime().asSeconds() % 20 == 0
+					&& (int)boss.running_attack_timer.getElapsedTime().asSeconds() != 0
+					&& (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 200 || !boss.runnning_attack_done)) {
 					boss.runningattack(boss);
 				}
 				else if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300 && t6.getElapsedTime().asMilliseconds() > 300)
@@ -2608,7 +2618,6 @@ struct FINAL_BOSS
 			if (player.upperbodySprite.getPosition().x > boss.sprite.getPosition().x && animation_indicator[6] == 0)
 			{
 				boss.sprite.setScale(3.25, 3.25);
-				boss.looking_right = 1;
 			}
 			else if (animation_indicator[6] == 0)
 			{
@@ -2619,23 +2628,11 @@ struct FINAL_BOSS
 		boss.velocity.x = 7 * (boss.sprite.getScale().x / 3.25);
 		boss.sprite.setOrigin((3600 / 18) / 2, 20);
 		boss.sprite.setTexture(boss.running_attacktex);
-		if (boss.looking_right = 1)
-		{
-			if (player.gun == PISTOL)
-			{
-				boss.velocity.x = 4.3 * (boss.sprite.getScale().x / 3.25);
-			}
-			else if (player.gun == RIFLE)
-			{
-				boss.velocity.x = 3.5 * (boss.sprite.getScale().x / 3.25);
-			}
-		}
 
 		EnemiAnimation(boss.sprite, 17.9, 3600 / 18, 98, 0.007, boss.animation_indicator[6]);
 		if (boss.animation_indicator[6] > 17.9)
 		{
 			boss.runnning_attack_done = 1;
-			boss.looking_right = 0;
 			boss.animation_indicator[6] = 0;
 		}
 		boss.sprite.move(velocity);
