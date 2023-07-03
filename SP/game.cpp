@@ -1,4 +1,4 @@
-﻿#include <SFML/Graphics.hpp> //seni is gay//loay is gay
+﻿#include <SFML/Graphics.hpp>
 #include<thread>
 #include <SFML/Audio.hpp>
 #include <iostream>
@@ -16,7 +16,7 @@
 #define LEVEL_1_C_BG 2
 #define LEVEL_1_D_BG 3
 
-//player.gun 
+//player.gun
 #define PISTOL 1
 #define RIFLE 2
 #define LISER 3
@@ -31,16 +31,15 @@
 #define RIFLE_AMMO 5
 #define LISER_AMMO 6
 
-
 using namespace std;
 using namespace sf;
 
-RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Fullscreen);
+RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Default);
 Event event;
 
 fstream out_names, in_names, lname;
 
-//make the variable 
+//make the variable
 string pathh = "";
 const float idle = 0.001,
 pistolshooting_delay = 0.007, rifleshooting_delay = 0.005,
@@ -54,25 +53,19 @@ PTexMU, PTexML, PTexRPU, PTexRPL, PTexRRU, PTexRRL, PTexSSPU, PTexSSRU, PTexIPSL
 health_kit_tex, health_potion_tex, speed_potion_tex, damage_potion_tex, rifle_ammo_tex, laser_ammo_tex, deathScreenBGTex,
 deathScreenFGTex, deathScreenFGTex2, NewGameTex, LeaderBoardTex, LeaderBoardSheetTex, LoadGameTex, CreditsBG, CreditsFG, MissionTex, PVicTex;
 
-
 Sprite TS_BGSpr, TS_TandGSpr, TS_LSpr, TS_VSpr, TS_LogoSpr, TS_PESpr, TS_buttonsSpr, TS_SSSpr, NewGameSpr,
 TS_OlSpr, OptionsSpr, MusicControlSpr, PMSpr, deathScreenBGSpr, deathScreenFGSpr, deathScreenFGSpr2, LeaderBoardSpr, LeaderBoardSheetSpr, CreditsBGSpr, CreditsFGSpr,
 LoadGameSpr, SoundEffectsControlSpr, MissionSpr, PVicSpr;
 
-Sound  win, short_attack, long_attack, music;
-SoundBuffer win_B, short_attack_B, long_attack_B, music_B;
+Sound  Victory, short_attack, long_attack, BossDeath;
+SoundBuffer Victory_B, short_attack_B, long_attack_B, BossDeath_B;
 
+Music TS_BGTheme, TS_BGFireFX, GamePlayTheme, CreditsMusic, BossMusic;
 
-Music TS_BGTheme;
-Music TS_BGFireFX;
-
-
-SoundBuffer MenuClickB, MenuScrollB, DeathScreenFXB, GamePlayB, MenuReturnB, CreditsMusicB;
-Sound MenuClick, MenuScroll, DeathScreenFX, GamePlayTheme, MenuReturn, startvoice, CreditsMusic;
-
+SoundBuffer MenuClickB, MenuScrollB, DeathScreenFXB, MenuReturnB;
+Sound MenuClick, MenuScroll, DeathScreenFX, MenuReturn, startvoice;
 
 Clock timer, timer2, timer4, escTimer, eventTimer, LB_timer, t6, t7;
-
 
 View view(Vector2f(0, 0), Vector2f(1920, 1080));
 
@@ -93,7 +86,6 @@ Clock CreditsTClock;
 int currentF = 0;
 int currentR = 0;
 int numF = 12;
-
 
 float TS_TandGCnt = 0, TS_LCnt = 0, TS_LogoCnt = 0, TS_PECnt = 0, AlphaPE = 255;
 int TS_ButtonsCnt = 0, TSS_ButtonsCnt = 0, OptionsSprCnt = 0, deathScreenFG2cnt = 0;
@@ -245,7 +237,7 @@ struct Rifle
 	}
 	void shooting(Rifle& rifle)
 	{
-		if (rifle.ammo > 0)//cheeck if rifle ammo more than zero 
+		if (rifle.ammo > 0)//cheeck if rifle ammo more than zero
 		{
 			rifle.shoot_timer += 0.08;//delay
 			if (rifle.shoot_timer > 1 || rifle.shoot_timer == 0.03)
@@ -285,7 +277,6 @@ struct Rifle
 			update_bUllets_distance(rifle, x);
 		}
 	}
-
 } rifle;
 
 //liser
@@ -306,7 +297,7 @@ struct Liser
 	}
 	void shooting(Liser& liser)
 	{
-		if (liser.shooting_timer.getElapsedTime().asSeconds() > 6)//restart liser power  
+		if (liser.shooting_timer.getElapsedTime().asSeconds() > 6)//restart liser power
 		{
 			liser.shooting_timer.restart();
 		}
@@ -321,7 +312,6 @@ struct Liser
 		{
 			liser.shooting_timer.restart();
 		}
-
 	}
 
 	void drawliser(Liser& liser)
@@ -341,7 +331,7 @@ struct Liser
 			}
 		}
 	}
-	void restart()//restart liser power  
+	void restart()//restart liser power
 
 	{
 		Event event;
@@ -363,7 +353,6 @@ struct Pistol
 	//sound
 	SoundBuffer soundb;
 	Sound sound;
-
 
 	Texture tex;
 	vector<Sprite>sprite;
@@ -417,7 +406,6 @@ struct Pistol
 	}
 } pistol;
 
-
 //draw blood when player damaged
 struct Blood_Spatter
 {
@@ -444,7 +432,7 @@ struct Blood_Spatter
 		}
 		blood.sprite.setTextureRect(IntRect(int(blood.indicator) * 500, 0, 500, 500));
 	}
-	void move(Blood_Spatter& blood)//update position  
+	void move(Blood_Spatter& blood)//update position
 	{
 		Vector2f pl = player.lowerbodySprite.getPosition();
 		blood.sprite.setPosition(pl.x - 120, pl.y - 50);
@@ -509,7 +497,6 @@ struct LeaderBoard
 	{
 		LeaderBoardText.setFont(nameFont);
 		LeaderBoardText.setCharacterSize(54);
-
 	}
 	void compare()
 	{
@@ -550,7 +537,6 @@ struct LeaderBoard
 		{
 			for (int j = 0; j < 3; j++)
 			{
-
 				switch (j)
 				{
 				case 0:
@@ -571,7 +557,6 @@ struct LeaderBoard
 			}
 		}
 		window.display();
-
 	}
 }LeaderBoard;
 struct LoadGameScreen
@@ -619,7 +604,6 @@ struct LoadGameScreen
 			else
 				LoadSaveText.setFillColor(Color::White);
 			window.draw(LoadSaveText);
-
 		}
 		window.display();
 	}
@@ -706,13 +690,13 @@ struct MusicSoundControl
 	int selected = 1, soundlevel = 100;
 	bool isOpen = false;
 
-
 	void move_right()
 	{
 		selected = (selected + 1 <= 7 ? selected + 1 : 7);
 		soundlevel = (100 - (selected - 1) * 15 < 11 ? 0 : 100 - (selected - 1) * 15);
 		TS_BGTheme.setVolume(soundlevel);
 		GamePlayTheme.setVolume(soundlevel);
+		BossMusic.setVolume(soundlevel);
 		MenuScroll.play();
 	}
 
@@ -722,6 +706,7 @@ struct MusicSoundControl
 		soundlevel = (100 - (selected - 1) * 15 < 11 ? 0 : 100 - (selected - 1) * 15);
 		TS_BGTheme.setVolume(soundlevel);
 		GamePlayTheme.setVolume(soundlevel);
+		BossMusic.setVolume(soundlevel);
 		MenuScroll.play();
 	}
 	void draw(string section = "")
@@ -762,11 +747,8 @@ struct MusicSoundControl
 			window.draw(TS_OlSpr);
 			window.draw(MusicControlSpr);
 			window.display();
-
 		}
-
 	}
-
 };
 //pause manu
 struct Pause
@@ -799,7 +781,6 @@ struct Pause
 		window.draw(TS_OlSpr);
 		window.draw(PMSpr);
 		window.display();
-
 	}
 }pause_menu;
 
@@ -915,7 +896,7 @@ struct OptionsScreen
 		}
 	}
 };
-struct CreditScreen
+struct Creditscreen
 {
 	bool isOpen = false;
 
@@ -924,14 +905,22 @@ struct CreditScreen
 		CreditsFG.loadFromFile("Credits Sprite Sheet.png");
 		CreditsBGSpr.setTexture(CreditsBG);
 		CreditsFGSpr.setTexture(CreditsFG);
-		CreditsMusicB.loadFromFile("Credits Music.wav");
-		CreditsMusic.setBuffer(CreditsMusicB);
+		CreditsMusic.openFromFile("Credits Music.wav");
 	}
 
 	void creditsAnimation()
 	{
-		if (Keyboard::isKeyPressed(Keyboard::Escape))
+		int volume = CreditsMusic.getVolume();
+		volume++;
+		CreditsMusic.setVolume(volume);
+		TS_BGFireFX.pause();
+		TS_BGTheme.pause();
+		if (Keyboard::isKeyPressed(Keyboard::Escape)) {
 			isOpen = false;
+			CreditsMusic.setVolume(0);
+			TS_BGFireFX.play();
+			TS_BGTheme.play();
+		}
 		CreditsBGSpr.setTextureRect(IntRect(int(CreditsCntX) * 1920, int(CreditsCntY) * 1080, 1920, 1080));
 		CreditsCntX += 0.5;
 		if (CreditsCntX > 4)
@@ -959,8 +948,9 @@ struct CreditScreen
 		else if (elapsedT >= totalT) {
 			CreditsTClock.restart();
 			currentF = (currentF + 1);
-			if (currentR == 1 && currentF == 6)
+			if (currentR == 1 && currentF == 6) {
 				creditsactive = 0;
+			}
 			if (currentF > 5)
 			{
 				currentF = 0;
@@ -975,7 +965,6 @@ struct CreditScreen
 		}
 		window.display();
 	}
-
 }CreditScreen;
 //menu
 struct Menu
@@ -1034,10 +1023,8 @@ struct Menu
 		else
 			window.draw(TS_PESpr);
 		window.display();
-
 	}
 } menu;
-
 
 //HUD
 struct HUD {
@@ -1123,7 +1110,6 @@ struct HUD {
 			hud.ammo_num_sprite[i].setTexture(hud.ammo_num_tex);
 			hud.ammo_num_sprite[i].setTextureRect(IntRect(ammo_num_index[i] * (390 / 10), 0, 390 / 10, 39));
 		}
-
 	}
 	void positions(HUD& hud) {
 		hud.HP_bar_sprite.setScale(3.455 * view.getSize().x / 1920.0, 3.455 * view.getSize().y / 1080.0);
@@ -1164,7 +1150,6 @@ struct HUD {
 			hud.ammo_num_sprite[i].setScale(view.getSize().x / 1920.0, view.getSize().y / 1080.0);
 			hud.ammo_num_sprite[i].setPosition(view.getCenter().x - (771 * view.getSize().x / 1920.0) + i * 41 * view.getSize().x / 1920.0, view.getCenter().y + (460 * view.getSize().y / 1080.0));
 		}
-
 	}
 	void draw(HUD hud) {
 		hud.HP_bar_sprite.setTextureRect(IntRect(hp_index * (390 / 6), 0, 390 / 6, 11));
@@ -1220,7 +1205,6 @@ struct HUD {
 		ammo_num_index[2] = 9 - (rifle.ammo % 10);//123
 		ammo_num_index[1] = 9 - ((rifle.ammo / 10) - (rifle.ammo / 100) * 10);
 		ammo_num_index[0] = 9 - (rifle.ammo / 100);
-
 	}
 	void score_display() {
 		//123456
@@ -1306,13 +1290,10 @@ struct PowerUps
 				else if (pick_power_up == SPEED_POTION)
 				{
 					player.speed_boost = 2;
-
-
 				}
 				else if (pick_power_up == DAMAGE_POTION)
 				{
 					damage_boost = 2;
-
 				}
 				else if (pick_power_up == RIFLE_AMMO)
 				{
@@ -1338,15 +1319,12 @@ struct PowerUps
 				player.powerup_is_on = false;
 				powerups.pop_back();
 			}
-
 		}
-
 	}
 }powerup;
 vector <PowerUps> powerups;
 //ground & wall
 RectangleShape ground[30], wall[30];
-
 
 //make clock & timer to plmovement
 Clock clock_pl;
@@ -1383,7 +1361,6 @@ struct Enemy1
 	bool stopped = 0;
 	float initial_position;
 	bool reversed_direction = 0;
-
 
 	vector <pair <RectangleShape, int>> bullet;//enemy1 pistol
 	vector<Sprite>bulletssprites;
@@ -1491,13 +1468,11 @@ struct Enemy1
 					enemy1[i].sprite.setPosition(enemy1[i].rec.getPosition().x - 58, enemy1[i].rec.getPosition().y - 22);
 			}
 		}
-
 	}
 	void Gravity(Enemy1 enemy1[30])
 	{
 		for (int j = 0; j < 30; j++)
 		{
-
 			float x = enemy1[j].rec.getPosition().x;
 			enemy1[j].rec.setPosition(x, 670);
 		}
@@ -1508,7 +1483,6 @@ struct Enemy1
 		{
 			if (enemy1[i].is_alive)
 			{
-
 				for (int j = 0; j < pistol.rects.size(); j++)
 				{
 					if (enemy1[i].sprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
@@ -1659,7 +1633,6 @@ struct Enemy1
 			enemy1[i].sprite.setOrigin(0, 0);
 			enemy1[i].last_key = RIGHT;
 		}
-
 	}
 	void Aimless_Walking(int i, Enemy1 enemy1[30])
 	{
@@ -1690,7 +1663,6 @@ struct Enemy1
 				enemy1[i].reversed_direction = 0;
 			}
 		}
-
 	}
 	void death_animation(int i, Enemy1 enemy1[30])
 	{
@@ -1721,7 +1693,6 @@ struct Enemy1
 		else
 		{
 			enemy1[i].is_alive = 0;
-
 		}
 	}
 	void Idle_animation_2(int i, Enemy1 enemy1[30])
@@ -1744,7 +1715,6 @@ struct Enemy1
 					RS[i].bullet[x].first.move(-10, 0);
 					RS[i].bulletssprites[x].move(-10, 0);
 					window.draw(RS[i].bulletssprites[x]);
-
 				}
 				else if (RS[i].bullet[x].second == RIGHT)
 				{
@@ -1780,10 +1750,8 @@ struct Enemy1
 			RS[i].shoot_timer = 0;
 			RS[i].last_key = RIGHT;
 		}
-
 	}
 }RS[33];//Rebel Soldier
-
 
 struct Enemy2
 {
@@ -1826,7 +1794,6 @@ struct Enemy2
 		s.RWSpr.setOrigin(0, 0);
 		if (player.rec.getPosition().x < s.RWSpr.getPosition().x)
 		{
-
 			s.RWSpr.setScale(plScale, plScale);
 			EnemiAnimation(s.RWSpr, 11, 49, 52, 0.02, s.run_indicator);
 			s.RWSpr.move(-5, 0);
@@ -1837,7 +1804,6 @@ struct Enemy2
 			EnemiAnimation(s.RWSpr, 11, 49, 52, 0.02, s.run_indicator);
 			s.RWSpr.move(5, 0);
 		}
-
 	}
 	void Damaged(Enemy2 enemy2[6])
 	{
@@ -1845,7 +1811,6 @@ struct Enemy2
 		{
 			if (enemy2[i].is_alive)
 			{
-
 				for (int j = 0; j < pistol.rects.size(); j++)
 				{
 					if (enemy2[i].RWSpr.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
@@ -1894,7 +1859,6 @@ struct Enemy2
 				if (enemy2[i].health <= 0)
 				{
 					death(enemy2[i]);
-
 				}
 			}
 			if (player.holding_knife && player.rec.getGlobalBounds().intersects(enemy2[i].RWSpr.getGlobalBounds()))
@@ -1903,7 +1867,6 @@ struct Enemy2
 				enemy2[i].is_getting_damaged = true;
 			}
 		}
-
 	}
 	void attack(Enemy2& s)
 	{
@@ -1946,7 +1909,6 @@ struct Enemy2
 		{
 			enemy2[1].deathSound.play();
 		}
-
 	}
 
 	void move_away(Enemy2& s)
@@ -1987,7 +1949,6 @@ struct Enemy2
 					else if (enemy2[i].current_status == "move_away")
 						move_away(enemy2[i]);
 				}
-
 			}
 		}
 	}
@@ -2013,7 +1974,6 @@ struct Enemy2
 	}
 }enemy2[6];
 
-
 struct SoundEffectsControl
 {
 	int selected = 1, soundlevel = 100;
@@ -2028,8 +1988,7 @@ struct SoundEffectsControl
 		rifle.sound.setVolume(soundlevel);
 		pistol.sound.setVolume(soundlevel);
 		liser.sound.setVolume(soundlevel);
-		music.setVolume(soundlevel);
-		win.setVolume(soundlevel);
+		Victory.setVolume(soundlevel);
 		short_attack.setVolume(soundlevel);
 		long_attack.setVolume(soundlevel);
 		for (int i = 0; i < 30; i++)
@@ -2050,8 +2009,7 @@ struct SoundEffectsControl
 		rifle.sound.setVolume(soundlevel);
 		pistol.sound.setVolume(soundlevel);
 		liser.sound.setVolume(soundlevel);
-		music.setVolume(soundlevel);
-		win.setVolume(soundlevel);
+		Victory.setVolume(soundlevel);
 		short_attack.setVolume(soundlevel);
 		long_attack.setVolume(soundlevel);
 		for (int i = 0; i < 30; i++)
@@ -2063,13 +2021,6 @@ struct SoundEffectsControl
 		TS_BGFireFX.setVolume(soundlevel);
 		player.playerdeath.setVolume(soundlevel);
 		startvoice.setVolume(soundlevel);
-	}
-	void boss_music()
-	{
-		if (bgCounter == LEVEL_1_D_BG)
-		{
-			music.play();
-		}
 	}
 
 	void draw(string section = "")
@@ -2110,12 +2061,9 @@ struct SoundEffectsControl
 			window.draw(TS_OlSpr);
 			window.draw(SoundEffectsControlSpr);
 			window.display();
-
 		}
-
 	}
 }SoundEffectsControl;
-
 
 Clock push_timer;
 float delay = 0.3;
@@ -2139,7 +2087,7 @@ struct Enemy3
 	bool check = 1;
 	vector <pair <RectangleShape, int>> bullet; //enemy3 pistol
 	vector<Sprite>bulletssprites;
-	int cnt = 0; //to cnt 
+	int cnt = 0; //to cnt
 
 	void shooting(int i, vector<Enemy3>& enemy1)
 	{
@@ -2167,7 +2115,6 @@ struct Enemy3
 				RS[i].bullet[x].first.move(-10, 0);
 				RS[i].bulletssprites[x].move(-10, 0);
 				window.draw(RS[i].bulletssprites[x]);
-
 			}
 			else if (RS[i].bullet[x].second == RIGHT)
 			{
@@ -2215,7 +2162,6 @@ struct Enemy3
 	{
 		if (enemy1[i].is_alive)
 		{
-
 			for (int j = 0; j < pistol.rects.size(); j++)
 			{
 				if (enemy1[i].sprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
@@ -2349,7 +2295,6 @@ struct Enemy3
 			enemy3[i].sprite.setOrigin(0, 0);
 			enemy3[i].last_key = RIGHT;
 		}
-
 	}
 	bool is_done(vector <Enemy3>& enemy3)
 	{
@@ -2364,8 +2309,6 @@ struct Enemy3
 			return true;
 		else
 			return false;
-
-
 	}
 	void reset(vector<Enemy3>& enemy3)
 	{
@@ -2409,7 +2352,6 @@ struct BossHealthBar {
 
 	void BossHealthBarSetup()
 	{
-
 		stroke.loadFromFile("Prince of Darkness Health Bar.png");
 		strokes.setTexture(stroke);
 		strokes.setPosition(view.getCenter().x - 636, view.getCenter().y + 320);
@@ -2437,7 +2379,6 @@ struct BossHealthBar {
 		healthBar[6].color = tandbColor;
 		healthBar[7].color = tandbColor;
 
-
 		bghealthBar[0].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 376);
 		bghealthBar[1].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 376);
 		bghealthBar[2].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 385);
@@ -2463,15 +2404,14 @@ struct BossHealthBar {
 		healthBar[1].position = { (view.getCenter().x - 664) + healthPercentage * 1328,view.getCenter().y + 376 };
 		healthBar[2].position = { (view.getCenter().x - 664) + healthPercentage * 1328, view.getCenter().y + 385 };
 		healthBar[5].position = { (view.getCenter().x - 664) + healthPercentage * 1328, view.getCenter().y + 385 };
-		healthBar[6].position = {(view.getCenter().x - 664) + healthPercentage * 1328,view.getCenter().y + 395 };
+		healthBar[6].position = { (view.getCenter().x - 664) + healthPercentage * 1328,view.getCenter().y + 395 };
 	}
 }bosshp;
-
 
 struct FINAL_BOSS
 {
 	Texture idletex, runningtex, fightingtex1, fightingtex2, deadtex, done_T, running_attacktex;
-	float health = 500, damage = 0, sprite_indicator = 0.0;
+	float health = 14, damage = 0, sprite_indicator = 0.0;
 	Vector2f velocity = { 0,0 };
 	Vector2f initialposition = { 26000,550 };
 	bool live = 1, deaths_animation_done = 0, is_alive = 1, is_getting_damaged = 0;
@@ -2481,7 +2421,8 @@ struct FINAL_BOSS
 	Clock damage_timer, running_attack_timer;
 	float animation_indicator[10] = {};
 	RectangleShape hitbox;
-	bool comlete = 0, runnning_attack_done = 0;;
+	bool comlete = 0, runnning_attack_done = 0;
+	bool looking_right = 0;
 
 	void setup(FINAL_BOSS& boss)
 	{
@@ -2497,17 +2438,16 @@ struct FINAL_BOSS
 		boss.done.setTexture(boss.done_T);
 		boss.done.setScale(3, 3);
 		boss.done.setPosition(view.getCenter());
-
+		BossDeath_B.loadFromFile("Boss Death.wav");
+		BossDeath.setBuffer(BossDeath_B);
 		boss.sprite.setPosition(boss.initialposition);
 		boss.sprite.setTexture(boss.idletex);
 		boss.sprite.setScale(-3.25, 3.25);
-
 	}
 	void status(FINAL_BOSS& boss)
 	{
 		if (bgCounter == LEVEL_1_D_BG && boss.live)
 		{
-
 			boss.damaged(boss);
 			if (!boss.stopped)
 			{
@@ -2515,7 +2455,6 @@ struct FINAL_BOSS
 				if ((int)boss.running_attack_timer.getElapsedTime().asSeconds() % 10 == 0 && (int)boss.running_attack_timer.getElapsedTime().asSeconds() != 0
 					&& abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 50) {
 					boss.runningattack(boss);
-
 				}
 				else if (abs(player.upperbodySprite.getPosition().x - boss.sprite.getPosition().x) > 300 && t6.getElapsedTime().asMilliseconds() > 300)
 				{
@@ -2543,7 +2482,6 @@ struct FINAL_BOSS
 	{
 		if (boss.is_alive)
 		{
-
 			for (int j = 0; j < pistol.rects.size(); j++)
 			{
 				if (boss.sprite.getGlobalBounds().intersects(pistol.rects[j].first.getGlobalBounds()) && pistol.rects[j].second.first != 0)
@@ -2576,7 +2514,6 @@ struct FINAL_BOSS
 			}
 			if (boss.is_getting_damaged == 1)  // this adds red color to enemies when damaged
 			{
-				
 				if (boss.damage_timer.getElapsedTime().asMilliseconds() <= 300) {
 					boss.sprite.setColor(Color::Red);
 				}
@@ -2597,7 +2534,6 @@ struct FINAL_BOSS
 				if (!game_ended)
 					t7.restart();
 				game_ended = true;
-
 			}
 		}
 		if (player.holding_knife && player.rec.getGlobalBounds().intersects(boss.sprite.getGlobalBounds()))
@@ -2606,15 +2542,12 @@ struct FINAL_BOSS
 			boss.is_getting_damaged = true;
 		}
 		bosshp.BossHealthBarChange(boss.health);
-
 	}
 	void Death_animation(FINAL_BOSS& boss)
 	{
-
 		boss.stopped = 1;
 		if (!boss.death_animation_done)
 		{
-
 			boss.velocity.x = 0;
 			boss.sprite.setTexture(boss.deadtex);
 			boss.sprite.setOrigin(3960 / 33 / 2, -5);
@@ -2630,12 +2563,10 @@ struct FINAL_BOSS
 		{
 			boss.sprite.setScale(0, 0);
 			boss.is_alive = 0;
-			//death sound here 
 		}
 	}
-	void fighting2(FINAL_BOSS& boss)//long range 
+	void fighting2(FINAL_BOSS& boss)//long range
 	{
-
 		boss.sprite.setOrigin(3300 / 11 / 4, -8);
 		boss.velocity.x = 0;
 		if (player.upperbodySprite.getPosition().x > boss.sprite.getPosition().x)
@@ -2650,7 +2581,6 @@ struct FINAL_BOSS
 		boss.sprite.setTexture(boss.fightingtex2);
 		EnemiAnimation(boss.sprite, 10.9, 3300 / 11, 63, 0.008, boss.animation_indicator[3]);
 		long_attack.play();
-
 	}
 	void fighting(FINAL_BOSS& boss)//melee
 	{
@@ -2669,7 +2599,6 @@ struct FINAL_BOSS
 		boss.sprite.setTexture(boss.fightingtex1);
 		EnemiAnimation(boss.sprite, 20.9, 4200 / 21, 74, 0.008, boss.animation_indicator[2]);
 		short_attack.play();
-
 	}
 	void runningattack(FINAL_BOSS& boss)
 	{
@@ -2677,27 +2606,37 @@ struct FINAL_BOSS
 		{
 			if (player.upperbodySprite.getPosition().x > boss.sprite.getPosition().x && animation_indicator[6] == 0)
 			{
-				boss.velocity.x = 17;
 				boss.sprite.setScale(3.25, 3.25);
+				boss.looking_right = 1;
 			}
 			else if (animation_indicator[6] == 0)
 			{
-				boss.velocity.x = -17;
 				boss.sprite.setScale(-3.25, 3.25);
 			}
 			boss.runnning_attack_done = 0;
 		}
 		boss.sprite.setOrigin((3600 / 18) / 2, 20);
 		boss.sprite.setTexture(boss.running_attacktex);
+		if (boss.looking_right = 1)
+		{
+			if (player.gun == PISTOL)
+			{
+				boss.velocity.x = 4.3 * (boss.sprite.getScale().x / 3.25);
+			}
+			else if (player.gun == RIFLE)
+			{
+				boss.velocity.x = 3.5 * (boss.sprite.getScale().x / 3.25);
+			}
+		}
 
-		EnemiAnimation(boss.sprite, 17.9, 3600 / 18, 98, 0.008, boss.animation_indicator[6]);
+		EnemiAnimation(boss.sprite, 17.9, 3600 / 18, 98, 0.007, boss.animation_indicator[6]);
 		if (boss.animation_indicator[6] > 17.9)
 		{
 			boss.runnning_attack_done = 1;
+			boss.looking_right = 0;
 			boss.animation_indicator[6] = 0;
 		}
 		boss.sprite.move(velocity);
-
 	}
 	void running(FINAL_BOSS& boss)
 	{
@@ -2725,7 +2664,6 @@ struct FINAL_BOSS
 		boss.sprite.setOrigin((856 / 8.0) / 2, -30);
 		boss.sprite.setTexture(boss.idletex);
 		EnemiAnimation(boss.sprite, 7.9, 856 / 8, 50, 0.05, boss.animation_indicator[0]);
-
 	}
 }boss;
 void call()
@@ -2785,8 +2723,6 @@ void call()
 	}
 }
 
-
-
 //gravity
 float gravity = 0.7;
 bool canDoubleJump;
@@ -2798,7 +2734,6 @@ Sprite bgSprite[30];
 ////Mission start voice
 SoundBuffer startvoice_B;
 bool once = 0;
-
 
 //lvl 1-b-2 animation Exit lamp
 Texture  ExitlampTex;
@@ -2843,7 +2778,7 @@ int main()
 	DeathScreen.deathScreenSetup();
 	player.Playersetup(player);
 	timer.restart();
-	
+
 	Menu();
 	file.save();
 	return 0;
@@ -2854,7 +2789,6 @@ void Menu()
 {
 	while (window.isOpen())
 	{
-
 		if (NewGameScreen.is_open)
 		{
 			Event event;
@@ -2862,7 +2796,6 @@ void Menu()
 			{
 				if (event.type == sf::Event::KeyPressed)
 				{
-
 					if (event.key.code == sf::Keyboard::Backspace)
 						NewGameScreen.name.pop_back();
 					else if (event.key.code == sf::Keyboard::Enter && NewGameScreen.name.size() > 2)
@@ -2912,9 +2845,6 @@ void Menu()
 					rifle.ammo = 200;
 					player.score = 0;
 					this_thread::sleep_for(chrono::milliseconds(100));
-
-
-
 				}
 				if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
 				{
@@ -2945,7 +2875,6 @@ void Menu()
 					player.upperbodySprite.setPosition(0, 600);
 					player.lowerbodySprite.setPosition(0, 600);
 					RS[0].reset();
-
 				}
 				else if (bgCounter == LEVEL_1_B_BG) {
 					isMoved = 0;
@@ -2956,7 +2885,6 @@ void Menu()
 					new_enemy.reset(enemy3);
 				}
 			}
-
 		}
 		else
 
@@ -3091,13 +3019,11 @@ void Menu()
 						menu.main_screen_draw();
 					if (Keyboard::isKeyPressed(Keyboard::Enter) || menu.ts_escaped)
 					{
-
 						if (!menu.ts_escaped)
 						{
 							timer2.restart();
 							MenuClick.play();
 							menu.ts_escaped = true;
-
 						}
 						else
 						{
@@ -3112,7 +3038,6 @@ void Menu()
 									MenuClick.play();
 									menu.start_selected = true;
 									timer.restart();
-
 								}
 								if (menu.start_screen.selected == 1 && Keyboard::isKeyPressed(Keyboard::Enter) && timer.getElapsedTime().asMilliseconds() > 200)
 								{
@@ -3124,7 +3049,6 @@ void Menu()
 									menu.game_started = true;
 									timer.restart();
 									windowfunction();
-
 								}
 								if (menu.start_screen.selected == 2 && Keyboard::isKeyPressed(Keyboard::Enter) && timer.getElapsedTime().asMilliseconds() > 300 || NewGameScreen.is_open)
 								{
@@ -3178,7 +3102,6 @@ void Menu()
 									}
 								}
 
-
 								if (Keyboard::isKeyPressed(Keyboard::Up) && timer.getElapsedTime().asMilliseconds() > 200)
 								{
 									menu.start_screen.move_up();
@@ -3195,8 +3118,6 @@ void Menu()
 									menu.start_selected = false;
 									timer.restart();
 								}
-
-
 							}
 							else if (menu.selected == OPTIONS && Keyboard::isKeyPressed(Keyboard::Enter) && timer2.getElapsedTime().asMilliseconds() > 200 || menu.options_screen.isOpen)
 							{
@@ -3238,8 +3159,6 @@ void Menu()
 										timer.restart();
 										menu.options_screen.music_slider.move_right();
 									}
-
-
 								}
 								if (Keyboard::isKeyPressed(Keyboard::Enter) && menu.options_screen.selected == 2 && timer4.getElapsedTime().asMilliseconds() > 200 || SoundEffectsControl.isOpen)
 								{
@@ -3268,8 +3187,6 @@ void Menu()
 										timer.restart();
 										SoundEffectsControl.move_right();
 									}
-
-
 								}
 								if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
 								{
@@ -3299,16 +3216,13 @@ void Menu()
 									creditsactive = 1;
 								}
 								CreditScreen.isOpen = true;
-								CreditScreen.creditsAnimation();
 
+								CreditScreen.creditsAnimation();
 
 								if (!creditsactive)
 								{
 									CreditScreen.isOpen = false;
 								}
-
-
-
 							}
 							else if (menu.selected == EXIT && Keyboard::isKeyPressed(Keyboard::Enter))
 							{
@@ -3320,14 +3234,11 @@ void Menu()
 							{
 								menu.move_up();
 								timer.restart();
-
 							}
 							else if (Keyboard::isKeyPressed(Keyboard::Down) && timer.getElapsedTime().asMilliseconds() > 200)
 							{
-
 								menu.move_down();
 								timer.restart();
-
 							}
 						}
 					}
@@ -3412,7 +3323,6 @@ void bgSetup()
 	Exitlamp.setTexture(ExitlampTex);
 	Exitlamp.setPosition(14771 + 2176, -940 + 471);
 
-
 	//FG Lv1-B-2
 
 	lvl1FGtex[2].loadFromFile(pathh + "Level 1-B-2 FG.png");
@@ -3455,13 +3365,9 @@ void bgSetup()
 	Lvl1FG[4].setTexture(lvl1FGtex[4]);
 	Lvl1FG[4].setPosition(22000, 0);
 	create(ground, 8, 5120, 20, 22000, 800);
-
-
-
 }
 void windowfunction()
 {
-
 	//delta time
 	dt = clock_pl.getElapsedTime().asMicroseconds();
 	dt /= 750;
@@ -3483,7 +3389,6 @@ void windowfunction()
 	bghealthBar[5].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 385);
 	bghealthBar[6].position = Vector2f(view.getCenter().x + 664, view.getCenter().y + 395);
 	bghealthBar[7].position = Vector2f(view.getCenter().x - 664, view.getCenter().y + 395);
-
 
 	if (Keyboard::isKeyPressed(Keyboard::X))
 		player.isdead = true;
@@ -3537,7 +3442,6 @@ void windowfunction()
 
 	//tank.tankState(tank);
 
-
 	BGanimation();
 	windowclose();
 	window.clear();
@@ -3558,8 +3462,6 @@ void BGanimation()
 	animation(lvl1torch[3], 8, 1304.0 / 8, 303, 0.01, 29);
 	animation(Exitlamp, 6, 1092.0 / 6, 99, 0.002, 30);
 	animation(FireTroches, 8, 13120.0 / 8, 1192, 0.01, 31);
-
-
 }
 void windowclose()
 {
@@ -3570,13 +3472,11 @@ void windowclose()
 			window.close();
 		}
 	}
-
 }
 void cameraView()
 {
 	//first map
 	if (bgCounter == LEVEL_1_A_BG) {
-
 		leftEnd = -300;
 		rightEnd = 8643;
 		//area where no black edges can appear
@@ -3593,7 +3493,6 @@ void cameraView()
 			startvoice.play();
 			once = 1;
 		}
-
 	}
 	else if (bgCounter == LEVEL_1_B_BG)
 	{
@@ -3634,7 +3533,6 @@ void cameraView()
 			full_time_played += hud.hud_time.getElapsedTime().asSeconds();
 			hud.hud_time.restart();
 			ismoved2 = true;
-
 		}
 		leftEnd = 18030;
 		rightEnd = 19650;
@@ -3658,6 +3556,10 @@ void cameraView()
 		if (!cutscene && player.upperbodySprite.getPosition().x > leftEnd + 950)
 		{
 			FBCutScene();
+			float Gvolume = GamePlayTheme.getVolume();
+			Gvolume--;
+			GamePlayTheme.setVolume(Gvolume);
+			BossMusic.play();
 			boss.running_attack_timer.restart();
 			cutscene = true;
 		}
@@ -3679,7 +3581,6 @@ void cameraView()
 			}
 		}
 	}
-
 }
 void transition()
 {
@@ -3717,14 +3618,12 @@ void transition_reverse()
 }
 void transition_pos_check()
 {
-
 	if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 0)
 	{
 		transition();
 		transition_reverse();
 		bgCounter = 1;
 		this_thread::sleep_for(chrono::milliseconds(300));
-
 	}
 	else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 1)
 	{
@@ -3732,7 +3631,6 @@ void transition_pos_check()
 		transition_reverse();
 		bgCounter = 2;
 		this_thread::sleep_for(chrono::milliseconds(300));
-
 	}
 	else if (player.upperbodySprite.getPosition().x > rightEnd && bgCounter == 2) {
 		transition();
@@ -3746,7 +3644,12 @@ void transition_pos_check()
 		float ind = 0, delay = 0.2;
 		player.upperbodySprite.setTexture(PVicTex);
 		player.lowerbodySprite.setTexture(PVicTex);
-		while (t7.getElapsedTime().asSeconds() < 4)
+		BossMusic.stop();
+		GamePlayTheme.stop();
+		BossDeath.play();
+		BossDeath.setVolume(100);
+		Victory.play();
+		while (t7.getElapsedTime().asSeconds() < 8)
 		{
 			window.clear();
 			player.upperbodySprite.setTextureRect(IntRect(int(ind) * 38, 0, 38, 43));
@@ -3804,7 +3707,6 @@ bool canMoveRight(Sprite object, int rightLimit)
 		return true;
 
 	return false;
-
 }
 bool canMoveleft(Sprite object, int leftLimit)
 {
@@ -3812,7 +3714,6 @@ bool canMoveleft(Sprite object, int leftLimit)
 		return true;
 
 	return false;
-
 }
 void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int index)
 {
@@ -3856,7 +3757,6 @@ void plmovement(Sprite& s, float maxframe, float x, float y, float delay, int in
 			else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
 				move_with_animation(player.upperbodySprite, 11.9, 528 / 11, 29, delay, 32);
 		}
-
 	}
 
 	//move player
@@ -3947,13 +3847,10 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
 					animation(player.upperbodySprite, 11.9, 528 / 12, 29, 0.004, 32);
 					animation(player.lowerbodySprite, 11.9, 408 / 12, 41, 0.004, 2);
 				}
-
-
 			}
 			player.last_key = 1;
 
 			moveToLeft(s);
-
 		}
 		else if (Keyboard::isKeyPressed(Keyboard::Right) && canMoveRight(s, rightEnd))
 		{
@@ -3992,14 +3889,12 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
 			player.last_key = 2;
 
 			moveToRight(s);
-
 		}
 
 		else
 		{
 			if (Keyboard::isKeyPressed(Keyboard::J))
 			{
-
 				// shooting animation when pl standing
 				if (player.gun == PISTOL)
 				{
@@ -4042,10 +3937,7 @@ void move_with_animation(Sprite& s, float maxframe, float x, float y, float dela
 			}
 
 			player.Velocity.x = 0;
-
-
 		}
-
 	}
 }
 void window_draw()
@@ -4072,17 +3964,14 @@ void window_draw()
 		if (enemy3[i].is_alive)
 		{
 			enemy3[i].drawbullets(i, enemy3);
-
 		}
 	}
 	window.draw(ground[12]);
-
 
 	//guns
 	pistol.drawpistol(window, pistol);//draw pistol bullets
 	rifle.drawrifle(rifle); //draw rifle bullets
 	liser.drawliser(liser);
-
 
 	if (player.live && !player.isdead)
 	{
@@ -4103,7 +3992,7 @@ void window_draw()
 	if (!cuton)
 		hud.draw(hud);
 	enemy2->draw(enemy2);
-	if (boss.live && bgCounter == 3) 
+	if (boss.live && bgCounter == 3)
 	{
 		window.draw(boss.sprite);
 
@@ -4193,7 +4082,6 @@ void crouchingAnimation()
 				pistol.shooting(pistol);
 			}
 			player.lowerbodySprite.setTextureRect(IntRect(int(animiindecator[14]) * 520 / 10, 0, 520 / 10, 29));
-
 		}
 		else if ((player.gun == RIFLE && rifle.ammo > 0) || player.gun == LISER)
 		{
@@ -4255,7 +4143,6 @@ bool collisonPl(RectangleShape arr[], int size)
 			return true;
 	}
 	return false;
-
 }
 void animation(Sprite& s, float maxframe, float x, float y, float delay, int index)
 {
@@ -4289,7 +4176,6 @@ void playerDamageFromEnemy1()
 					player.health -= RS[i].damage;
 					player.is_getting_damaged = 1;
 					RS[i].bullet[j].second = 0;
-
 				}
 				if (RS[i].bullet[j].first.getPosition().x > 9000 || RS[i].bullet[j].first.getPosition().x < -500)
 				{
@@ -4304,8 +4190,6 @@ void playerDamageFromEnemy1()
 				if ((player.lowerbodySprite.getGlobalBounds().intersects(enemy3[i].bullet[j].first.getGlobalBounds()) || player.upperbodySprite.getGlobalBounds().intersects(enemy3[i].bullet[j].first.getGlobalBounds())) && enemy3[i].bullet[j].second != 0)
 				{
 					player.health -= enemy3[i].damage;
-
-
 
 					player.is_getting_damaged = 1;
 					enemy3[i].bullet[j].second = 0;
@@ -4325,7 +4209,6 @@ void playerDamageFromEnemy1()
 }
 void playerDeathAnimation()
 {
-
 	if (!player.isdead)
 	{
 		player.Velocity.x = 0;
@@ -4363,27 +4246,24 @@ void TS_Setups()
 	TS_BGTheme.setVolume(70.f);
 	TS_BGTheme.setLoop(true);
 	TS_BGFireFX.openFromFile(pathh + "Title Screen _ Main Menu Fire Sound.wav");
+	CreditsMusic.setVolume(0);
+	CreditsMusic.play();
 	TS_BGFireFX.play();
 	TS_BGFireFX.setVolume(30.f);//30;
 	TS_BGFireFX.setLoop(true);
-
 
 	//Sets up the Title Screen & Main Menu Torches & Gate Animation.
 	TS_TandGSpr.setPosition(659.f, 208.f);
 	TS_TandGTex.loadFromFile(pathh + "TS Torches _ Gate Sprite Sheet.png");
 	TS_TandGSpr.setTexture(TS_TandGTex);
 
-
-
 	TS_LSpr.setPosition(722.f, 0.f);
 	TS_LTex.loadFromFile(pathh + "TS Lamp Sprite Sheet.png");
 	TS_LSpr.setTexture(TS_LTex);
 
-
 	TS_VSpr.setPosition(0.f, 0.f);
 	TS_VTex.loadFromFile(pathh + "Vignette.png");
 	TS_VSpr.setTexture(TS_VTex);
-
 
 	TS_LogoSpr.setPosition(269.f, 465.f);
 	TS_LogoTex.loadFromFile(pathh + "TS 1 Sprite Sheet.png");
@@ -4392,7 +4272,6 @@ void TS_Setups()
 	TS_PESpr.setPosition(612.f, 874.f);
 	TS_PETex.loadFromFile(pathh + "TS Press Enter Sprite Sheet.png");
 	TS_PESpr.setTexture(TS_PETex);
-
 
 	TS_buttonsSpr.setPosition(769.f, 650.f);
 	TS_buttonsTex.loadFromFile(pathh + "Main Menu Sprite Sheet.png");
@@ -4432,8 +4311,8 @@ void TS_Setups()
 	MenuScroll.setBuffer(MenuScrollB);
 	MenuScroll.setVolume(100);//100;
 
-	GamePlayB.loadFromFile("Game BG Music.wav");
-	GamePlayTheme.setBuffer(GamePlayB);
+	//GamePlayB.loadFromFile("Game BG Music.wav");
+	GamePlayTheme.openFromFile("Game Music.wav");
 	GamePlayTheme.setLoop(true);
 
 	MenuReturnB.loadFromFile("Menu Return FX.wav");
@@ -4459,7 +4338,6 @@ void TS_Setups()
 	SoundEffectsControlSpr.setTexture(MusicControlTex);
 	SoundEffectsControlSpr.setTextureRect(IntRect(0, 0, 755, 240));
 
-
 	LoadGameSpr.setPosition(-12, 100);
 	LoadGameTex.loadFromFile("Load game.png");
 	LoadGameSpr.setTexture(LoadGameTex);
@@ -4467,13 +4345,10 @@ void TS_Setups()
 	LoadSaveText.setFont(nameFont);
 	LoadSaveText.setCharacterSize(54);
 
-	music.setBuffer(music_B);
-	music.setLoop(true);
-	win.setBuffer(win_B);
+	BossMusic.setLoop(true);
+	Victory.setBuffer(Victory_B);
 	short_attack.setBuffer(short_attack_B);
 	long_attack.setBuffer(long_attack_B);
-
-
 }
 void texture_setup()//&buffers setup
 {
@@ -4516,20 +4391,18 @@ void texture_setup()//&buffers setup
 	PVicTex.loadFromFile(pathh + "Victory (Pistol) Sprite Sheet.png");
 	PVicSpr.setTexture(PVicTex);
 
-	win_B.loadFromFile("Mission Complete Sound.wav");
+	Victory_B.loadFromFile("Mission Complete Sound.wav");
 	short_attack_B.loadFromFile("Fire Attack Short.wav");
 	long_attack_B.loadFromFile("Fire Attack Long.wav");
-	music_B.loadFromFile("Final_Boss_Theme_Song.wav");
-
-	music.setBuffer(music_B);
-	win.setBuffer(win_B);
+	BossMusic.openFromFile("Final_Boss_Theme_Song.wav");
+	Victory.setBuffer(Victory_B);
+	Victory.setVolume(100);
 	short_attack.setBuffer(short_attack_B);
 	long_attack.setBuffer(long_attack_B);
 }
 
 void FBCutScene()
 {
-
 	cuton = true;
 	Clock t1, t2;
 	float ctr = 20;
@@ -4541,7 +4414,6 @@ void FBCutScene()
 		boss.idle(boss);
 		view.setCenter(boss.sprite.getPosition().x, 550);
 		window.setView(view);
-
 
 		window.display();
 	}
@@ -4559,7 +4431,6 @@ void FBCutScene()
 		ctr += 20;
 	}
 	cuton = false;
-
 }
 void mouse_pos()
 {
