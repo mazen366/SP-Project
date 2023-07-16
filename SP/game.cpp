@@ -34,7 +34,7 @@
 using namespace std;
 using namespace sf;
 
-RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Default);
+RenderWindow window(sf::VideoMode(1920, 1080), "Game", sf::Style::Fullscreen);
 Event event;
 
 fstream out_names, in_names, lname;
@@ -90,7 +90,7 @@ int numF = 12;
 float TS_TandGCnt = 0, TS_LCnt = 0, TS_LogoCnt = 0, TS_PECnt = 0, AlphaPE = 255;
 int TS_ButtonsCnt = 0, TSS_ButtonsCnt = 0, OptionsSprCnt = 0, deathScreenFG2cnt = 0;
 
-bool game_ended = 0;
+bool game_ended = 0, vp = true;
 VertexArray healthBar(Quads, 8);
 VertexArray bghealthBar(Quads, 8);
 Font nameFont;
@@ -453,6 +453,8 @@ struct Blood_Spatter
 		}
 	}
 }blood;
+
+
 struct File
 {
 	void load()
@@ -484,10 +486,11 @@ struct File
 		}
 		for (int i = 0; i < names_save.size(); i++)
 			out_names << names_save[i].first << ' ' << names_save[i].second << '\n';
-		out_names << current_name << ' ' << 'a';
+		out_names << names_save[names_save.size() - 1].first << ' ' << 'a';
 		out_names.close();
 	}
 }file;
+
 struct LeaderBoard
 {
 	float XanimCtr = 0, YanimCtr = 0;
@@ -559,6 +562,8 @@ struct LeaderBoard
 		window.display();
 	}
 }LeaderBoard;
+
+
 struct LoadGameScreen
 {
 	bool isOpen = false;
@@ -1236,6 +1241,7 @@ struct PowerUps
 	Clock powerup_timer;
 	void drop_power_up(vector<PowerUps>& powerups)
 	{
+		srand(time(0));
 		powerup.pick_power_up = 1 + rand() % 6;
 		if (player.kill_count % 4 == 0)
 		{
@@ -1350,7 +1356,7 @@ struct Enemy1
 	SoundBuffer deathSoundB2;
 	Sound deathSound2;
 
-	int damage = 1;
+	float damage = 0.5;
 	float health = 5;
 	float sprite_indicator[10];
 	bool isCarrying_a_weapon = 0;
@@ -2412,7 +2418,7 @@ struct BossHealthBar {
 struct FINAL_BOSS
 {
 	Texture idletex, runningtex, fightingtex1, fightingtex2, deadtex, done_T, running_attacktex;
-	float health = 250, damage = 0, sprite_indicator = 0.0;
+	float health = 250, damage = 0.075, sprite_indicator = 0.0;
 	Vector2f velocity = { 0,0 };
 	Vector2f initialposition = { 26000,550 };
 	bool live = 1, deaths_animation_done = 0, is_alive = 1, is_getting_damaged = 0;
@@ -2549,7 +2555,7 @@ struct FINAL_BOSS
 		}
 		if (player.holding_knife && player.rec.getGlobalBounds().intersects(boss.sprite.getGlobalBounds()))
 		{
-			boss.health -= 0.3 / 2;
+			boss.health -= 0.3 / 2 * 1.5;
 			boss.is_getting_damaged = true;
 		}
 		bosshp.BossHealthBarChange(boss.health);
@@ -2790,34 +2796,36 @@ void Menu()
 	{
 		if (NewGameScreen.is_open)
 		{
+			cout << NewGameScreen.name << '\n';
 			Event event;
+
 			while (window.pollEvent(event))
 			{
-				if (event.type == sf::Event::KeyPressed)
-				{
-					if (event.key.code == sf::Keyboard::Backspace)
-						NewGameScreen.name.pop_back();
-					else if (event.key.code == sf::Keyboard::Enter && NewGameScreen.name.size() > 2)
-					{
-						if (names_save.size() < 10)
-						{
-							current_name = NewGameScreen.name;
-							names_save.push_back({ NewGameScreen.name, "0" });
-							NewGameScreen.is_open = false;
-							menu.game_started = true;
-						}
-					}
-					else
-						NewGameScreen.name += key_code(event.key.code);
-				}
-				if (event.type == Event::Closed)
-				{
+				if (event.type == Event::Closed())
 					window.close();
+				else if (event.type == Event::TextEntered)
+					NewGameScreen.name += static_cast <char>(event.text.unicode);
+				if (Keyboard::isKeyPressed(Keyboard::BackSpace) && NewGameScreen.name.size() > 0)
+					NewGameScreen.name.pop_back();
+				if (Keyboard::isKeyPressed(Keyboard::Enter) && timer.getElapsedTime().asMilliseconds() > 200)
+				{
+					timer.restart();
+					NewGameScreen.is_open = false;
+					menu.game_started = true;
+					names_save.push_back({ NewGameScreen.name, "0" });
+					current_name = NewGameScreen.name;
+					TS_BGTheme.stop();
+					TS_BGFireFX.stop();
+					GamePlayTheme.play();
+					for (auto& i : names_save)
+						cout << i.first << ' ' << i.second << '\n';
 				}
+
 			}
 		}
 		else
 			windowclose();
+		
 		mouse_pos();
 		if (player.isdead)
 		{
@@ -3052,9 +3060,11 @@ void Menu()
 								if (menu.start_screen.selected == 2 && Keyboard::isKeyPressed(Keyboard::Enter) && timer.getElapsedTime().asMilliseconds() > 300 || NewGameScreen.is_open)
 								{
 									if (!NewGameScreen.is_open)
+									{
 										MenuClick.play();
-									timer.restart();
-									NewGameScreen.is_open = true;
+										timer.restart();
+										NewGameScreen.is_open = true;
+									}
 									NewGameScreen.draw();
 
 									if (Keyboard::isKeyPressed(Keyboard::Escape) && escTimer.getElapsedTime().asMilliseconds() > 300)
@@ -3554,11 +3564,11 @@ void cameraView()
 		//area where no black edges can appear
 		if (!cutscene && player.upperbodySprite.getPosition().x > leftEnd + 950)
 		{
+			BossMusic.play();
 			FBCutScene();
 			float Gvolume = GamePlayTheme.getVolume();
 			Gvolume--;
 			GamePlayTheme.setVolume(Gvolume);
-			BossMusic.play();
 			boss.running_attack_timer.restart();
 			cutscene = true;
 		}
@@ -3635,6 +3645,7 @@ void transition_pos_check()
 		transition();
 		transition_reverse();
 		bgCounter = 3;
+		GamePlayTheme.stop();
 		this_thread::sleep_for(chrono::milliseconds(300));
 	}
 
@@ -3647,7 +3658,11 @@ void transition_pos_check()
 		GamePlayTheme.stop();
 		BossDeath.play();
 		BossDeath.setVolume(100);
-		Victory.play();
+		if (vp)
+		{
+			Victory.play();
+			vp = false;
+		}
 		while (t7.getElapsedTime().asSeconds() < 8)
 		{
 			window.clear();
@@ -3994,10 +4009,12 @@ void window_draw()
 	if (boss.live && bgCounter == 3)
 	{
 		window.draw(boss.sprite);
-
-		window.draw(bghealthBar);
-		window.draw(healthBar);
-		window.draw(bosshp.strokes);
+		if (cutscene)
+		{
+			window.draw(bghealthBar);
+			window.draw(healthBar);
+			window.draw(bosshp.strokes);
+		}
 	}
 }
 void moveToRight(Sprite& s)
